@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:real": "cross-env VITE_API_MODE=real VITE_API_BASE_URL=http://127.0.0.1:8123/api vite",
     "build": "tsc --build && vite build",
     "typecheck": "tsc --build",
     "preview": "vite preview"
@@ -49,6 +50,7 @@
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.20",
     "babel-plugin-react-compiler": "^1.0.0",
+    "cross-env": "^10.1.0",
     "jsdom": "^25.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.1.18",

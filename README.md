@@ -43,7 +43,7 @@ uv run uvicorn app.main:app --reload
 # Terminal 2: Frontend
 cd webapp
 npm install
-VITE_API_MODE=real npm run dev
+npm run dev:real
 # Open http://localhost:5173
 ```
 
