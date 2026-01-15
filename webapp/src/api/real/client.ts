@@ -347,6 +347,32 @@ export const realApiClient: ApiClient = {
       },
     };
   },
+
+  async getDriveStatus() {
+    return fetchJson<import("@/types").DriveStatus>("/api/drive/status", { method: "GET" });
+  },
+
+  async getDriveAuthUrl() {
+    const res = await fetchJson<{ url: string }>("/api/drive/auth/url", { method: "GET" });
+    return res.url;
+  },
+
+  async smartSync() {
+    return fetchJson<import("@/types").DriveSyncResponse>("/api/drive/sync", { method: "POST" });
+  },
+
+  async pushDrive() {
+    return fetchJson<import("@/types").DriveSyncResponse>("/api/drive/sync/push", { method: "POST" });
+  },
+
+  async pullDrive() {
+    return fetchJson<import("@/types").DriveSyncResponse>("/api/drive/sync/pull", { method: "POST" });
+  },
+
+  async disconnectDrive() {
+    await fetchJson("/api/drive/disconnect", { method: "POST" });
+    return { ok: true as const };
+  },
 };
 
 

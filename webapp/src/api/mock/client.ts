@@ -87,6 +87,40 @@ export const mockApiClient: ApiClient = {
     await sleep(LATENCY_MS);
     return mockDashboardCharts(params);
   },
+
+  async getDriveStatus() {
+    await sleep(LATENCY_MS);
+    return {
+      connected: false,
+      mode: "folder",
+      files: [],
+    };
+  },
+
+  async getDriveAuthUrl() {
+    await sleep(LATENCY_MS);
+    return "http://localhost:8123/api/drive/auth/url?mock=1";
+  },
+
+  async smartSync() {
+    await sleep(LATENCY_MS);
+    return { mode: "folder", results: [] };
+  },
+
+  async pushDrive() {
+    await sleep(LATENCY_MS);
+    return { mode: "folder", results: [] };
+  },
+
+  async pullDrive() {
+    await sleep(LATENCY_MS);
+    return { mode: "folder", results: [] };
+  },
+
+  async disconnectDrive() {
+    await sleep(LATENCY_MS);
+    return { ok: true as const };
+  },
 };
 
 

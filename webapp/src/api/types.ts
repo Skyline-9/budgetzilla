@@ -46,6 +46,13 @@ export type ApiClient = {
 
   getDashboardSummary: (params: GetDashboardParams) => Promise<DashboardSummary>;
   getDashboardCharts: (params: GetDashboardParams) => Promise<DashboardCharts>;
+
+  getDriveStatus: () => Promise<import("@/types").DriveStatus>;
+  getDriveAuthUrl: () => Promise<string>;
+  smartSync: () => Promise<import("@/types").DriveSyncResponse>;
+  pushDrive: () => Promise<import("@/types").DriveSyncResponse>;
+  pullDrive: () => Promise<import("@/types").DriveSyncResponse>;
+  disconnectDrive: () => Promise<{ ok: true }>;
 };
 
 

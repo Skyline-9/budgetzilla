@@ -17,6 +17,7 @@ logs/
 .env
 .env.*
 !.env.example
+gcloud.json
 
 # --- Python (backend) ---
 __pycache__/

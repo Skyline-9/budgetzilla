@@ -92,11 +92,13 @@ function useToastOnError() {
 export function useUpsertOverallBudgetMutation() {
   const qc = useQueryClient();
   const onError = useToastOnError();
+  const autoSync = useAutoSyncTrigger();
   return useMutation({
     mutationFn: (payload: { month: string; budgetCents: number }) => api.upsertOverallBudget(payload),
     onSuccess: async (_budget: Budget) => {
       toast.success("Budget saved");
       await qc.invalidateQueries({ queryKey: ["overallBudget"] });
+      autoSync();
     },
     onError,
   });
@@ -105,11 +107,13 @@ export function useUpsertOverallBudgetMutation() {
 export function useDeleteOverallBudgetMutation() {
   const qc = useQueryClient();
   const onError = useToastOnError();
+  const autoSync = useAutoSyncTrigger();
   return useMutation({
     mutationFn: (month: string) => api.deleteOverallBudget(month),
     onSuccess: async () => {
       toast.success("Budget removed");
       await qc.invalidateQueries({ queryKey: ["overallBudget"] });
+      autoSync();
     },
     onError,
   });
@@ -118,6 +122,7 @@ export function useDeleteOverallBudgetMutation() {
 export function useCreateTransactionMutation() {
   const qc = useQueryClient();
   const onError = useToastOnError();
+  const autoSync = useAutoSyncTrigger();
   return useMutation({
     mutationFn: (payload: TransactionCreate) => api.createTransaction(payload),
     onSuccess: async (created) => {
@@ -126,6 +131,7 @@ export function useCreateTransactionMutation() {
       await qc.invalidateQueries({ queryKey: ["transactions"] });
       await qc.invalidateQueries({ queryKey: ["dashboardSummary"] });
       await qc.invalidateQueries({ queryKey: ["dashboardCharts"] });
+      autoSync();
     },
     onError,
   });
@@ -134,6 +140,7 @@ export function useCreateTransactionMutation() {
 export function useUpdateTransactionMutation() {
   const qc = useQueryClient();
   const onError = useToastOnError();
+  const autoSync = useAutoSyncTrigger();
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: TransactionUpdate }) =>
       api.updateTransaction(id, payload),
@@ -148,6 +155,7 @@ export function useUpdateTransactionMutation() {
       await qc.invalidateQueries({ queryKey: ["transactions"] });
       await qc.invalidateQueries({ queryKey: ["dashboardSummary"] });
       await qc.invalidateQueries({ queryKey: ["dashboardCharts"] });
+      autoSync();
     },
     onError,
   });
@@ -156,6 +164,7 @@ export function useUpdateTransactionMutation() {
 export function useDeleteTransactionMutation() {
   const qc = useQueryClient();
   const onError = useToastOnError();
+  const autoSync = useAutoSyncTrigger();
   return useMutation({
     mutationFn: (vars: { id: string; transaction?: Transaction }) => api.deleteTransaction(vars.id),
     onMutate: async (vars) => {
@@ -178,33 +187,35 @@ export function useDeleteTransactionMutation() {
       toast.success("Transaction deleted", {
         action: vars.transaction
           ? {
-              label: "Undo",
-              onClick: async () => {
-                try {
-                  const t = vars.transaction!;
-                  const restored = await api.createTransaction({
-                    date: t.date,
-                    categoryId: t.categoryId,
-                    amountCents: t.amountCents,
-                    merchant: t.merchant,
-                    notes: t.notes,
-                  });
-                  emitTransactionUiEvent({ type: "created", transaction: restored });
-                  toast.success("Transaction restored");
-                  await qc.invalidateQueries({ queryKey: ["transactions"] });
-                  await qc.invalidateQueries({ queryKey: ["dashboardSummary"] });
-                  await qc.invalidateQueries({ queryKey: ["dashboardCharts"] });
-                } catch (e) {
-                  const message = e instanceof Error ? e.message : "Undo failed";
-                  toast.error(message);
-                }
-              },
-            }
+            label: "Undo",
+            onClick: async () => {
+              try {
+                const t = vars.transaction!;
+                const restored = await api.createTransaction({
+                  date: t.date,
+                  categoryId: t.categoryId,
+                  amountCents: t.amountCents,
+                  merchant: t.merchant,
+                  notes: t.notes,
+                });
+                emitTransactionUiEvent({ type: "created", transaction: restored });
+                toast.success("Transaction restored");
+                await qc.invalidateQueries({ queryKey: ["transactions"] });
+                await qc.invalidateQueries({ queryKey: ["dashboardSummary"] });
+                await qc.invalidateQueries({ queryKey: ["dashboardCharts"] });
+                // Note: autoSync will be triggered by createTransaction's onSuccess
+              } catch (e) {
+                const message = e instanceof Error ? e.message : "Undo failed";
+                toast.error(message);
+              }
+            },
+          }
           : undefined,
       });
       await qc.invalidateQueries({ queryKey: ["transactions"] });
       await qc.invalidateQueries({ queryKey: ["dashboardSummary"] });
       await qc.invalidateQueries({ queryKey: ["dashboardCharts"] });
+      autoSync();
     },
   });
 }
@@ -212,11 +223,13 @@ export function useDeleteTransactionMutation() {
 export function useCreateCategoryMutation() {
   const qc = useQueryClient();
   const onError = useToastOnError();
+  const autoSync = useAutoSyncTrigger();
   return useMutation({
     mutationFn: (payload: CategoryCreate) => api.createCategory(payload),
     onSuccess: async () => {
       toast.success("Category created");
       await qc.invalidateQueries({ queryKey: qk.categories() });
+      autoSync();
     },
     onError,
   });
@@ -225,6 +238,7 @@ export function useCreateCategoryMutation() {
 export function useUpdateCategoryMutation() {
   const qc = useQueryClient();
   const onError = useToastOnError();
+  const autoSync = useAutoSyncTrigger();
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: CategoryUpdate }) =>
       api.updateCategory(id, payload),
@@ -233,6 +247,7 @@ export function useUpdateCategoryMutation() {
       await qc.invalidateQueries({ queryKey: qk.categories() });
       await qc.invalidateQueries({ queryKey: ["transactions"] }); // category labels used in tables
       await qc.invalidateQueries({ queryKey: ["dashboardCharts"] });
+      autoSync();
     },
     onError,
   });
@@ -241,6 +256,7 @@ export function useUpdateCategoryMutation() {
 export function useDeleteCategoryMutation() {
   const qc = useQueryClient();
   const onError = useToastOnError();
+  const autoSync = useAutoSyncTrigger();
   return useMutation({
     mutationFn: ({ id, reassignToCategoryId }: { id: string; reassignToCategoryId: string }) =>
       api.deleteCategory(id, { reassignToCategoryId }),
@@ -249,9 +265,65 @@ export function useDeleteCategoryMutation() {
       await qc.invalidateQueries({ queryKey: ["transactions"] });
       await qc.invalidateQueries({ queryKey: ["dashboardSummary"] });
       await qc.invalidateQueries({ queryKey: ["dashboardCharts"] });
+      autoSync();
     },
     onError,
   });
+}
+
+// --- Google Drive Sync ---
+
+export const driveQk = {
+  status: () => ["drive", "status"] as const,
+};
+
+export function useDriveStatusQuery() {
+  return useQuery({
+    queryKey: driveQk.status(),
+    queryFn: () => api.getDriveStatus(),
+    enabled: api !== undefined, // Avoid issues if api is being swapped
+    staleTime: 30_000, // 30 seconds
+  });
+}
+
+export function useSmartSyncMutation() {
+  const qc = useQueryClient();
+  const onError = useToastOnError();
+  return useMutation({
+    mutationFn: () => api.smartSync(),
+    onSuccess: async (res) => {
+      const conflicts = res.results.filter((r) => r.status === "conflict").length;
+      if (conflicts > 0) {
+        toast.warning(`Sync completed with ${conflicts} conflicts. See Settings.`);
+      } else {
+        // Silently succeed unless there are errors in results
+        const errors = res.results.filter((r) => r.status === "error");
+        if (errors.length > 0) {
+          toast.error(`Sync partially failed: ${errors[0].message}`);
+        }
+      }
+      await qc.invalidateQueries({ queryKey: driveQk.status() });
+      // After sync, data might have changed locally (if pulled).
+      await qc.invalidateQueries();
+    },
+    onError,
+  });
+}
+
+/**
+ * Hook to trigger auto-sync if Drive is connected.
+ * Called after successful mutations that modify data.
+ */
+export function useAutoSyncTrigger() {
+  const { data: status } = useDriveStatusQuery();
+  const { mutate: sync } = useSmartSyncMutation();
+
+  return React.useCallback(() => {
+    if (status?.connected) {
+      console.log("Auto-syncing to Google Drive...");
+      sync();
+    }
+  }, [status, sync]);
 }
 
 

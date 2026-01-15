@@ -187,7 +187,6 @@ export function TransactionDialog(props: {
                     <SelectItem
                       key={c.id}
                       value={c.id}
-                      disabled={isParent}
                       className={cn(indentClass(row.depth), isParent && "font-semibold")}
                     >
                       <div className="flex min-w-0 items-center gap-2">
