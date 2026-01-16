@@ -203,10 +203,10 @@ export function DashboardPage() {
   const prevSummaryQuery = useDashboardSummaryQuery(
     comparison
       ? {
-          ...params,
-          from: comparison.prevFrom,
-          to: comparison.prevTo,
-        }
+        ...params,
+        from: comparison.prevFrom,
+        to: comparison.prevTo,
+      }
       : params,
   );
 
@@ -484,7 +484,7 @@ export function DashboardPage() {
             </div>
           }
         >
-          <DashboardChartsLazy charts={chartsQuery.data} />
+          <DashboardChartsLazy charts={chartsQuery.data} categories={categories} />
         </React.Suspense>
       )}
     </div>

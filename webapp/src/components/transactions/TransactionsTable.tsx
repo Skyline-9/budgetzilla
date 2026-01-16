@@ -22,6 +22,10 @@ import {
   Inbox,
   FilterX,
   Filter,
+  TrendingUp,
+  TrendingDown,
+  CornerDownRight,
+  Minus,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useCategoriesQuery } from "@/api/queries";
@@ -202,7 +206,6 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
         ),
         cell: ({ row }) => {
           const c = categoriesById.get(row.original.categoryId);
-          const arrow = c?.kind === "income" ? "↗" : c?.kind === "expense" ? "↘" : "•";
           const label = c?.name ?? "Unknown";
           return (
             <div className="flex min-w-0 items-center gap-2">
@@ -210,7 +213,13 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
                 className="inline-flex h-6 w-6 items-center justify-center rounded-xl border border-border/60 bg-background/35 text-xs text-muted-foreground"
                 aria-hidden="true"
               >
-                {arrow}
+                {c?.kind === "income" ? (
+                  <TrendingUp className="h-3.5 w-3.5 text-income" />
+                ) : c?.kind === "expense" ? (
+                  <TrendingDown className="h-3.5 w-3.5 text-expense" />
+                ) : (
+                  <Minus className="h-3.5 w-3.5" />
+                )}
               </span>
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold tracking-tight">{label}</div>
@@ -391,9 +400,15 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
                     }}
                   >
                     <span className="shrink-0 text-muted-foreground">
-                      {c.kind === "income" ? "↗" : "↘"}
+                      {c.kind === "income" ? (
+                        <TrendingUp className="h-3.5 w-3.5 text-income" />
+                      ) : (
+                        <TrendingDown className="h-3.5 w-3.5 text-expense" />
+                      )}
                     </span>
-                    {isChild ? <span className="ml-1 shrink-0 text-muted-foreground">↳</span> : null}
+                    {isChild ? (
+                      <CornerDownRight className="h-3.5 w-3.5 ml-1 shrink-0 text-muted-foreground/50" />
+                    ) : null}
                     <span className="ml-2 min-w-0 flex-1 truncate">{c.name}</span>
                   </DropdownMenuCheckboxItem>
                 );
@@ -531,11 +546,11 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
                                 reduceMotion
                                   ? { duration: 0 }
                                   : {
-                                      duration: 0.18,
-                                      ease: [0.16, 1, 0.3, 1],
-                                      opacity: { duration: 0.12 },
-                                      backgroundColor: { duration: 0.55, ease: [0.16, 1, 0.3, 1] },
-                                    }
+                                    duration: 0.18,
+                                    ease: [0.16, 1, 0.3, 1],
+                                    opacity: { duration: 0.12 },
+                                    backgroundColor: { duration: 0.55, ease: [0.16, 1, 0.3, 1] },
+                                  }
                               }
                               style={{ paddingLeft: 12, paddingRight: 12 }}
                               className="overflow-hidden"

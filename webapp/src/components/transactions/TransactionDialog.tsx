@@ -2,7 +2,7 @@ import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Check, DollarSign, StickyNote, Store, Tag, Trash2, X } from "lucide-react";
+import { Calendar, Check, CornerDownRight, DollarSign, StickyNote, Store, Tag, TrendingDown, TrendingUp, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Transaction } from "@/types";
 import { useCategoriesQuery, useCreateTransactionMutation, useDeleteTransactionMutation, useUpdateTransactionMutation } from "@/api/queries";
@@ -191,9 +191,15 @@ export function TransactionDialog(props: {
                     >
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="shrink-0 text-muted-foreground">
-                          {c.kind === "income" ? "↗" : "↘"}
+                          {c.kind === "income" ? (
+                            <TrendingUp className="h-3.5 w-3.5 text-income" />
+                          ) : (
+                            <TrendingDown className="h-3.5 w-3.5 text-expense" />
+                          )}
                         </span>
-                        {isChild ? <span className="shrink-0 text-muted-foreground">↳</span> : null}
+                        {isChild ? (
+                          <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                        ) : null}
                         <span className="min-w-0 flex-1 truncate">{c.name}</span>
                       </div>
                     </SelectItem>

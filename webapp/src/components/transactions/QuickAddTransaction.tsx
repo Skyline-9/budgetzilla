@@ -2,7 +2,7 @@ import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Zap } from "lucide-react";
+import { CornerDownRight, Plus, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -177,9 +177,8 @@ export function QuickAddTransaction() {
             </Label>
           </div>
           <div
-            className={`flex items-center gap-2 rounded-2xl border border-border/60 bg-background/20 px-3 py-1 ${
-              keepValues ? "" : "pointer-events-none opacity-50"
-            }`}
+            className={`flex items-center gap-2 rounded-2xl border border-border/60 bg-background/20 px-3 py-1 ${keepValues ? "" : "pointer-events-none opacity-50"
+              }`}
           >
             <Switch
               id="keep-date"
@@ -259,9 +258,15 @@ export function QuickAddTransaction() {
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="shrink-0 text-muted-foreground">
-                      {row.category.kind === "income" ? "↗" : "↘"}
+                      {row.category.kind === "income" ? (
+                        <TrendingUp className="h-3.5 w-3.5 text-income" />
+                      ) : (
+                        <TrendingDown className="h-3.5 w-3.5 text-expense" />
+                      )}
                     </span>
-                    {row.depth > 0 ? <span className="shrink-0 text-muted-foreground">↳</span> : null}
+                    {row.depth > 0 ? (
+                      <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                    ) : null}
                     <span className="min-w-0 flex-1 truncate">{row.category.name}</span>
                   </div>
                 </SelectItem>

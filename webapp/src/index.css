@@ -83,9 +83,9 @@
     --glow-warm: 251, 146, 60;
 
     /* Chart + picker palettes */
-    --palette-chart-categorical: #60a5fa,#a78bfa,#34d399,#fb7185,#fbbf24,#22d3ee,#c084fc,#f472b6,#93c5fd,#86efac;
-    --palette-chart-tableau: #4E79A7,#F28E2B,#E15759,#76B7B2,#59A14F,#EDC948,#B07AA1,#FF9DA7;
-    --palette-category-colors: #ef4444,#f97316,#84cc16,#22c55e,#06b6d4,#3b82f6,#a855f7;
+    --palette-chart-categorical: #60a5fa, #a78bfa, #34d399, #fb7185, #fbbf24, #22d3ee, #c084fc, #f472b6, #93c5fd, #86efac;
+    --palette-chart-tableau: #4E79A7, #F28E2B, #E15759, #76B7B2, #59A14F, #EDC948, #B07AA1, #FF9DA7;
+    --palette-category-colors: #ef4444, #f97316, #84cc16, #22c55e, #06b6d4, #3b82f6, #a855f7;
   }
 
   .dark {
@@ -168,14 +168,43 @@
     --glow-warm: 251, 146, 60;
 
     /* Chart + picker palettes */
-    --palette-chart-categorical: #60a5fa,#a78bfa,#34d399,#fb7185,#fbbf24,#22d3ee,#c084fc,#f472b6,#93c5fd,#86efac;
-    --palette-chart-tableau: #4E79A7,#F28E2B,#E15759,#76B7B2,#59A14F,#EDC948,#B07AA1,#FF9DA7;
-    --palette-category-colors: #ef4444,#f97316,#84cc16,#22c55e,#06b6d4,#3b82f6,#a855f7;
+    --palette-chart-categorical: #60a5fa, #a78bfa, #34d399, #fb7185, #fbbf24, #22d3ee, #c084fc, #f472b6, #93c5fd, #86efac;
+    --palette-chart-tableau: #4E79A7, #F28E2B, #E15759, #76B7B2, #59A14F, #EDC948, #B07AA1, #FF9DA7;
+    --palette-category-colors: #ef4444, #f97316, #84cc16, #22c55e, #06b6d4, #3b82f6, #a855f7;
+
+    color-scheme: dark;
+  }
+
+  /* Custom Date Picker Styling */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2.5rem;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+    z-index: 10;
+  }
+
+  /* Ensure the picker works well with the wrapper */
+  input[type="date"] {
+    position: relative;
+  }
+
+  /* Support for browsers that might not respect the absolute positioning on the indicator */
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-clear-button {
+    display: none;
+    -webkit-appearance: none;
   }
 
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -186,11 +215,9 @@
 
 @layer utilities {
   .surface-gradient {
-    background-image: radial-gradient(
-        1200px 600px at 12% 0%,
+    background-image: radial-gradient(1200px 600px at 12% 0%,
         rgba(var(--glow-warm), 0.10),
-        transparent 55%
-      ),
+        transparent 55%),
       radial-gradient(900px 420px at 86% 10%, rgba(var(--glow-neutral), 0.08), transparent 60%),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
   }
@@ -201,34 +228,51 @@
 
   /* Tint classes just define the glow color variable; no background fill.
      Pair with .corner-glow for the Apple TV–style corner glow overlay. */
-  .tint-neutral { --glow-rgb: var(--glow-neutral); }
-  .tint-income  { --glow-rgb: var(--glow-income); }
-  .tint-expense { --glow-rgb: var(--glow-expense); }
-  .tint-accent  { --glow-rgb: var(--glow-accent); }
-  .tint-hero    { --glow-rgb: var(--glow-hero); }
-  .tint-warm    { --glow-rgb: var(--glow-warm); }
+  .tint-neutral {
+    --glow-rgb: var(--glow-neutral);
+  }
+
+  .tint-income {
+    --glow-rgb: var(--glow-income);
+  }
+
+  .tint-expense {
+    --glow-rgb: var(--glow-expense);
+  }
+
+  .tint-accent {
+    --glow-rgb: var(--glow-accent);
+  }
+
+  .tint-hero {
+    --glow-rgb: var(--glow-hero);
+  }
+
+  .tint-warm {
+    --glow-rgb: var(--glow-warm);
+  }
 
   /* Apple TV–style corner glow overlay: vivid but small so it reads as a "light leak". */
   .corner-glow {
     position: relative;
   }
+
   .corner-glow::before {
     content: "";
     position: absolute;
     inset: -1px;
     pointer-events: none;
     border-radius: inherit;
-    background: radial-gradient(
-      420px 260px at 0% 0%,
-      rgba(var(--glow-rgb, 56, 189, 248), 0.28),
-      transparent 55%
-    );
+    background: radial-gradient(420px 260px at 0% 0%,
+        rgba(var(--glow-rgb, 56, 189, 248), 0.28),
+        transparent 55%);
   }
 
   /* Hero variant: larger + more saturated so one card can feel like the "north star". */
   .corner-glow-hero {
     position: relative;
   }
+
   .corner-glow-hero::before {
     content: "";
     position: absolute;
@@ -236,22 +280,19 @@
     pointer-events: none;
     border-radius: inherit;
     background:
-      radial-gradient(
-        560px 340px at 0% 0%,
+      radial-gradient(560px 340px at 0% 0%,
         rgba(var(--glow-rgb, 167, 139, 250), 0.36),
-        transparent 60%
-      ),
-      radial-gradient(
-        520px 320px at 100% 0%,
+        transparent 60%),
+      radial-gradient(520px 320px at 100% 0%,
         rgba(var(--glow-rgb, 167, 139, 250), 0.16),
-        transparent 62%
-      );
+        transparent 62%);
   }
 
   /* Hover/focus variant so lists/tables don't constantly glow. */
   .corner-glow-hover {
     position: relative;
   }
+
   .corner-glow-hover::before {
     content: "";
     position: absolute;
@@ -260,12 +301,11 @@
     border-radius: inherit;
     opacity: 0;
     transition: opacity 150ms ease-out;
-    background: radial-gradient(
-      420px 260px at 0% 0%,
-      rgba(var(--glow-rgb, 56, 189, 248), 0.28),
-      transparent 55%
-    );
+    background: radial-gradient(420px 260px at 0% 0%,
+        rgba(var(--glow-rgb, 56, 189, 248), 0.28),
+        transparent 55%);
   }
+
   .corner-glow-hover:hover::before,
   .corner-glow-hover:focus-visible::before {
     opacity: 1;

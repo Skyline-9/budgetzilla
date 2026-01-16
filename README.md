@@ -38,8 +38,7 @@ open dist/Budget.app
 # Terminal 1: Backend
 cd backend
 uv sync
-uv run uvicorn app.main:app --reload
-
+uv run uvicorn app.main:app --host localhost --port 8123 --reload
 # Terminal 2: Frontend
 cd webapp
 npm install

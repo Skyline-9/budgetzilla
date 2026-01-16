@@ -3,7 +3,7 @@ import ReactECharts from "echarts-for-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
 import { TrendingUp, BarChart3, Calendar } from "lucide-react";
-import type { DashboardCharts } from "@/types";
+import type { DashboardCharts, Category } from "@/types";
 import { formatCents, formatDateDisplay, formatMonthKey, formatYmdToShort } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { useTheme } from "@/providers/ThemeProvider";
@@ -65,7 +65,7 @@ function compactNumber(n: number) {
   return nf.format(n);
 }
 
-export function DashboardChartsView({ charts }: { charts: DashboardCharts }) {
+export function DashboardChartsView({ charts, categories }: { charts: DashboardCharts; categories: Category[] }) {
   const { theme } = useTheme();
   const reduceMotion = useReducedMotion();
   const navigate = useNavigate();
@@ -133,19 +133,19 @@ export function DashboardChartsView({ charts }: { charts: DashboardCharts }) {
             <div style="font-weight:700; margin-bottom:6px">${axis}</div>
             <div style="display:flex; justify-content:space-between; gap:12px">
               <span>Income</span><span style="font-variant-numeric: tabular-nums">${formatCents(
-                Math.round(incomeV * 100),
-              )}</span>
+            Math.round(incomeV * 100),
+          )}</span>
             </div>
             <div style="display:flex; justify-content:space-between; gap:12px">
               <span>Expenses</span><span style="font-variant-numeric: tabular-nums">${formatCents(
-                Math.round(expenseV * 100),
-              )}</span>
+            Math.round(expenseV * 100),
+          )}</span>
             </div>
             <div style="height:1px; background:rgba(148,163,184,0.22); margin:8px 0"></div>
             <div style="display:flex; justify-content:space-between; gap:12px">
               <span>Net</span><span style="font-weight:700; font-variant-numeric: tabular-nums">${formatCents(
-                netCents,
-              )}</span>
+            netCents,
+          )}</span>
             </div>
           `;
         },
@@ -279,6 +279,36 @@ export function DashboardChartsView({ charts }: { charts: DashboardCharts }) {
     const months = charts.categoryMonthly.months;
     const series = charts.categoryMonthly.series;
 
+    const catMap = new Map(categories.map((c) => [c.id, c]));
+    const findRootParent = (id: string) => {
+      let curr = catMap.get(id);
+      if (!curr) return { id, name: "Unknown" };
+      while (curr.parentId) {
+        const next = catMap.get(curr.parentId);
+        if (!next) break;
+        curr = next;
+      }
+      return { id: curr.id, name: curr.name };
+    };
+
+    const rolledMap = new Map<string, { id: string; name: string; valuesCents: number[] }>();
+    for (const s of series) {
+      const root = findRootParent(s.categoryId);
+      if (!rolledMap.has(root.id)) {
+        rolledMap.set(root.id, {
+          id: root.id,
+          name: root.name,
+          valuesCents: new Array(months.length).fill(0),
+        });
+      }
+      const grp = rolledMap.get(root.id)!;
+      s.valuesCents.forEach((v, i) => {
+        grp.valuesCents[i] += v;
+      });
+    }
+
+    const finalSeries = Array.from(rolledMap.values());
+
     const isDark = theme === "dark";
     const palette = chartTableauPalette;
 
@@ -300,9 +330,9 @@ export function DashboardChartsView({ charts }: { charts: DashboardCharts }) {
     const sliderHandle = isDark ? "rgba(226,232,240,0.75)" : "rgba(15,23,42,0.35)";
     const sliderHandleBorder = isDark ? "rgba(148,163,184,0.32)" : "rgba(100,116,139,0.28)";
 
-    const seriesOptions = series.map((s, idx) => ({
-      id: s.categoryId,
-      name: s.categoryName,
+    const seriesOptions = finalSeries.map((s, idx) => ({
+      id: s.id,
+      name: s.name,
       type: "bar",
       stack: "expenses",
       // Use a ratio instead of fixed pixels so the bars naturally widen as you zoom into fewer months.
@@ -429,22 +459,79 @@ export function DashboardChartsView({ charts }: { charts: DashboardCharts }) {
   }, [allowAnimation, baseText, chartTableauPalette, charts.categoryMonthly, theme]);
 
   const categoryRankItems = React.useMemo(() => {
-    const sorted = [...charts.categoryShare].sort((a, b) => b.totalCents - a.totalCents);
-    const total = sorted.reduce((acc, c) => acc + c.totalCents, 0) || 1;
+    // 1. Build lookup map for categories
+    const catMap = new Map(categories.map((c) => [c.id, c]));
 
-    // Keep categorical palette separate from the primary UI accent.
+    // 2. Helper to find the top-level parent of any category
+    const findRootParent = (id: string): { id: string; name: string } => {
+      let curr = catMap.get(id);
+      if (!curr) return { id, name: "Unknown" };
+      while (curr.parentId) {
+        const next = catMap.get(curr.parentId);
+        if (!next) break;
+        curr = next;
+      }
+      return { id: curr.id, name: curr.name };
+    };
+
+    // 3. Aggregate flat category spend into root parent groups
+    const rootGroups = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        totalCents: number;
+        children: Map<string, { name: string; totalCents: number }>;
+      }
+    >();
+
+    for (const item of charts.categoryShare) {
+      const root = findRootParent(item.categoryId);
+      if (!rootGroups.has(root.id)) {
+        rootGroups.set(root.id, {
+          id: root.id,
+          name: root.name,
+          totalCents: 0,
+          children: new Map(),
+        });
+      }
+      const group = rootGroups.get(root.id)!;
+      group.totalCents += item.totalCents;
+
+      // If this item is a sub-category (not the root itself), add to breakdown
+      if (item.categoryId !== root.id) {
+        if (!group.children.has(item.categoryId)) {
+          group.children.set(item.categoryId, { name: item.categoryName, totalCents: 0 });
+        }
+        group.children.get(item.categoryId)!.totalCents += item.totalCents;
+      }
+    }
+
+    // 4. Transform to LegendItem array and sort
+    const result = Array.from(rootGroups.values()).sort((a, b) => b.totalCents - a.totalCents);
+    const globalTotal = result.reduce((acc, g) => acc + g.totalCents, 0) || 1;
     const palette = chartCategoricalPalette.slice(0, 6);
 
-    const items: LegendItem[] = sorted.map((c, idx) => ({
-      name: c.categoryName,
-      valueCents: c.totalCents,
-      percent: c.totalCents / total,
-      color: palette[idx % palette.length]!,
-      categoryId: c.categoryId,
-    }));
+    return result.map((g, idx) => {
+      const subItems: LegendItem[] = Array.from(g.children.values())
+        .sort((a, b) => b.totalCents - a.totalCents)
+        .map((child) => ({
+          name: child.name,
+          valueCents: child.totalCents,
+          percent: child.totalCents / g.totalCents, // Share of parent
+          color: "transparent", // used for rendering logic in modified ChartLegend
+        }));
 
-    return items;
-  }, [chartCategoricalPalette, charts.categoryShare]);
+      return {
+        name: g.name,
+        valueCents: g.totalCents,
+        percent: g.totalCents / globalTotal,
+        color: palette[idx % palette.length]!,
+        categoryId: g.id,
+        subItems,
+      };
+    });
+  }, [categories, chartCategoricalPalette, charts.categoryShare]);
 
   const onCategoryClick = React.useCallback(
     (categoryId: string) => {

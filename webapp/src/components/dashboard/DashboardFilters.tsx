@@ -1,5 +1,5 @@
 import React from "react";
-import { CalendarRange, Filter, X } from "lucide-react";
+import { CalendarRange, Filter, TrendingDown, TrendingUp, X } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useCategoriesQuery } from "@/api/queries";
 import { Button } from "@/components/ui/button";
@@ -103,8 +103,12 @@ export function DashboardFilters() {
                   setPatch({ categoryId: Array.from(next) });
                 }}
               >
-                <span className={c.kind === "income" ? "text-income" : "text-expense"}>
-                  {c.kind === "income" ? "↗" : "↘"}
+                <span>
+                  {c.kind === "income" ? (
+                    <TrendingUp className="inline-block h-3.5 w-3.5 text-income" />
+                  ) : (
+                    <TrendingDown className="inline-block h-3.5 w-3.5 text-expense" />
+                  )}
                 </span>{" "}
                 {c.name}
               </DropdownMenuCheckboxItem>

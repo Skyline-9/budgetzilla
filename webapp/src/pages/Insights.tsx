@@ -125,9 +125,37 @@ export function InsightsPage() {
         ? forecastMonthEnd(summaryQuery.data.expenseCents, now.getDate(), { daysInMonth })
         : null;
 
-    const category = chartsQuery.data ? calculatePareto(chartsQuery.data.categoryBreakdown) : null;
-    const topCategory = chartsQuery.data?.categoryBreakdown?.length
-      ? [...chartsQuery.data.categoryBreakdown].sort((a, b) => b.totalCents - a.totalCents)[0]
+    const catMap = new Map(categories.map((c) => [c.id, c]));
+    const findRootParent = (id: string) => {
+      let curr = catMap.get(id);
+      if (!curr) return { id, name: "Unknown" };
+      while (curr.parentId) {
+        const next = catMap.get(curr.parentId);
+        if (!next) break;
+        curr = next;
+      }
+      return { id: curr.id, name: curr.name };
+    };
+
+    const rootBreakdown = chartsQuery.data?.categoryBreakdown
+      ? (() => {
+        const groups = new Map<string, { categoryId: string; categoryName: string; totalCents: number }>();
+        for (const item of chartsQuery.data.categoryBreakdown) {
+          const root = findRootParent(item.categoryId);
+          const existing = groups.get(root.id);
+          if (existing) {
+            existing.totalCents += item.totalCents;
+          } else {
+            groups.set(root.id, { categoryId: root.id, categoryName: root.name, totalCents: item.totalCents });
+          }
+        }
+        return Array.from(groups.values());
+      })()
+      : null;
+
+    const category = rootBreakdown ? calculatePareto(rootBreakdown) : null;
+    const topCategory = rootBreakdown?.length
+      ? [...rootBreakdown].sort((a, b) => b.totalCents - a.totalCents)[0]
       : null;
     const topSharePct =
       category && category.totalCents > 0 && topCategory ? (topCategory.totalCents / category.totalCents) * 100 : null;
@@ -140,8 +168,8 @@ export function InsightsPage() {
     const trend = recent.length && prior.length ? calculateTrend(recent, prior) : null;
     const trendLabel = interval === "day" ? `vs prior ${window} days` : `vs prior ${window} months`;
 
-    return { isThisMonth, forecast, category, topCategory, topSharePct, trend, trendLabel };
-  }, [chartsQuery.data, from, summaryQuery.data, to]);
+    return { isThisMonth, forecast, category, topCategory, topSharePct, trend, trendLabel, rootBreakdown };
+  }, [chartsQuery.data, from, summaryQuery.data, to, categories]);
 
   return (
     <div className="space-y-6">
@@ -236,7 +264,7 @@ export function InsightsPage() {
                 ) : null}
               </div>
               <div className="mt-3 space-y-2">
-                {[...chartsQuery.data.categoryBreakdown]
+                {(derived.rootBreakdown ?? [])
                   .sort((a, b) => b.totalCents - a.totalCents)
                   .slice(0, 6)
                   .map((c) => (
