@@ -1,11 +1,12 @@
 import React from "react";
-import { ChevronDown, ChevronRight, MoreHorizontal, Pencil, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, Plus, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { api } from "@/api";
 import { qk, useCategoriesQuery, useDeleteCategoryMutation } from "@/api/queries";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import type { Category, CategoryKind } from "@/types";
 import { CategoryDialog } from "@/components/categories/CategoryDialog";
 import { CategoryInspectorPanel, CategoryInspectorSheet } from "@/components/categories/CategoryInspector";
@@ -231,6 +232,11 @@ function CategoryTreeRow(props: {
       onDragEnd={onDragEndRow}
     >
       <div className="min-w-0 flex items-start gap-2">
+        {/* Drag handle - indicates draggability per Apple HIG */}
+        <GripVertical 
+          className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing" 
+          aria-hidden 
+        />
         <div className="flex items-center gap-1.5" style={{ marginLeft: row.depth * 14 }}>
           {row.hasChildren ? (
             <button
@@ -371,7 +377,7 @@ function CategoryGroup(props: {
   );
 
   return (
-    <div className="rounded-3xl border border-border/60 bg-card/50 p-4 shadow-soft-lg flex min-h-0 flex-col">
+    <div className="rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg flex min-h-0 flex-col">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-semibold tracking-tight">{title}</div>
@@ -419,8 +425,14 @@ function CategoryGroup(props: {
             />
           ))
         ) : (
-          <div className="rounded-2xl border border-border/60 bg-background/30 p-4 text-sm text-muted-foreground">
-            {isSearching ? "No matching categories." : "No categories yet."}
+          <div className="rounded-2xl border border-border/60 bg-background/30 p-6 text-center">
+            <FolderOpen className="mx-auto h-10 w-10 text-muted-foreground/40" />
+            <div className="mt-2 text-sm font-medium text-muted-foreground">
+              {isSearching ? "No matching categories" : "No categories yet"}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground/70">
+              {isSearching ? "Try a different search term." : "Create your first category to get started."}
+            </div>
           </div>
         )}
       </div>
@@ -472,7 +484,7 @@ function CategoriesSidePanel(props: {
   const kindPill = selectedKind ? (selectedKind === "expense" ? "Expense" : "Income") : "Mixed types";
 
   return (
-    <div className="h-[calc(100dvh-7.25rem)] rounded-3xl border border-border/60 bg-card/50 p-4 shadow-soft-lg flex min-h-0 flex-col">
+    <div className="h-[calc(100dvh-7.25rem)] rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg flex min-h-0 flex-col">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -614,6 +626,7 @@ export function CategoriesPage() {
   const from = searchParams.get("from") ?? undefined;
   const to = searchParams.get("to") ?? undefined;
   const qc = useQueryClient();
+  const { confirm } = useConfirmDialog();
 
   const [showIds, setShowIds] = useLocalStorageBoolean("budget.categories.showIds", false);
   const [collapsedIds, setCollapsedIds] = React.useState<Set<string>>(() => new Set());
@@ -918,7 +931,12 @@ export function CategoriesPage() {
   async function bulkSetActive(nextActive: boolean) {
     if (!selectedCount) return;
     if (!nextActive) {
-      const ok = window.confirm(`Archive ${selectedCount} categor${selectedCount === 1 ? "y" : "ies"}?`);
+      const ok = await confirm({
+        title: "Archive categories",
+        description: `Are you sure you want to archive ${selectedCount} categor${selectedCount === 1 ? "y" : "ies"}? Archived categories won't appear in pickers but historical data is preserved.`,
+        confirmText: "Archive",
+        cancelText: "Cancel",
+      });
       if (!ok) return;
     }
     setBulkBusy(true);
@@ -996,6 +1014,7 @@ export function CategoriesPage() {
           </DropdownMenu>
 
           <Button
+            variant="secondary"
             onClick={() => {
               openCreateDialog("expense");
             }}
@@ -1007,20 +1026,20 @@ export function CategoriesPage() {
       </div>
 
       {categoriesQuery.isLoading ? (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
-          <Skeleton className="h-[420px]" />
-          <Skeleton className="h-[420px]" />
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
+          <Skeleton className="h-[350px] sm:h-[420px]" />
+          <Skeleton className="h-[350px] sm:h-[420px]" />
           <Skeleton className="hidden h-[420px] xl:block" />
         </div>
       ) : categoriesQuery.isError ? (
-        <div className="rounded-3xl border border-border/60 bg-card/50 p-6 shadow-soft-lg">
+        <div className="rounded-3xl border border-border/60 bg-card/90 p-6 shadow-soft-lg">
           <div className="text-sm font-semibold">Couldn't load categories</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Try again, or switch API mode back to mock.
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
           <CategoryGroup
             title="Expenses"
             kind="expense"

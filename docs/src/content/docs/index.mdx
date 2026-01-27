@@ -1,0 +1,50 @@
+---
+title: Budget Documentation
+description: Local-first budgeting that just works.
+template: splash
+hero:
+  tagline: React frontend • SQLite WASM • Native macOS app — All your data stays local.
+  image:
+    file: ../../assets/logo.png
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/your-username/budget
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Features
+
+<CardGrid stagger>
+	<Card title="Local-First" icon="laptop">
+		All data stored locally in your browser using SQLite WASM with OPFS persistence. No server required.
+	</Card>
+	<Card title="Transaction Management" icon="document">
+		Track spending and income with categories, budgets, and powerful search.
+	</Card>
+	<Card title="Visual Dashboard" icon="bars">
+		Beautiful charts and insights to understand your spending patterns.
+	</Card>
+	<Card title="Optional Cloud Sync" icon="cloud">
+		Backup to Google Drive when you want, but never required.
+	</Card>
+</CardGrid>
+
+## Quick Links
+
+<CardGrid>
+	<Card title="Quick Start" icon="rocket">
+		Get up and running in minutes. [Read the guide →](/getting-started/quick-start/)
+	</Card>
+	<Card title="Features" icon="list-format">
+		Explore all features Budget has to offer. [Learn more →](/features/transactions/)
+	</Card>
+	<Card title="Development" icon="setting">
+		Contribute to Budget or build the macOS app. [Developer docs →](/development/architecture/)
+	</Card>
+</CardGrid>

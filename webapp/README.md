@@ -52,4 +52,31 @@ Filters are stored in the URL query string and preserved when navigating via the
 - `min=...` (dollars, absolute)
 - `max=...` (dollars, absolute)
 
+### Building Tauri Desktop App
 
+#### Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install) (install via `rustup`)
+- Platform-specific dependencies:
+  - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
+  - **Windows**: Microsoft Visual Studio C++ Build Tools, WebView2
+  - **Linux**: `webkit2gtk`, `libappindicator3`, `librsvg2` (see [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites/))
+
+#### Development
+
+```bash
+npm run tauri:dev
+```
+
+This starts the Vite dev server and opens the Tauri window with hot-reload.
+
+#### Production Build
+
+```bash
+npm run tauri:build
+```
+
+Build artifacts are output to `src-tauri/target/release/bundle/`:
+- **macOS**: `.app` and `.dmg`
+- **Windows**: `.exe` and `.msi`
+- **Linux**: `.deb` and `.AppImage`

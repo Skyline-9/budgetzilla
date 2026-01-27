@@ -2,7 +2,7 @@ import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCategoriesQuery, useTransactionsQuery } from "@/api/queries";
 import type { Transaction } from "@/types";
-import { QuickAddTransaction } from "@/components/transactions/QuickAddTransaction";
+
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -62,17 +62,15 @@ export function TransactionsPage() {
         </div>
       </div>
 
-      <QuickAddTransaction />
-
       {categoriesQuery.isLoading || txnsQuery.isLoading ? (
-        <div className="rounded-3xl border border-border/60 bg-card/50 p-4 shadow-soft-lg">
+        <div className="rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg">
           <div className="space-y-3">
             <Skeleton className="h-6 w-40" />
             <Skeleton className="h-[560px] w-full" />
           </div>
         </div>
       ) : categoriesQuery.isError || txnsQuery.isError ? (
-        <div className="rounded-3xl border border-border/60 bg-card/50 p-6 shadow-soft-lg">
+        <div className="rounded-3xl border border-border/60 bg-card/90 p-6 shadow-soft-lg">
           <div className="text-sm font-semibold">Couldn’t load transactions</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Try again, or switch API mode back to mock.

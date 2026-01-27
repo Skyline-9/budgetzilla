@@ -1,5 +1,7 @@
 import React from "react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 import dotsOverlayUrl from "@/assets/dashboard/dots-overlay.svg";
 
 export type MetricDelta = {
@@ -99,11 +101,29 @@ function Sparkline({
   const max = Math.max(...values);
   const range = max - min || 1;
 
-  const points = values.map((v, i) => {
-    const x = (i / (values.length - 1)) * width;
-    const y = height - ((v - min) / range) * height;
-    return `${x.toFixed(2)},${y.toFixed(2)}`;
-  });
+  const points = values.map((v, i) => ({
+    x: (i / (values.length - 1)) * width,
+    y: height - ((v - min) / range) * height,
+  }));
+
+  // Create smooth curve using cubic bezier spline (Catmull-Rom to Bezier conversion)
+  const tension = 0.3;
+  let d = `M ${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(0, i - 1)];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[Math.min(points.length - 1, i + 2)];
+
+    // Control points for cubic bezier
+    const cp1x = p1.x + (p2.x - p0.x) * tension;
+    const cp1y = p1.y + (p2.y - p0.y) * tension;
+    const cp2x = p2.x - (p3.x - p1.x) * tension;
+    const cp2y = p2.y - (p3.y - p1.y) * tension;
+
+    d += ` C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
+  }
 
   return (
     <svg
@@ -112,7 +132,14 @@ function Sparkline({
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      <polyline fill="none" stroke="currentColor" strokeWidth="1.75" points={points.join(" ")} />
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d={d}
+      />
     </svg>
   );
 }
@@ -128,6 +155,7 @@ export function MetricCard({
   emoji,
   icon,
   showDots = false,
+  helpContent,
   className,
 }: {
   title: string;
@@ -140,14 +168,17 @@ export function MetricCard({
   emoji?: string;
   icon?: React.ReactNode;
   showDots?: boolean;
+  helpContent?: React.ReactNode;
   className?: string;
 }) {
   const valueText = useAutoScaleText({ deps: [value] });
 
   return (
     <div
+      role="region"
+      aria-label={`${title} metric card`}
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/35",
+        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/85",
         variant === "hero" ? "corner-glow-hero" : "corner-glow",
         tone === "income" && "tint-income",
         tone === "expense" && "tint-expense",
@@ -156,8 +187,9 @@ export function MetricCard({
         tone === "hero" && "tint-hero",
         tone === "warm" && "tint-warm",
         variant === "hero" ? "p-6 md:p-7 shadow-lift hover:-translate-y-1" : "p-5 hover:-translate-y-0.5",
-        "transition-transform duration-150 ease-out",
-        "hover:bg-card/45 hover:shadow-lift",
+        "transition-all duration-150 ease-out",
+        "hover:bg-card/90 hover:shadow-lift",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
     >
@@ -171,7 +203,7 @@ export function MetricCard({
           <div
             className={cn(
               "flex items-center gap-2",
-              "text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground",
+              "text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground",
               variant === "hero" && "text-xs text-foreground/70",
             )}
           >
@@ -195,6 +227,7 @@ export function MetricCard({
               </span>
             ) : null}
             <span>{title}</span>
+            {helpContent && <HelpTooltip content={helpContent} />}
           </div>
           <div
             className={cn(
@@ -234,23 +267,26 @@ export function MetricCard({
 
       {delta ? (
         <div className={cn("mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs", variant === "hero" && "text-sm")}>
-          <span className="text-foreground/70">{delta.label}</span>
+          <span className="text-muted-foreground">{delta.label}</span>
           <span
             className={cn(
-              "font-semibold tabular-nums",
+              "inline-flex items-center gap-1 font-semibold tabular-nums",
               delta.intent === "positive" && "text-income",
               delta.intent === "negative" && "text-danger",
-              delta.intent === "neutral" && "text-foreground/70",
+              delta.intent === "neutral" && "text-muted-foreground",
             )}
           >
+            {delta.intent === "positive" && <TrendingUp className="h-3 w-3" aria-hidden />}
+            {delta.intent === "negative" && <TrendingDown className="h-3 w-3" aria-hidden />}
+            {delta.intent === "neutral" && <Minus className="h-3 w-3" aria-hidden />}
             {delta.valueText}
           </span>
           {delta.subText ? (
-            <span className="text-foreground/60 tabular-nums">{delta.subText}</span>
+            <span className="text-muted-foreground tabular-nums">{delta.subText}</span>
           ) : null}
         </div>
       ) : (
-        <div className="mt-4 text-xs text-foreground/50">—</div>
+        <div className="mt-4 text-xs text-muted-foreground">—</div>
       )}
     </div>
   );

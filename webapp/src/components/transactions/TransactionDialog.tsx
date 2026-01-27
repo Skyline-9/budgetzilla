@@ -2,11 +2,13 @@ import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Check, CornerDownRight, DollarSign, StickyNote, Store, Tag, TrendingDown, TrendingUp, Trash2, X } from "lucide-react";
+import { Check, CornerDownRight, DollarSign, StickyNote, Store, Tag, TrendingDown, TrendingUp, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Transaction } from "@/types";
 import { useCategoriesQuery, useCreateTransactionMutation, useDeleteTransactionMutation, useUpdateTransactionMutation } from "@/api/queries";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +51,7 @@ export function TransactionDialog(props: {
   const createTxn = useCreateTransactionMutation();
   const updateTxn = useUpdateTransactionMutation();
   const deleteTxn = useDeleteTransactionMutation();
+  const { confirm } = useConfirmDialog();
 
   const categories = categoriesQuery.data ?? [];
   const categoriesById = React.useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
@@ -139,11 +142,12 @@ export function TransactionDialog(props: {
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="txn-date" className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                Date
-              </Label>
-              <Input id="txn-date" type="date" {...form.register("date")} />
+              <Label htmlFor="txn-date">Date</Label>
+              <DatePicker
+                id="txn-date"
+                value={form.watch("date")}
+                onChange={(date) => form.setValue("date", date ?? "", { shouldValidate: true })}
+              />
               {form.formState.errors.date?.message && (
                 <div className="text-xs text-danger">{form.formState.errors.date.message}</div>
               )}
@@ -159,6 +163,22 @@ export function TransactionDialog(props: {
                 inputMode="decimal"
                 placeholder="e.g. 42.50"
                 {...form.register("amount")}
+                onKeyDown={(e) => {
+                  // Allow: backspace, delete, tab, escape, enter, decimal point
+                  if (
+                    ["Backspace", "Delete", "Tab", "Escape", "Enter", "."].includes(e.key) ||
+                    // Allow Ctrl/Cmd+A, Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+X
+                    ((e.ctrlKey || e.metaKey) && ["a", "c", "v", "x"].includes(e.key.toLowerCase())) ||
+                    // Allow arrow keys
+                    e.key.startsWith("Arrow")
+                  ) {
+                    return;
+                  }
+                  // Block non-numeric
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
               />
               {form.formState.errors.amount?.message && (
                 <div className="text-xs text-danger">{form.formState.errors.amount.message}</div>
@@ -243,7 +263,14 @@ export function TransactionDialog(props: {
                 className="sm:mr-auto"
                 disabled={submitting}
                 onClick={async () => {
-                  if (!confirm("Delete this transaction?")) return;
+                  const confirmed = await confirm({
+                    title: "Delete transaction",
+                    description: "Are you sure you want to delete this transaction? This action cannot be undone.",
+                    confirmText: "Delete",
+                    cancelText: "Cancel",
+                    variant: "destructive",
+                  });
+                  if (!confirmed) return;
                   await deleteTxn.mutateAsync({ id: initial.id, transaction: initial });
                   onOpenChange(false);
                 }}

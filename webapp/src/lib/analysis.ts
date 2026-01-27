@@ -124,6 +124,184 @@ export function calculateTrend(
   return { percentChange, direction };
 }
 
+export type BudgetTip = {
+  id: string;
+  type: "warning" | "caution" | "success" | "info";
+  title: string;
+  message: string;
+  priority: number;
+};
+
+export type BudgetTipParams = {
+  summary: { incomeCents: number; expenseCents: number; savingsRate: number };
+  trend?: { direction: "up" | "down" | "stable"; percentChange: number } | null;
+  forecast?: { projected: number } | null;
+  budgetCents?: number | null;
+  topCategory?: { name: string; sharePct: number } | null;
+  recurringTotalCents?: number;
+  weekendAnalysis?: { ratio: number; weekendAvgCents: number; weekdayAvgCents: number } | null;
+};
+
+export function generateBudgetTips(params: BudgetTipParams): BudgetTip[] {
+  const tips: BudgetTip[] = [];
+  const { summary, trend, forecast, budgetCents, topCategory, recurringTotalCents, weekendAnalysis } = params;
+
+  // Priority 10: Spending exceeds income
+  if (summary.savingsRate < 0) {
+    tips.push({
+      id: "negative-savings",
+      type: "warning",
+      title: "Overspending",
+      message: "Spending exceeds income this period. Review expenses to find areas to cut back.",
+      priority: 10,
+    });
+  }
+
+  // Priority 9: On track to exceed budget
+  if (forecast && budgetCents && budgetCents > 0 && forecast.projected > budgetCents * 1.1) {
+    const overBy = forecast.projected - budgetCents;
+    const overByDollars = Math.round(overBy / 100);
+    tips.push({
+      id: "over-budget-forecast",
+      type: "warning",
+      title: "Budget Alert",
+      message: `Projected to exceed budget by $${overByDollars}. Consider reducing discretionary spending.`,
+      priority: 9,
+    });
+  }
+
+  // Priority 8: Spending trending up significantly
+  if (trend && trend.direction === "up" && trend.percentChange >= 20) {
+    tips.push({
+      id: "spending-trending-up",
+      type: "caution",
+      title: "Spending Up",
+      message: `Spending is up ${Math.round(trend.percentChange)}% vs prior period. Watch for lifestyle creep.`,
+      priority: 8,
+    });
+  }
+
+  // Priority 7: Low savings rate (but not negative)
+  if (summary.savingsRate >= 0 && summary.savingsRate < 0.1 && summary.incomeCents > 0) {
+    tips.push({
+      id: "low-savings-rate",
+      type: "caution",
+      title: "Low Savings",
+      message: "Savings rate is below 10%. Financial experts recommend saving at least 20% of income.",
+      priority: 7,
+    });
+  }
+
+  // Priority 6: Top category dominates spending
+  if (topCategory && topCategory.sharePct > 50) {
+    tips.push({
+      id: "category-concentration",
+      type: "info",
+      title: "Concentrated Spending",
+      message: `${Math.round(topCategory.sharePct)}% of spending is in ${topCategory.name}. Diversifying may reduce risk.`,
+      priority: 6,
+    });
+  }
+
+  // Priority 5: High recurring/subscription spend
+  if (recurringTotalCents && summary.incomeCents > 0) {
+    const recurringRatio = recurringTotalCents / summary.incomeCents;
+    if (recurringRatio > 0.3) {
+      tips.push({
+        id: "high-subscriptions",
+        type: "caution",
+        title: "Subscription Load",
+        message: `Recurring payments are ${Math.round(recurringRatio * 100)}% of income. Review subscriptions for unused services.`,
+        priority: 5,
+      });
+    }
+  }
+
+  // Priority 4: Weekend spending significantly higher
+  if (weekendAnalysis && weekendAnalysis.ratio > 1.4 && weekendAnalysis.weekdayAvgCents > 0) {
+    const pctHigher = Math.round((weekendAnalysis.ratio - 1) * 100);
+    tips.push({
+      id: "weekend-spending",
+      type: "info",
+      title: "Weekend Pattern",
+      message: `Weekend spending is ${pctHigher}% higher than weekdays. Planning weekend activities may help.`,
+      priority: 4,
+    });
+  }
+
+  // Priority 3: Good savings rate (positive feedback)
+  if (summary.savingsRate >= 0.2 && summary.incomeCents > 0) {
+    tips.push({
+      id: "good-savings",
+      type: "success",
+      title: "On Track",
+      message: `Great job! You're saving ${Math.round(summary.savingsRate * 100)}% of your income.`,
+      priority: 3,
+    });
+  }
+
+  // Priority 2: Spending trending down (positive)
+  if (trend && trend.direction === "down" && trend.percentChange <= -10) {
+    tips.push({
+      id: "spending-down",
+      type: "success",
+      title: "Spending Down",
+      message: `Spending is down ${Math.round(Math.abs(trend.percentChange))}% vs prior period. Keep it up!`,
+      priority: 2,
+    });
+  }
+
+  return tips.sort((a, b) => b.priority - a.priority);
+}
+
+export function analyzeWeekendSpending(transactions: Transaction[]): {
+  weekdayAvgCents: number;
+  weekendAvgCents: number;
+  weekdayTotalCents: number;
+  weekendTotalCents: number;
+  weekdayCount: number;
+  weekendCount: number;
+  ratio: number;
+} {
+  let weekdayTotal = 0;
+  let weekendTotal = 0;
+  let weekdayCount = 0;
+  let weekendCount = 0;
+
+  for (const t of transactions) {
+    const amount = Number(t.amountCents);
+    if (!Number.isFinite(amount) || amount >= 0) continue;
+
+    const d = parseISO(t.date);
+    if (!isValid(d)) continue;
+
+    const day = getDay(d);
+    const absAmount = Math.abs(amount);
+
+    if (day === 0 || day === 6) {
+      weekendTotal += absAmount;
+      weekendCount++;
+    } else {
+      weekdayTotal += absAmount;
+      weekdayCount++;
+    }
+  }
+
+  const weekdayAvg = weekdayCount > 0 ? weekdayTotal / weekdayCount : 0;
+  const weekendAvg = weekendCount > 0 ? weekendTotal / weekendCount : 0;
+  const ratio = weekdayAvg > 0 ? weekendAvg / weekdayAvg : 0;
+
+  return {
+    weekdayAvgCents: Math.round(weekdayAvg),
+    weekendAvgCents: Math.round(weekendAvg),
+    weekdayTotalCents: weekdayTotal,
+    weekendTotalCents: weekendTotal,
+    weekdayCount,
+    weekendCount,
+    ratio,
+  };
+}
+
 export function findRecurringTransactions(
   transactions: Transaction[],
   opts?: { minCount?: number; amountBucketCents?: number },

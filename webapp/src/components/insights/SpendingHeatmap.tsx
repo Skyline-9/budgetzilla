@@ -25,8 +25,8 @@ function ChartCard({
   return (
     <div
       className={cn(
-        "group relative rounded-2xl border border-border/60 bg-card/35 p-5 overflow-hidden",
-        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/45 hover:shadow-lift",
+        "group relative rounded-2xl border border-border/60 bg-card/85 p-5 overflow-hidden",
+        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-lift",
         "corner-glow tint-neutral",
         className,
       )}

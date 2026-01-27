@@ -1,6 +1,7 @@
 import React from "react";
 import { Copy, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useCreateTransactionMutation, useDeleteTransactionMutation } from "@/api/queries";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import type { Transaction } from "@/types";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,6 +14,7 @@ type Props = {
 export function TableRowActions({ transaction, onEdit }: Props) {
   const createTxn = useCreateTransactionMutation();
   const deleteTxn = useDeleteTransactionMutation();
+  const { confirm } = useConfirmDialog();
 
   const busy = createTxn.isPending || deleteTxn.isPending;
 
@@ -27,7 +29,14 @@ export function TableRowActions({ transaction, onEdit }: Props) {
   }
 
   async function handleDelete() {
-    if (!confirm("Delete this transaction?")) return;
+    const confirmed = await confirm({
+      title: "Delete transaction",
+      description: "Are you sure you want to delete this transaction? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
     await deleteTxn.mutateAsync({ id: transaction.id, transaction });
   }
 

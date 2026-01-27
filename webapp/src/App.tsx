@@ -3,6 +3,9 @@ import { Toaster } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider, useTheme } from "@/providers/ThemeProvider";
+import { ConfirmDialogProvider } from "@/hooks/useConfirmDialog";
+import { ScreenReaderAnnouncerProvider } from "@/components/ui/screen-reader-announcer";
+import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { CategoriesPage } from "@/pages/Categories";
 import { DashboardPage } from "@/pages/Dashboard";
 import { HelpPage } from "@/pages/Help";
@@ -16,33 +19,38 @@ function AppInner() {
 
   return (
     <QueryProvider>
-      <TooltipProvider delayDuration={120}>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppShell />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/insights" element={<InsightsPage />} />
-              <Route path="/transactions" element={<TransactionsPage />} />
-              <Route path="/categories" element={<CategoriesPage />} />
-              <Route path="/help" element={<HelpPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+      <ConfirmDialogProvider>
+        <ScreenReaderAnnouncerProvider>
+          <TooltipProvider delayDuration={120}>
+            <BrowserRouter>
+            <Routes>
+              <Route element={<AppShell />}>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/insights" element={<InsightsPage />} />
+                <Route path="/transactions" element={<TransactionsPage />} />
+                <Route path="/categories" element={<CategoriesPage />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+              </Route>
+            </Routes>
+              <WelcomeModal />
+            </BrowserRouter>
 
-        <Toaster
-          theme={theme}
-          richColors
-          position="top-right"
-          toastOptions={{
-            classNames: {
-              toast: "bg-card text-card-foreground border border-border shadow-soft-lg rounded-xl",
-              success: "border-primary/35 bg-primary/10",
-            },
-          }}
-        />
-      </TooltipProvider>
+            <Toaster
+              theme={theme}
+              richColors
+              position="top-right"
+              toastOptions={{
+                classNames: {
+                  toast: "bg-card text-card-foreground border border-border shadow-soft-lg rounded-xl",
+                  success: "border-primary/35 bg-primary/10",
+                },
+              }}
+            />
+          </TooltipProvider>
+        </ScreenReaderAnnouncerProvider>
+      </ConfirmDialogProvider>
     </QueryProvider>
   );
 }

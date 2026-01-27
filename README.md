@@ -6,8 +6,8 @@
 
 <p align="center">
   <strong>Local-first budgeting that just works.</strong><br/>
-  React frontend • FastAPI backend • Native macOS app<br/>
-  All your data stays local in CSV files with automatic backups.
+  React frontend • SQLite WASM • Native macOS app<br/>
+  All your data stays local in your browser with optional Google Drive sync.
 </p>
 
 <p align="center">
@@ -30,19 +30,14 @@ open dist/Budget.app
 
 **First time?** The script auto-builds everything. Just make sure you have:
 - Xcode Command Line Tools: `xcode-select --install`
-- Node.js, Python 3.11+, and [uv](https://github.com/astral-sh/uv)
+- Node.js 18+
 
 ### Or Run in Browser (Development)
 
 ```bash
-# Terminal 1: Backend
-cd backend
-uv sync
-uv run uvicorn app.main:app --host localhost --port 8123 --reload
-# Terminal 2: Frontend
 cd webapp
 npm install
-npm run dev:real
+npm run dev
 # Open http://localhost:5173
 ```
 
@@ -54,9 +49,10 @@ npm run dev:real
 - 📊 **Visual dashboard** with spending trends and charts
 - 🔍 **Fast search** (Cmd+K) across all transactions
 - ⌨️ **Keyboard shortcuts** (N to add transaction)
-- 💾 **Local CSV storage** with automatic backups
-- ☁️ **Optional Google Drive sync** (coming soon)
+- 💾 **Local SQLite storage** in your browser (OPFS)
+- ☁️ **Optional Google Drive sync** for backup
 - 🎨 **Modern UI** with dark mode and smooth animations
+- 🚀 **Zero backend** - runs entirely in your browser
 
 ---
 
@@ -64,52 +60,17 @@ npm run dev:real
 
 ```
 budget/
-├── backend/          Python FastAPI + CSV storage
-├── webapp/           React + TypeScript + Vite
+├── webapp/           React + TypeScript + SQLite WASM
+│   ├── src/
+│   │   ├── api/      API client layer
+│   │   ├── db/       SQLite database operations
+│   │   ├── services/ Google Drive sync, import/export
+│   │   └── components/  UI components
 ├── macos-app/        Swift wrapper + Rust build tool
 │   ├── build_tool/   Fast incremental build system
 │   └── Sources/      Native macOS window & menus
 └── dist/             Built .app bundles
 ```
-
----
-
-## 🏗 Building the macOS App
-
-### One Command Build
-
-```bash
-./build_mac_app.sh
-```
-
-Creates `dist/Budget.app` with everything bundled inside.
-
-### Build Options
-
-```bash
-CLEAN=1 ./build_mac_app.sh              # Full rebuild
-DEV_MODE=1 ./build_mac_app.sh           # Fast frontend-only (UI dev)
-VERBOSE=1 ./build_mac_app.sh            # Show detailed output
-DRY_RUN=1 ./build_mac_app.sh            # Preview without building
-
-# Customize
-APP_NAME="MyBudget" APP_VERSION="2.0" ./build_mac_app.sh
-
-# Code sign
-CODESIGN_IDENTITY="Developer ID..." ./build_mac_app.sh
-```
-
-### How It Works
-
-The build system (written in Rust) is **smart and fast**:
-
-1. ⚡ **Parallel builds** — Frontend, backend, and Swift compile simultaneously
-2. 🎯 **Incremental** — Only rebuilds what changed (timestamp-based)
-3. 🚀 **Optimized PyInstaller** — ~40% faster with smart exclusions
-4. 🎨 **Auto icon generation** — Flattens PNG transparency for macOS
-5. 📦 **No Rust required** — Prebuilt universal binary included
-
-**Performance:** ~40% faster clean builds, ~80% faster incremental vs bash scripts.
 
 ---
 
@@ -119,19 +80,38 @@ The build system (written in Rust) is **smart and fast**:
 
 ```bash
 cd webapp
-npm run dev  # Mock API mode (default)
+npm run dev  # Local SQLite mode (default)
 ```
 
 Open `http://localhost:5173` — hot reload enabled.
 
-### Full Stack Development
+### Building Tauri Desktop App
+
+**Prerequisites:**
+- [Rust](https://www.rust-lang.org/tools/install) (install via `rustup`)
+- macOS: Xcode Command Line Tools (`xcode-select --install`)
+- Windows: Microsoft Visual Studio C++ Build Tools, WebView2
+- Linux: `webkit2gtk`, `libappindicator3`, `librsvg2`
+
+**Development:**
+```bash
+cd webapp
+npm run tauri:dev
+```
+
+**Production Build:**
+```bash
+cd webapp
+npm run tauri:build
+```
+
+Build artifacts output to `webapp/src-tauri/target/release/bundle/` (`.app`, `.dmg`, `.exe`, `.msi`, `.deb`, `.AppImage`).
+
+### API Modes
 
 ```bash
-# Terminal 1: Backend with auto-reload
-cd backend && uv run uvicorn app.main:app --reload
-
-# Terminal 2: Frontend with real API
-cd webapp && VITE_API_MODE=real npm run dev
+npm run dev          # Local mode - SQLite WASM (default)
+npm run dev:mock     # Mock mode - in-memory mock data
 ```
 
 ### Fast macOS App Iteration
@@ -151,27 +131,32 @@ open dist/Budget.app           # Manually restart
 
 ## 📊 Data Storage
 
-All data lives in `backend/data/`:
+Data is stored locally in your browser using SQLite WASM with OPFS persistence:
 
-```
-backend/data/
-├── transactions.csv     Your transaction data
-├── categories.csv       Category definitions
-├── budgets.csv          Budget allocations
-├── config.json          Schema version
-└── backups/             Timestamped backups (every write)
-```
+- **Transactions** — Your spending and income records
+- **Categories** — Expense and income categorization
+- **Budgets** — Monthly budget allocations
 
-**No database required.** CSV files are human-readable and version-control friendly.
+### Export Options
+
+- CSV export for individual data types
+- Excel (XLSX) workbook with all data
+- Google Drive sync for cloud backup
+
+### Import Options
+
+- Cashew CSV import (popular budgeting app)
+- Legacy CSV migration from previous backend versions
 
 ---
 
 ## 🛠 Tech Stack
 
 - **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Radix UI, TanStack Query
-- **Backend:** FastAPI, Python 3.11+, Pandas, uvicorn
-- **Build:** Rust (orchestrator), PyInstaller, SwiftPM
-- **macOS App:** Swift, WKWebView
+- **Database:** SQLite WASM (sql.js) with OPFS persistence
+- **Sync:** Google Drive API via Google Identity Services
+- **Build:** Rust (orchestrator), SwiftPM
+- **macOS App:** Swift, WKWebView with local HTTP server
 
 ---
 
@@ -191,6 +176,11 @@ CLEAN=1 VERBOSE=1 ./build_mac_app.sh
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
+
+**Browser storage issues:**
+- Check that your browser supports OPFS (Chrome, Edge, Firefox)
+- Ensure the site is not in private/incognito mode
+- Check storage quota in browser settings
 
 ---
 

@@ -8,11 +8,12 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: "bg-accent/60 text-foreground",
-        subtle: "bg-card/40 text-muted-foreground",
+        subtle: "bg-card/85 text-muted-foreground",
         success: "bg-primary/15 text-primary border-primary/30",
         income: "bg-income/15 text-income border-income/30",
         expense: "bg-expense/15 text-expense border-expense/30",
         danger: "bg-danger/15 text-danger border-danger/30",
+        info: "bg-info/15 text-info border-info/30",
       },
     },
     defaultVariants: {

@@ -11,8 +11,8 @@ import {
   startOfMonth,
   subMonths,
 } from "date-fns";
-import { Plus, TrendingUp, TrendingDown, Minus, PiggyBank } from "lucide-react";
-import { useOutletContext, useSearchParams } from "react-router-dom";
+import { TrendingUp, TrendingDown, Minus, PiggyBank } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import {
   useCategoriesQuery,
   useDashboardChartsQuery,
@@ -20,12 +20,10 @@ import {
   useOverallBudgetsQuery,
 } from "@/api/queries";
 import { ActiveFilterChips, type DashboardFilterState } from "@/components/dashboard/ActiveFilterChips";
-import { FilterBar } from "@/components/dashboard/FilterBar";
 import { MetricCard, type MetricDelta } from "@/components/dashboard/MetricCard";
 import { BudgetCard } from "@/components/dashboard/BudgetCard";
 import { QuickInsights } from "@/components/dashboard/QuickInsights";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { AnimatedMoneyCents } from "@/components/motion/AnimatedNumber";
 import { cn } from "@/lib/cn";
 import { formatCents, formatPercent01 } from "@/lib/format";
@@ -130,7 +128,6 @@ function formatSignedPp(diff: number) {
 }
 
 export function DashboardPage() {
-  const { openAddTransaction } = useOutletContext<{ openAddTransaction: () => void }>();
   const [sp, setSp] = useSearchParams();
   const from = readString(sp, "from");
   const to = readString(sp, "to");
@@ -326,32 +323,12 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header: title + controls (Tableau-like) */}
+      {/* Header */}
       <section className="space-y-3">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-[220px]">
-            <div className="text-2xl font-semibold tracking-tight">Dashboard</div>
-            <div className="mt-1 text-sm text-muted-foreground text-balance">
-              {rangeLabel}. Click a category in charts to filter Transactions.
-            </div>
-          </div>
-
-          <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:min-w-[540px]">
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <FilterBar filters={filters} onChange={setFilters} />
-              <Button
-                onClick={openAddTransaction}
-                className="shrink-0"
-                aria-keyshortcuts="N"
-                title="Shortcut: N"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add Transaction</span>
-                <kbd className="hidden sm:inline-flex items-center rounded-lg border border-primary-foreground/25 bg-primary-foreground/10 px-2 py-0.5 text-[11px] font-semibold text-primary-foreground/90">
-                  N
-                </kbd>
-              </Button>
-            </div>
+        <div>
+          <div className="text-2xl font-semibold tracking-tight">Dashboard</div>
+          <div className="mt-1 text-sm text-muted-foreground text-balance">
+            {rangeLabel}. Click a category in charts to filter Transactions.
           </div>
         </div>
 
@@ -359,15 +336,15 @@ export function DashboardPage() {
       </section>
 
       {summaryQuery.isLoading ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2">
-          <Skeleton className="h-[260px] md:col-span-2 xl:col-span-1 xl:row-span-2" />
-          <Skeleton className="h-[126px]" />
-          <Skeleton className="h-[126px]" />
-          <Skeleton className="h-[126px]" />
-          <Skeleton className="h-[126px]" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 xl:grid-rows-2">
+          <Skeleton className="h-[200px] sm:h-[260px] sm:col-span-2 xl:col-span-1 xl:row-span-2" />
+          <Skeleton className="h-[100px] sm:h-[126px]" />
+          <Skeleton className="h-[100px] sm:h-[126px]" />
+          <Skeleton className="h-[100px] sm:h-[126px]" />
+          <Skeleton className="h-[100px] sm:h-[126px]" />
         </div>
       ) : summaryQuery.isError || !summaryQuery.data ? (
-        <div className="rounded-2xl border border-border/60 bg-card/35 p-6">
+        <div className="rounded-2xl border border-border/60 bg-card/85 p-6">
           <div className="text-sm font-semibold">Couldn’t load dashboard summary</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Try again, or switch API mode back to mock.
@@ -376,7 +353,7 @@ export function DashboardPage() {
       ) : (
         <section
           className={cn(
-            "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2",
+            "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 xl:grid-rows-2",
             // Prevent layout shift when prev summary loads: cards render regardless.
             "min-h-[168px]",
           )}
@@ -390,7 +367,7 @@ export function DashboardPage() {
             missingMonthsCount={adjusted.missingMonthsCount}
             isLoading={budgetsLoading}
             isError={budgetsError}
-            className="md:col-span-2 xl:col-span-1 xl:row-span-2"
+            className="sm:col-span-2 xl:col-span-1 xl:row-span-2"
           />
           <MetricCard
             title="Income"
@@ -429,13 +406,22 @@ export function DashboardPage() {
             tone="warm"
             icon={<PiggyBank className="h-4 w-4" />}
             showDots
+            helpContent={
+              <div className="space-y-1">
+                <div className="font-semibold">Savings Rate</div>
+                <div>
+                  The percentage of your income that you've saved. Calculated as (Net Income ÷ Total Income) × 100.
+                  A higher rate indicates better savings habits.
+                </div>
+              </div>
+            }
           />
           {chartsQuery.isLoading ? (
             <div
               className={cn(
-                "rounded-2xl border border-border/60 bg-card/35 p-5",
+                "rounded-2xl border border-border/60 bg-card/85 p-5",
                 "corner-glow tint-neutral",
-                "md:col-span-2 xl:col-span-3",
+                "sm:col-span-2 xl:col-span-3",
               )}
             >
               <div className="flex items-center gap-2">
@@ -455,20 +441,20 @@ export function DashboardPage() {
               charts={chartsQuery.data}
               from={from ?? undefined}
               to={to ?? undefined}
-              className="md:col-span-2 xl:col-span-3"
+              className="sm:col-span-2 xl:col-span-3"
             />
           )}
         </section>
       )}
 
       {chartsQuery.isLoading ? (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          <Skeleton className="h-[380px] xl:col-span-2" />
-          <Skeleton className="h-[380px]" />
-          <Skeleton className="h-[420px] xl:col-span-3" />
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
+          <Skeleton className="h-[300px] sm:h-[380px] lg:col-span-2" />
+          <Skeleton className="h-[300px] sm:h-[380px]" />
+          <Skeleton className="h-[350px] sm:h-[420px] lg:col-span-3" />
         </div>
       ) : chartsQuery.isError || !chartsQuery.data ? (
-        <div className="rounded-2xl border border-border/60 bg-card/35 p-6">
+        <div className="rounded-2xl border border-border/60 bg-card/85 p-6">
           <div className="text-sm font-semibold">Couldn’t load charts</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Try adjusting filters or refreshing.
@@ -477,10 +463,10 @@ export function DashboardPage() {
       ) : (
         <React.Suspense
           fallback={
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-              <Skeleton className="h-[380px] xl:col-span-2" />
-              <Skeleton className="h-[380px]" />
-              <Skeleton className="h-[420px] xl:col-span-3" />
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
+              <Skeleton className="h-[300px] sm:h-[380px] lg:col-span-2" />
+              <Skeleton className="h-[300px] sm:h-[380px]" />
+              <Skeleton className="h-[350px] sm:h-[420px] lg:col-span-3" />
             </div>
           }
         >

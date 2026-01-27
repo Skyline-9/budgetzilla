@@ -118,8 +118,9 @@ export function getMockDb(): MockDb {
   const rand = seededRandom(42);
   const txns: Transaction[] = [];
 
-  const today = new Date();
-  const start = startOfMonth(subMonths(today, 5));
+  // Use a fixed date for consistent mock data: Feb 28, 2026
+  const today = new Date(2026, 1, 28);
+  const start = startOfMonth(subMonths(today, 5)); // Sept 2025
 
   const merchants = [
     "Whole Foods",
@@ -189,8 +190,8 @@ export function getMockDb(): MockDb {
     });
   }
 
-  // Random-ish expenses across months/days
-  const txnTarget = 55;
+  // Random-ish expenses across months/days - generate more data
+  const txnTarget = 120;
   while (txns.length < txnTarget) {
     const dayOffset = Math.floor(rand() * 180);
     const date = toYmd(addDays(start, dayOffset));
@@ -230,6 +231,100 @@ export function getMockDb(): MockDb {
       notes: rand() < 0.18 ? "—" : undefined,
     });
   }
+
+  // Add more transactions specifically for Jan-Feb 2026
+  const jan2026Start = new Date(2026, 0, 1);
+  const feb2026End = new Date(2026, 1, 28);
+  
+  // Weekly groceries in Jan-Feb
+  for (let week = 0; week < 8; week++) {
+    const date = toYmd(addDays(jan2026Start, week * 7 + Math.floor(rand() * 3)));
+    if (date > toYmd(feb2026End)) continue;
+    const merchant = ["Whole Foods", "Trader Joe's", "Safeway", "Costco"][Math.floor(rand() * 4)]!;
+    addTxn({
+      date,
+      amountCents: -Math.floor((80 + rand() * 120) * 100),
+      categoryId: "cat_expense_groceries",
+      merchant,
+      notes: "Weekly groceries",
+    });
+  }
+
+  // Dining out 2-3 times per week in Jan-Feb
+  for (let i = 0; i < 20; i++) {
+    const dayOffset = Math.floor(rand() * 58);
+    const date = toYmd(addDays(jan2026Start, dayOffset));
+    const merchant = ["Starbucks", "Chipotle", "Panera", "Local Cafe", "Sushi Place", "Pizza Hut"][Math.floor(rand() * 6)]!;
+    addTxn({
+      date,
+      amountCents: -Math.floor((12 + rand() * 45) * 100),
+      categoryId: "cat_expense_dining",
+      merchant,
+    });
+  }
+
+  // Entertainment/subscriptions in Jan-Feb
+  for (let m = 0; m < 2; m++) {
+    const monthStart = addMonths(jan2026Start, m);
+    addTxn({
+      date: toYmd(addDays(monthStart, 1)),
+      amountCents: -1599,
+      categoryId: "cat_expense_subscriptions",
+      merchant: "Netflix",
+      notes: "Monthly subscription",
+    });
+    addTxn({
+      date: toYmd(addDays(monthStart, 1)),
+      amountCents: -1099,
+      categoryId: "cat_expense_subscriptions",
+      merchant: "Spotify",
+      notes: "Monthly subscription",
+    });
+    addTxn({
+      date: toYmd(addDays(monthStart, 15)),
+      amountCents: -1499,
+      categoryId: "cat_expense_subscriptions",
+      merchant: "HBO Max",
+      notes: "Monthly subscription",
+    });
+  }
+
+  // Transport expenses in Jan-Feb
+  for (let i = 0; i < 12; i++) {
+    const dayOffset = Math.floor(rand() * 58);
+    const date = toYmd(addDays(jan2026Start, dayOffset));
+    const isUber = rand() < 0.6;
+    addTxn({
+      date,
+      amountCents: -Math.floor((isUber ? 15 + rand() * 35 : 40 + rand() * 20) * 100),
+      categoryId: "cat_expense_transport",
+      merchant: isUber ? (rand() < 0.5 ? "Uber" : "Lyft") : "Shell Gas",
+      notes: isUber ? undefined : "Gas fill-up",
+    });
+  }
+
+  // Health expenses
+  addTxn({
+    date: "2026-01-10",
+    amountCents: -3500,
+    categoryId: "cat_expense_health",
+    merchant: "CVS Pharmacy",
+    notes: "Prescription",
+  });
+  addTxn({
+    date: "2026-02-05",
+    amountCents: -15000,
+    categoryId: "cat_expense_health",
+    merchant: "Dr. Smith",
+    notes: "Copay",
+  });
+  addTxn({
+    date: "2026-02-20",
+    amountCents: -8500,
+    categoryId: "cat_expense_health",
+    merchant: "Gym Membership",
+    notes: "Monthly fee",
+  });
 
   // Sort by date desc then created
   txns.sort((a, b) => (a.date === b.date ? b.id.localeCompare(a.id) : b.date.localeCompare(a.date)));

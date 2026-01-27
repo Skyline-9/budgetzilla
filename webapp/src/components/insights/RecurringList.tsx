@@ -6,23 +6,37 @@ import { findRecurringTransactions } from "@/lib/analysis";
 import { formatCents } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 
+type CardTint = "neutral" | "income" | "expense" | "accent" | "hero" | "warm";
+
 function Card({
   title,
   icon,
   children,
   className,
+  tint = "neutral",
 }: {
   title: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  tint?: CardTint;
 }) {
+  const tintClass = {
+    neutral: "tint-neutral",
+    income: "tint-income",
+    expense: "tint-expense",
+    accent: "tint-accent",
+    hero: "tint-hero",
+    warm: "tint-warm",
+  }[tint];
+
   return (
     <div
       className={cn(
-        "group relative rounded-2xl border border-border/60 bg-card/35 p-5 overflow-hidden",
-        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/45 hover:shadow-lift",
-        "corner-glow tint-neutral",
+        "group relative rounded-2xl border border-border/60 bg-card/85 p-5 overflow-hidden",
+        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-lift",
+        "corner-glow",
+        tintClass,
         className,
       )}
     >
@@ -53,7 +67,7 @@ export function RecurringList({
   }, [maxRows, transactions]);
 
   return (
-    <Card title="Recurring payments" icon={<Repeat className="h-4 w-4" />} className={className}>
+    <Card title="Recurring payments" icon={<Repeat className="h-4 w-4" />} className={className} tint="hero">
       {recurring.length ? (
         <div className="space-y-2">
           {recurring.map((r) => {
@@ -68,7 +82,7 @@ export function RecurringList({
                   <div className="flex min-w-0 items-center gap-2">
                     <div className="truncate text-sm font-semibold">{r.merchant}</div>
                     {r.isLikelySubscription ? (
-                      <Badge variant="success">Likely subscription</Badge>
+                      <Badge variant="info">Likely subscription</Badge>
                     ) : (
                       <Badge variant="subtle">Recurring</Badge>
                     )}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useDeleteOverallBudgetMutation, useUpsertOverallBudgetMutation } from "@/api/queries";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ export function BudgetDialog(props: {
   const { open, onOpenChange, month, initialBudgetCents } = props;
   const upsert = useUpsertOverallBudgetMutation();
   const del = useDeleteOverallBudgetMutation();
+  const { confirm } = useConfirmDialog();
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -62,6 +64,14 @@ export function BudgetDialog(props: {
   }
 
   async function onDelete() {
+    const confirmed = await confirm({
+      title: "Delete budget",
+      description: `Are you sure you want to delete the budget for ${formatMonthKey(month)}? This action cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
     await del.mutateAsync(month);
     onOpenChange(false);
   }

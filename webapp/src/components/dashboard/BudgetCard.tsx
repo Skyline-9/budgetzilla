@@ -2,6 +2,7 @@ import React from "react";
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { cn } from "@/lib/cn";
 import { formatCents } from "@/lib/format";
 import { BudgetDialog } from "@/components/dashboard/BudgetDialog";
@@ -52,11 +53,14 @@ export function BudgetCard(props: {
 
   return (
     <div
+      role="region"
+      aria-label="Budget tracking card"
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/35",
+        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/85",
         "p-6 md:p-7 corner-glow-hero tint-hero",
-        "transition-transform duration-150 ease-out hover:-translate-y-0.5",
-        "hover:bg-card/45 hover:shadow-lift",
+        "transition-all duration-150 ease-out hover:-translate-y-0.5",
+        "hover:bg-card/90 hover:shadow-lift",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
     >
@@ -69,13 +73,24 @@ export function BudgetCard(props: {
 
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-hero/10 ring-1 ring-hero/30 text-hero">
               <Target className="h-4 w-4" />
             </span>
             <span>Budget (Adjusted)</span>
+            <HelpTooltip
+              content={
+                <div className="space-y-1">
+                  <div className="font-semibold">Adjusted Budget</div>
+                  <div>
+                    Your budget is prorated based on the selected date range. If viewing a partial month,
+                    the budget is scaled proportionally to the number of days included.
+                  </div>
+                </div>
+              }
+            />
           </div>
-          <div className="mt-1 text-xs text-foreground/60">{subtitle}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{subtitle}</div>
         </div>
 
         <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
@@ -94,10 +109,10 @@ export function BudgetCard(props: {
       ) : budgetCents == null ? (
         <div className="relative z-10 mt-4">
           <div className="flex items-baseline justify-between gap-3">
-            <div className="text-xs text-foreground/60">Spent</div>
+            <div className="text-xs text-muted-foreground">Spent</div>
             <div className="text-base font-semibold tabular-nums">{formatCents(expenseCents)}</div>
           </div>
-          <div className="mt-3 text-xs text-foreground/50">
+          <div className="mt-3 text-xs text-muted-foreground">
             No budget set for this range. Set monthly budgets to compute an adjusted budget.
           </div>
         </div>
@@ -117,23 +132,30 @@ export function BudgetCard(props: {
                 {formatCents(remainingCents ?? 0)}
               </div>
             </div>
-            <div className="text-xs text-foreground/60">{budgetCents > 0 ? `${pctText(ratio)} used` : "—"}</div>
+            <div
+              className={cn(
+                "text-xs font-medium",
+                ratio > 1 ? "text-danger" : ratio >= 0.75 ? "text-warning" : "text-muted-foreground",
+              )}
+            >
+              {budgetCents > 0 ? `${pctText(ratio)} used` : "—"}
+            </div>
           </div>
 
           <div className="space-y-2">
             <div className="h-2 overflow-hidden rounded-full border border-border/60 bg-background/40">
               <div
-                className={cn("h-full rounded-full", overspent ? "bg-warning" : "bg-hero")}
+                className={cn("h-full rounded-full", overspent ? "bg-danger" : ratio >= 0.75 ? "bg-warning" : "bg-hero")}
                 style={{ width: `${Math.round(fill01 * 100)}%` }}
               />
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-foreground/60">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="tabular-nums">
                 Spent {formatCents(expenseCents)} / Budget {formatCents(budgetCents)}
               </span>
               {missingMonthsCount ? (
-                <span className="text-foreground/50">Missing {missingMonthsCount} month(s)</span>
+                <span className="text-muted-foreground/80">Missing {missingMonthsCount} month(s)</span>
               ) : null}
             </div>
           </div>

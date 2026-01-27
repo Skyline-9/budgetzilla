@@ -18,7 +18,7 @@ function Card({
   tone?: "income" | "expense" | "neutral";
 }) {
   return (
-    <div className="rounded-3xl border border-border/60 bg-card/50 p-5 shadow-soft-lg">
+    <div className="rounded-3xl border border-border/60 bg-card/90 p-5 shadow-soft-lg">
       <div className="flex items-center justify-between gap-3">
         <div className="text-xs uppercase tracking-widest text-muted-foreground">{title}</div>
         <div

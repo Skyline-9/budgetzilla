@@ -38,7 +38,7 @@ export function DashboardFilters() {
     Boolean(from) || Boolean(to) || categoryId.length > 0 || Boolean(min) || Boolean(max);
 
   return (
-    <div className="rounded-3xl border border-border/60 bg-card/50 p-4 shadow-soft-lg">
+    <div className="rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg">
       <div className="flex flex-wrap items-center gap-2">
         <Popover>
           <PopoverTrigger asChild>

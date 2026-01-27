@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { Sidebar, MobileSidebarProvider } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 
 export function AppShell() {
@@ -91,34 +91,36 @@ export function AppShell() {
   );
 
   return (
-    <div className="min-h-screen bg-background surface-gradient">
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          {!isHelp && (
-            <Topbar
-              searchRef={searchRef}
-              query={searchParams.get("q") ?? ""}
-              from={searchParams.get("from") ?? undefined}
-              to={searchParams.get("to") ?? undefined}
-              onSubmitSearch={onGlobalSearchSubmit}
-              onChangeDateRange={onChangeDateRange}
-              onAddTransaction={openAddTransaction}
-              searchPlaceholder={isCategories ? "Search categories…" : "Search merchant or notes…"}
-              searchAriaLabel={isCategories ? "Search categories (Cmd/Ctrl+K)" : "Global search (Cmd/Ctrl+K)"}
-              addButtonVariant={isCategories ? "secondary" : "default"}
-              showDateRange={!isDashboard}
-              showAddButton={!isDashboard}
-            />
-          )}
-          <main className="min-w-0 flex-1 px-5 pb-8 pt-4">
-            <Outlet context={{ openAddTransaction }} />
-          </main>
+    <MobileSidebarProvider>
+      <div className="min-h-screen bg-background surface-gradient">
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            {!isHelp && (
+              <Topbar
+                searchRef={searchRef}
+                query={searchParams.get("q") ?? ""}
+                from={searchParams.get("from") ?? undefined}
+                to={searchParams.get("to") ?? undefined}
+                onSubmitSearch={onGlobalSearchSubmit}
+                onChangeDateRange={onChangeDateRange}
+                onAddTransaction={openAddTransaction}
+                searchPlaceholder={isCategories ? "Search categories…" : "Search merchant or notes…"}
+                searchAriaLabel={isCategories ? "Search categories (Cmd/Ctrl+K)" : "Global search (Cmd/Ctrl+K)"}
+                addButtonVariant={isCategories ? "secondary" : "default"}
+                showDateRange
+                showAddButton
+              />
+            )}
+            <main className="min-w-0 flex-1 px-3 pb-8 pt-4 md:px-5">
+              <Outlet context={{ openAddTransaction }} />
+            </main>
+          </div>
         </div>
-      </div>
 
-      <TransactionDialog open={addOpen} onOpenChange={setAddOpen} mode="create" />
-    </div>
+        <TransactionDialog open={addOpen} onOpenChange={setAddOpen} mode="create" />
+      </div>
+    </MobileSidebarProvider>
   );
 }
 

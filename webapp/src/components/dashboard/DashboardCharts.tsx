@@ -29,8 +29,8 @@ function ChartCard({
   return (
     <div
       className={cn(
-        "group relative rounded-2xl border border-border/60 bg-card/35 p-5 overflow-hidden",
-        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/45 hover:shadow-lift",
+        "group relative rounded-2xl border border-border/60 bg-card/85 p-5 overflow-hidden",
+        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-lift",
         glow && "corner-glow",
         glow === "neutral" && "tint-neutral",
         glow === "income" && "tint-income",
@@ -108,6 +108,12 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
     const incomeTotalCents = charts.monthlyTrend.reduce((acc, p) => acc + p.incomeCents, 0);
     const expenseTotalCents = charts.monthlyTrend.reduce((acc, p) => acc + p.expenseCents, 0);
     const labelInterval = isDaily ? Math.max(0, Math.ceil(periods.length / 8) - 1) : 0;
+    const isDark = theme === "dark";
+    const tooltipBg = isDark ? "rgba(15,23,42,0.94)" : "rgba(255,255,255,0.97)";
+    const tooltipBorder = isDark ? "rgba(148,163,184,0.20)" : "rgba(15,23,42,0.10)";
+    const tooltipText = isDark ? "rgba(226,232,240,0.92)" : "rgba(15,23,42,0.88)";
+    const tooltipShadow = isDark ? "0 16px 44px rgba(0,0,0,0.45)" : "0 14px 36px rgba(2,6,23,0.18)";
+
     return {
       textStyle: baseText,
       animation: allowAnimation,
@@ -121,6 +127,13 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
       tooltip: {
         trigger: "axis",
         axisPointer: { type: "line" },
+        appendToBody: true,
+        backgroundColor: tooltipBg,
+        borderColor: tooltipBorder,
+        borderWidth: 1,
+        padding: [10, 12],
+        extraCssText: `border-radius:12px; box-shadow:${tooltipShadow};`,
+        textStyle: { color: tooltipText, fontSize: 12 },
         formatter: (params: any[]) => {
           const raw = params?.[0]?.axisValue ?? "";
           const axis = isDaily ? formatDateDisplay(raw) : formatMonthKey(raw);
@@ -131,19 +144,19 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
           const netCents = Math.round((incomeV - expenseV) * 100);
           return `
             <div style="font-weight:700; margin-bottom:6px">${axis}</div>
-            <div style="display:flex; justify-content:space-between; gap:12px">
-              <span>Income</span><span style="font-variant-numeric: tabular-nums">${formatCents(
+            <div style="display:flex; justify-content:space-between; gap:24px">
+              <span>Income</span><span style="font-weight:600; font-variant-numeric: tabular-nums">${formatCents(
             Math.round(incomeV * 100),
           )}</span>
             </div>
-            <div style="display:flex; justify-content:space-between; gap:12px">
-              <span>Expenses</span><span style="font-variant-numeric: tabular-nums">${formatCents(
+            <div style="display:flex; justify-content:space-between; gap:24px">
+              <span>Expenses</span><span style="font-weight:600; font-variant-numeric: tabular-nums">${formatCents(
             Math.round(expenseV * 100),
           )}</span>
             </div>
             <div style="height:1px; background:rgba(148,163,184,0.22); margin:8px 0"></div>
-            <div style="display:flex; justify-content:space-between; gap:12px">
-              <span>Net</span><span style="font-weight:700; font-variant-numeric: tabular-nums">${formatCents(
+            <div style="display:flex; justify-content:space-between; gap:24px">
+              <span>Net</span><span style="font-weight:700; font-variant-numeric: tabular-nums; color: ${netCents >= 0 ? "rgb(52, 211, 153)" : "rgb(244, 114, 182)"}">${formatCents(
             netCents,
           )}</span>
             </div>
@@ -548,27 +561,28 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
   );
 
   return (
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
       <ChartCard
         title={
           charts.trendInterval === "day"
             ? "Daily trend (income vs expenses)"
             : "Monthly trend (income vs expenses)"
         }
-        className="xl:col-span-2"
+        className="lg:col-span-2"
         glow="neutral"
         cornerShine={charts.trendInterval === "day"}
         icon={<TrendingUp className="h-4 w-4" />}
       >
         <ReactECharts
           option={monthlyTrendOption}
-          style={{ height: 320 }}
+          style={{ height: 280 }}
+          className="sm:[&>div]:!h-[320px]"
           opts={{ renderer: "canvas" }}
         />
       </ChartCard>
 
       <ChartCard title="Category ranking (expenses)" glow="neutral" icon={<BarChart3 className="h-4 w-4" />}>
-        <div className="flex h-[320px] min-h-0 flex-col">
+        <div className="flex h-[280px] sm:h-[320px] min-h-0 flex-col">
           <div className="flex items-center justify-between border-b border-border/60 px-3 pb-2 text-xs font-semibold text-muted-foreground">
             <span>Category</span>
             <span className="tabular-nums">Spend</span>
@@ -579,10 +593,11 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
         </div>
       </ChartCard>
 
-      <ChartCard title="Top categories (expenses) by month" className="xl:col-span-3" cornerShine icon={<Calendar className="h-4 w-4" />}>
+      <ChartCard title="Top categories (expenses) by month" className="lg:col-span-3" cornerShine icon={<Calendar className="h-4 w-4" />}>
         <ReactECharts
           option={categoryMonthlyOption}
-          style={{ height: 380 }}
+          style={{ height: 320 }}
+          className="sm:[&>div]:!h-[380px]"
           opts={{ renderer: "canvas" }}
           onEvents={{
             click: (params: any) => {

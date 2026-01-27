@@ -17,14 +17,14 @@ export function TableSummary({ transactions }: { transactions: Transaction[] }) 
   }, [transactions]);
 
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+    <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-label={`Summary: Expenses ${(totals.expense / 100).toFixed(2)}, Income ${(totals.income / 100).toFixed(2)}, Net ${(totals.net / 100).toFixed(2)}`}>
       <span className="flex items-center gap-1.5">
-        <ArrowDownRight className="h-3.5 w-3.5" />
+        <ArrowDownRight className="h-3.5 w-3.5 text-expense" />
         Expenses: <AnimatedMoneyCents cents={totals.expense} />
       </span>
       <span className="text-muted-foreground/60">•</span>
       <span className="flex items-center gap-1.5">
-        <ArrowUpRight className="h-3.5 w-3.5" />
+        <ArrowUpRight className="h-3.5 w-3.5 text-income" />
         Income: <AnimatedMoneyCents cents={totals.income} />
       </span>
       <span className="text-muted-foreground/60">•</span>

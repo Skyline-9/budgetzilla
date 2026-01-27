@@ -1,7 +1,9 @@
 import React from "react";
 import { endOfMonth, format, startOfMonth, subMonths } from "date-fns";
-import { CalendarRange, Plus, Search } from "lucide-react";
+import { CalendarRange, Menu, Plus, Search } from "lucide-react";
+import { MobileSidebarTrigger } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
+import { DateInput } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -69,7 +71,16 @@ export function Topbar({
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/40 backdrop-blur-xl">
-      <div className="flex items-center gap-3 px-5 py-3">
+      {/* Titlebar drag region for macOS */}
+      <div
+        data-tauri-drag-region
+        className="h-[var(--titlebar-height)] w-full"
+        aria-hidden="true"
+      />
+      <div className="flex items-center gap-2 px-3 py-3 md:gap-3 md:px-5">
+        {/* Mobile menu button */}
+        <MobileSidebarTrigger />
+        
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <div className="relative w-full max-w-[560px]">
             <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -135,18 +146,16 @@ export function Topbar({
                     <div className="mt-2 grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <Label>From</Label>
-                        <Input
-                          type="date"
-                          value={from ?? ""}
-                          onChange={(e) => onChangeDateRange({ from: e.target.value || undefined, to })}
+                        <DateInput
+                          value={from}
+                          onChange={(date) => onChangeDateRange({ from: date, to })}
                         />
                       </div>
                       <div className="space-y-1.5">
                         <Label>To</Label>
-                        <Input
-                          type="date"
-                          value={to ?? ""}
-                          onChange={(e) => onChangeDateRange({ from, to: e.target.value || undefined })}
+                        <DateInput
+                          value={to}
+                          onChange={(date) => onChangeDateRange({ from, to: date })}
                         />
                       </div>
                     </div>
@@ -169,10 +178,12 @@ export function Topbar({
             onClick={onAddTransaction}
             aria-keyshortcuts="N"
             title="Shortcut: N"
+            size="icon"
+            className="md:w-auto md:px-4"
           >
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Transaction</span>
-            <kbd className="hidden sm:inline-flex items-center rounded-lg border border-primary-foreground/25 bg-primary-foreground/10 px-2 py-0.5 text-[11px] font-semibold text-primary-foreground/90">
+            <span className="hidden md:inline">Add Transaction</span>
+            <kbd className="hidden md:inline-flex items-center rounded-lg border border-primary-foreground/25 bg-primary-foreground/10 px-2 py-0.5 text-[11px] font-semibold text-primary-foreground/90">
               N
             </kbd>
           </Button>

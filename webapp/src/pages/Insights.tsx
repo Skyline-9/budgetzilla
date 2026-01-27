@@ -1,35 +1,49 @@
 import React from "react";
-import { endOfMonth, format, getDaysInMonth, isValid, parseISO, startOfMonth } from "date-fns";
+import { endOfMonth, format, getDaysInMonth, startOfMonth } from "date-fns";
 import { Activity, Lightbulb, PieChart, TrendingUp } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { useCategoriesQuery, useDashboardChartsQuery, useDashboardSummaryQuery, useTransactionsQuery } from "@/api/queries";
+import { useCategoriesQuery, useDashboardChartsQuery, useDashboardSummaryQuery, useOverallBudgetQuery, useTransactionsQuery } from "@/api/queries";
 import { ActiveFilterChips, type DashboardFilterState } from "@/components/dashboard/ActiveFilterChips";
 import { AnomalyTable } from "@/components/insights/AnomalyTable";
+import { BudgetTips } from "@/components/insights/BudgetTips";
 import { RecurringList } from "@/components/insights/RecurringList";
-import { SpendingHeatmap } from "@/components/insights/SpendingHeatmap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/cn";
 import { formatCents, formatPercent01, formatRange } from "@/lib/format";
-import { calculatePareto, calculateTrend, forecastMonthEnd } from "@/lib/analysis";
+import { analyzeWeekendSpending, calculatePareto, calculateTrend, findRecurringTransactions, forecastMonthEnd, generateBudgetTips } from "@/lib/analysis";
 import { parseMoneyToCents, readString, readStringList, writeListOrDelete, writeOrDelete } from "@/lib/urlState";
+
+type CardTint = "neutral" | "income" | "expense" | "accent" | "hero" | "warm";
 
 function Card({
   title,
   icon,
   children,
   className,
+  tint = "neutral",
 }: {
   title: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  tint?: CardTint;
 }) {
+  const tintClass = {
+    neutral: "tint-neutral",
+    income: "tint-income",
+    expense: "tint-expense",
+    accent: "tint-accent",
+    hero: "tint-hero",
+    warm: "tint-warm",
+  }[tint];
+
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/35 p-5",
-        "corner-glow tint-neutral",
-        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/45 hover:shadow-lift",
+        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/85 p-5",
+        "corner-glow",
+        tintClass,
+        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-lift",
         className,
       )}
     >
@@ -112,10 +126,13 @@ export function InsightsPage() {
   const chartsQuery = useDashboardChartsQuery(params);
   const transactionsQuery = useTransactionsQuery(params);
 
+  const now = new Date();
+  const currentMonth = format(startOfMonth(now), "yyyy-MM");
+  const budgetQuery = useOverallBudgetQuery(currentMonth);
+
   const rangeLabel = formatRange(from, to);
 
   const derived = React.useMemo(() => {
-    const now = new Date();
     const tm = thisMonthKey(now);
     const isThisMonth = from === tm.from && to === tm.to;
 
@@ -169,7 +186,28 @@ export function InsightsPage() {
     const trendLabel = interval === "day" ? `vs prior ${window} days` : `vs prior ${window} months`;
 
     return { isThisMonth, forecast, category, topCategory, topSharePct, trend, trendLabel, rootBreakdown };
-  }, [chartsQuery.data, from, summaryQuery.data, to, categories]);
+  }, [chartsQuery.data, from, summaryQuery.data, to, categories, now]);
+
+  const budgetTips = React.useMemo(() => {
+    if (!summaryQuery.data) return [];
+
+    const transactions = transactionsQuery.data ?? [];
+    const weekendAnalysis = transactions.length > 0 ? analyzeWeekendSpending(transactions) : null;
+    const recurring = transactions.length > 0 ? findRecurringTransactions(transactions) : [];
+    const recurringTotalCents = recurring.reduce((sum, r) => sum + r.avgAmountCents, 0);
+
+    return generateBudgetTips({
+      summary: summaryQuery.data,
+      trend: derived.trend,
+      forecast: derived.forecast,
+      budgetCents: budgetQuery.data?.budgetCents ?? null,
+      topCategory: derived.topCategory && derived.topSharePct != null
+        ? { name: derived.topCategory.categoryName, sharePct: derived.topSharePct }
+        : null,
+      recurringTotalCents,
+      weekendAnalysis,
+    });
+  }, [summaryQuery.data, transactionsQuery.data, derived.trend, derived.forecast, derived.topCategory, derived.topSharePct, budgetQuery.data]);
 
   return (
     <div className="space-y-6">
@@ -186,6 +224,9 @@ export function InsightsPage() {
         <ActiveFilterChips filters={filters} categoriesById={categoriesById} onChange={setFilters} />
       </section>
 
+      {/* Budget Tips */}
+      {budgetTips.length > 0 && <BudgetTips tips={budgetTips} />}
+
       {/* Overview cards */}
       {summaryQuery.isLoading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -195,29 +236,29 @@ export function InsightsPage() {
           <Skeleton className="h-[126px]" />
         </div>
       ) : summaryQuery.isError || !summaryQuery.data ? (
-        <div className="rounded-2xl border border-border/60 bg-card/35 p-6">
+        <div className="rounded-2xl border border-border/60 bg-card/85 p-6">
           <div className="text-sm font-semibold">Couldn’t load insights summary</div>
           <div className="mt-1 text-sm text-muted-foreground">Try adjusting filters or refreshing.</div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card title="Income" icon={<TrendingUp className="h-4 w-4" />}>
+          <Card title="Income" icon={<TrendingUp className="h-4 w-4 text-income" />} tint="income">
             <div className="text-3xl font-semibold tracking-tight tabular-nums">
               {formatCents(summaryQuery.data.incomeCents)}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">{rangeLabel}</div>
           </Card>
-          <Card title="Expenses" icon={<Activity className="h-4 w-4" />}>
+          <Card title="Expenses" icon={<Activity className="h-4 w-4 text-expense" />} tint="expense">
             <div className="text-3xl font-semibold tracking-tight tabular-nums">
               {formatCents(summaryQuery.data.expenseCents)}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">{rangeLabel}</div>
           </Card>
-          <Card title="Net" icon={<Lightbulb className="h-4 w-4" />}>
+          <Card title="Net" icon={<Lightbulb className="h-4 w-4" />} tint="hero">
             <div className="text-3xl font-semibold tracking-tight tabular-nums">{formatCents(summaryQuery.data.netCents)}</div>
             <div className="mt-1 text-xs text-muted-foreground">Income − Expenses</div>
           </Card>
-          <Card title="Savings rate" icon={<PieChart className="h-4 w-4" />}>
+          <Card title="Savings rate" icon={<PieChart className="h-4 w-4 text-info" />} tint="warm">
             <div className="text-3xl font-semibold tracking-tight tabular-nums">
               {formatPercent01(summaryQuery.data.savingsRate)}
             </div>
@@ -226,28 +267,18 @@ export function InsightsPage() {
         </div>
       )}
 
-      {/* Analysis sections */}
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        {transactionsQuery.isLoading ? (
-          <Skeleton className="h-[360px] xl:col-span-2" />
-        ) : transactionsQuery.isError || !transactionsQuery.data ? (
-          <div className="rounded-2xl border border-border/60 bg-card/35 p-6 xl:col-span-2">
-            <div className="text-sm font-semibold">Couldn’t load transactions</div>
-            <div className="mt-1 text-sm text-muted-foreground">Some insights require transaction data.</div>
-          </div>
-        ) : (
-          <SpendingHeatmap transactions={transactionsQuery.data} className="xl:col-span-2" />
-        )}
-
-        <div className="space-y-4">
+      {/* Analysis section - Category & Trend */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Analysis</h2>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {chartsQuery.isLoading ? (
-            <Skeleton className="h-[180px]" />
+            <Skeleton className="h-[220px]" />
           ) : chartsQuery.isError || !chartsQuery.data ? (
             <Card title="Category concentration" icon={<PieChart className="h-4 w-4" />}>
               <div className="text-sm text-muted-foreground">Charts data unavailable for this filter.</div>
             </Card>
           ) : (
-            <Card title="Category concentration" icon={<PieChart className="h-4 w-4" />}>
+            <Card title="Category concentration" icon={<PieChart className="h-4 w-4" />} tint="expense">
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="font-semibold tabular-nums">{derived.category?.categoriesFor80Percent ?? "—"}</span>{" "}
@@ -277,7 +308,7 @@ export function InsightsPage() {
             </Card>
           )}
 
-          <Card title="Trend & forecast" icon={<TrendingUp className="h-4 w-4" />}>
+          <Card title="Trend & forecast" icon={<TrendingUp className="h-4 w-4" />} tint="accent">
             {derived.trend ? (
               <div className="text-sm text-foreground/80">
                 Spending{" "}
@@ -316,30 +347,33 @@ export function InsightsPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        {transactionsQuery.isLoading ? (
-          <Skeleton className="h-[260px]" />
-        ) : transactionsQuery.isError || !transactionsQuery.data ? (
-          <div className="rounded-2xl border border-border/60 bg-card/35 p-6">
-            <div className="text-sm font-semibold">Couldn’t load recurring payments</div>
-            <div className="mt-1 text-sm text-muted-foreground">Requires transaction data.</div>
-          </div>
-        ) : (
-          <RecurringList transactions={transactionsQuery.data} />
-        )}
+      {/* Patterns section - Recurring & Anomalies */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Patterns</h2>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          {transactionsQuery.isLoading ? (
+            <Skeleton className="h-[260px]" />
+          ) : transactionsQuery.isError || !transactionsQuery.data ? (
+            <div className="rounded-2xl border border-border/60 bg-card/85 p-6">
+              <div className="text-sm font-semibold">Couldn't load recurring payments</div>
+              <div className="mt-1 text-sm text-muted-foreground">Requires transaction data.</div>
+            </div>
+          ) : (
+            <RecurringList transactions={transactionsQuery.data} />
+          )}
 
-        {transactionsQuery.isLoading ? (
-          <Skeleton className="h-[260px]" />
-        ) : transactionsQuery.isError || !transactionsQuery.data ? (
-          <div className="rounded-2xl border border-border/60 bg-card/35 p-6">
-            <div className="text-sm font-semibold">Couldn’t load anomalies</div>
-            <div className="mt-1 text-sm text-muted-foreground">Requires transaction data.</div>
-          </div>
-        ) : (
-          <AnomalyTable transactions={transactionsQuery.data} />
-        )}
+          {transactionsQuery.isLoading ? (
+            <Skeleton className="h-[260px]" />
+          ) : transactionsQuery.isError || !transactionsQuery.data ? (
+            <div className="rounded-2xl border border-border/60 bg-card/85 p-6">
+              <div className="text-sm font-semibold">Couldn't load anomalies</div>
+              <div className="mt-1 text-sm text-muted-foreground">Requires transaction data.</div>
+            </div>
+          ) : (
+            <AnomalyTable transactions={transactionsQuery.data} />
+          )}
+        </div>
       </section>
     </div>
   );
 }
-

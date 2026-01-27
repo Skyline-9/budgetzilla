@@ -1,10 +1,11 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BarChart3, ChevronLeft, ChevronRight, Command, HelpCircle, Lightbulb, Receipt, Settings, Tags } from "lucide-react";
+import { BarChart3, ChevronLeft, ChevronRight, Command, HelpCircle, Lightbulb, Menu, Receipt, Settings, Tags, X } from "lucide-react";
 import { LogoMark } from "@/components/common/Logo";
 import { SidebarNavItem } from "@/components/layout/SidebarNavItem";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
 import { useMediaQuery } from "@/lib/useMediaQuery";
@@ -104,165 +105,265 @@ function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
   );
 }
 
+function MobileMenuButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      className="md:hidden"
+      aria-label="Open menu"
+    >
+      <Menu className="h-5 w-5" />
+    </Button>
+  );
+}
+
+function SidebarContent({
+  collapsed,
+  search,
+  onNavClick,
+  setShortcutsOpen,
+  mdUp,
+  setCollapsedPref,
+}: {
+  collapsed: boolean;
+  search: string;
+  onNavClick?: () => void;
+  setShortcutsOpen: (v: boolean) => void;
+  mdUp: boolean;
+  setCollapsedPref: (fn: (v: boolean) => boolean) => void;
+}) {
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <div
+        className={cn(
+          "flex h-[60px] items-center justify-between gap-2 border-b border-border/70",
+          collapsed ? "px-3" : "px-4",
+        )}
+      >
+        <Link
+          to={{ pathname: "/dashboard", search }}
+          className={cn(
+            "group inline-flex min-w-0 items-center gap-3 rounded-2xl",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+          )}
+          aria-label="Go to Dashboard"
+          title="Dashboard"
+          onClick={onNavClick}
+        >
+          <LogoMark size={36} className="shrink-0" />
+          {!collapsed ? (
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold tracking-tight">Budget</div>
+              <div className="truncate text-xs text-muted-foreground">Personal finance</div>
+            </div>
+          ) : null}
+        </Link>
+
+        {mdUp ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsedPref((v) => !v)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand" : "Collapse"}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        ) : null}
+      </div>
+
+      <nav
+        className={cn(
+          "min-h-0 flex-1 overflow-auto py-3",
+          "flex flex-col gap-1",
+          collapsed ? "items-center px-2" : "px-3",
+        )}
+      >
+        <SidebarNavItem
+          to="/dashboard"
+          label="Dashboard"
+          icon={<BarChart3 className="h-4 w-4" />}
+          collapsed={collapsed}
+          search={search}
+          onClick={onNavClick}
+        />
+        <SidebarNavItem
+          to="/insights"
+          label="Insights"
+          icon={<Lightbulb className="h-4 w-4" />}
+          collapsed={collapsed}
+          search={search}
+          onClick={onNavClick}
+        />
+        <SidebarNavItem
+          to="/transactions"
+          label="Transactions"
+          icon={<Receipt className="h-4 w-4" />}
+          collapsed={collapsed}
+          search={search}
+          onClick={onNavClick}
+        />
+        <SidebarNavItem
+          to="/categories"
+          label="Categories"
+          icon={<Tags className="h-4 w-4" />}
+          collapsed={collapsed}
+          search={search}
+          onClick={onNavClick}
+        />
+        <SidebarNavItem
+          to="/help"
+          label="Help"
+          icon={<HelpCircle className="h-4 w-4" />}
+          collapsed={collapsed}
+          search={search}
+          onClick={onNavClick}
+        />
+        <SidebarNavItem
+          to="/settings"
+          label="Settings"
+          icon={<Settings className="h-4 w-4" />}
+          collapsed={collapsed}
+          search={search}
+          onClick={onNavClick}
+        />
+      </nav>
+
+      <div
+        className={cn(
+          "shrink-0 border-t border-border/70 py-3",
+          collapsed ? "px-2" : "px-3",
+        )}
+      >
+        {collapsed ? (
+          <div className="flex justify-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShortcutsOpen(true)}
+                  aria-label="Keyboard shortcuts"
+                  title="Keyboard shortcuts"
+                  className="h-11 w-11"
+                >
+                  <Command className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Keyboard shortcuts</TooltipContent>
+            </Tooltip>
+          </div>
+        ) : (
+          <div className="hidden md:block rounded-2xl border border-border/60 bg-background/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs font-semibold text-muted-foreground">Shortcuts</div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShortcutsOpen(true)}
+                className="h-7 px-2 text-xs"
+              >
+                View all
+              </Button>
+            </div>
+            <div className="mt-3 space-y-2">
+              <ShortcutRow label="Search" keys={["⌘K", "Ctrl K"]} />
+              <ShortcutRow label="Search (quick)" keys={["/"]} />
+              <ShortcutRow label="Add transaction" keys={["N"]} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function Sidebar() {
   const location = useLocation();
   const search = location.search ?? "";
 
   const mdUp = useMediaQuery("(min-width: 768px)");
   const [collapsedPref, setCollapsedPref] = useLocalStorageBoolean(STORAGE_KEY, false);
-  const collapsed = mdUp ? collapsedPref : true; // keep the UI usable on narrow screens
+  const collapsed = mdUp ? collapsedPref : false;
 
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+  
+  // Try to use context, but fall back to local state if not wrapped
+  const mobileSidebarCtx = React.useContext(MobileSidebarContext);
+  const [localMobileOpen, setLocalMobileOpen] = React.useState(false);
+  const mobileOpen = mobileSidebarCtx?.open ?? localMobileOpen;
+  const setMobileOpen = mobileSidebarCtx?.setOpen ?? setLocalMobileOpen;
+
+  // Close mobile menu on route change
+  React.useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname, setMobileOpen]);
 
   return (
     <>
+      {/* Desktop sidebar */}
       <aside
         className={cn(
           "sticky top-0 z-20 h-[100dvh] shrink-0",
           "border-r border-border/70 bg-background/40 backdrop-blur-xl",
           "transition-[width] duration-200",
+          "hidden md:block",
           collapsed ? "w-[92px]" : "w-[240px]",
         )}
         aria-label="Sidebar"
       >
-        <div className="flex h-full min-h-0 flex-col">
-          <div
-            className={cn(
-              "flex h-[60px] items-center justify-between gap-2 border-b border-border/70",
-              collapsed ? "px-3" : "px-4",
-            )}
-          >
-            <Link
-              to={{ pathname: "/dashboard", search }}
-              className={cn(
-                "group inline-flex min-w-0 items-center gap-3 rounded-2xl",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-              )}
-              aria-label="Go to Dashboard"
-              title="Dashboard"
-            >
-              <LogoMark size={36} className="shrink-0" />
-              {!collapsed ? (
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold tracking-tight">Budget</div>
-                  <div className="truncate text-xs text-muted-foreground">Personal finance</div>
-                </div>
-              ) : null}
-            </Link>
-
-            {mdUp ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCollapsedPref((v) => !v)}
-                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                title={collapsed ? "Expand" : "Collapse"}
-              >
-                {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-              </Button>
-            ) : null}
-          </div>
-
-          <nav
-            className={cn(
-              "min-h-0 flex-1 overflow-auto py-3",
-              "flex flex-col gap-1",
-              collapsed ? "items-center px-2" : "px-3",
-            )}
-          >
-            <SidebarNavItem
-              to="/dashboard"
-              label="Dashboard"
-              icon={<BarChart3 className="h-4 w-4" />}
-              collapsed={collapsed}
-              search={search}
-            />
-            <SidebarNavItem
-              to="/insights"
-              label="Insights"
-              icon={<Lightbulb className="h-4 w-4" />}
-              collapsed={collapsed}
-              search={search}
-            />
-            <SidebarNavItem
-              to="/transactions"
-              label="Transactions"
-              icon={<Receipt className="h-4 w-4" />}
-              collapsed={collapsed}
-              search={search}
-            />
-            <SidebarNavItem
-              to="/categories"
-              label="Categories"
-              icon={<Tags className="h-4 w-4" />}
-              collapsed={collapsed}
-              search={search}
-            />
-            <SidebarNavItem
-              to="/help"
-              label="Help"
-              icon={<HelpCircle className="h-4 w-4" />}
-              collapsed={collapsed}
-              search={search}
-            />
-            <SidebarNavItem
-              to="/settings"
-              label="Settings"
-              icon={<Settings className="h-4 w-4" />}
-              collapsed={collapsed}
-              search={search}
-            />
-          </nav>
-
-          <div
-            className={cn(
-              "shrink-0 border-t border-border/70 py-3",
-              collapsed ? "px-2" : "px-3",
-            )}
-          >
-            {collapsed ? (
-              <div className="flex justify-center">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShortcutsOpen(true)}
-                      aria-label="Keyboard shortcuts"
-                      title="Keyboard shortcuts"
-                      className="h-11 w-11"
-                    >
-                      <Command className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">Keyboard shortcuts</TooltipContent>
-                </Tooltip>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-border/60 bg-background/20 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-xs font-semibold text-muted-foreground">Shortcuts</div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShortcutsOpen(true)}
-                    className="h-7 px-2 text-xs"
-                  >
-                    View all
-                  </Button>
-                </div>
-                <div className="mt-3 space-y-2">
-                  <ShortcutRow label="Search" keys={["⌘K", "Ctrl K"]} />
-                  <ShortcutRow label="Search (quick)" keys={["/"]} />
-                  <ShortcutRow label="Add transaction" keys={["N"]} />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <SidebarContent
+          collapsed={collapsed}
+          search={search}
+          setShortcutsOpen={setShortcutsOpen}
+          mdUp={mdUp}
+          setCollapsedPref={setCollapsedPref}
+        />
       </aside>
+
+      {/* Mobile hamburger button - rendered in Topbar via context */}
+      {/* Mobile drawer */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="w-[280px] p-0 bg-background/95 backdrop-blur-xl">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation Menu</SheetTitle>
+          </SheetHeader>
+          <SidebarContent
+            collapsed={false}
+            search={search}
+            onNavClick={() => setMobileOpen(false)}
+            setShortcutsOpen={setShortcutsOpen}
+            mdUp={false}
+            setCollapsedPref={setCollapsedPref}
+          />
+        </SheetContent>
+      </Sheet>
 
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </>
   );
+}
+
+// Context for mobile sidebar state
+const MobileSidebarContext = React.createContext<{
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+} | null>(null);
+
+export function MobileSidebarProvider({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = React.useState(false);
+  return <MobileSidebarContext.Provider value={{ open, setOpen }}>{children}</MobileSidebarContext.Provider>;
+}
+
+export function useMobileSidebar() {
+  const ctx = React.useContext(MobileSidebarContext);
+  if (!ctx) throw new Error("useMobileSidebar must be used within MobileSidebarProvider");
+  return ctx;
+}
+
+export function MobileSidebarTrigger() {
+  const { setOpen } = useMobileSidebar();
+  return <MobileMenuButton onClick={() => setOpen(true)} />;
 }

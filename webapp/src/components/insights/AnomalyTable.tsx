@@ -7,23 +7,37 @@ import { formatCents, formatDateDisplay } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+type CardTint = "neutral" | "income" | "expense" | "accent" | "hero" | "warm";
+
 function Card({
   title,
   icon,
   children,
   className,
+  tint = "neutral",
 }: {
   title: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  tint?: CardTint;
 }) {
+  const tintClass = {
+    neutral: "tint-neutral",
+    income: "tint-income",
+    expense: "tint-expense",
+    accent: "tint-accent",
+    hero: "tint-hero",
+    warm: "tint-warm",
+  }[tint];
+
   return (
     <div
       className={cn(
-        "group relative rounded-2xl border border-border/60 bg-card/35 p-5 overflow-hidden",
-        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/45 hover:shadow-lift",
-        "corner-glow tint-neutral",
+        "group relative rounded-2xl border border-border/60 bg-card/85 p-5 overflow-hidden",
+        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-lift",
+        "corner-glow",
+        tintClass,
         className,
       )}
     >
@@ -73,7 +87,7 @@ export function AnomalyTable({
   }, [maxRows, threshold, transactions]);
 
   return (
-    <Card title="Unusual transactions" icon={<AlertTriangle className="h-4 w-4" />} className={className}>
+    <Card title="Unusual transactions" icon={<AlertTriangle className="h-4 w-4" />} className={className} tint="warm">
       {rows.length ? (
         <>
           <div className="overflow-hidden rounded-xl border border-border/60 bg-background/20">

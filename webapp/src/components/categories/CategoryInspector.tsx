@@ -3,6 +3,7 @@ import { Copy, ShieldAlert, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Category } from "@/types";
 import { useTransactionsQuery, useUpdateCategoryMutation } from "@/api/queries";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { categoryMoveErrorMessage, validateCategoryMove } from "@/lib/categoryHierarchy";
 import { cn } from "@/lib/cn";
 import { formatDateDisplay, formatRange } from "@/lib/format";
@@ -16,7 +17,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { getCategoryColorOptions } from "@/theme/palette";
 
 function kindLabel(kind: Category["kind"]) {
   return kind === "expense" ? "Expense" : "Income";
@@ -50,19 +50,19 @@ function StatsBlock(props: { categoryId: string; from?: string; to?: string }) {
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
-        <div className="rounded-2xl border border-border/60 bg-card/40 p-3">
+        <div className="rounded-2xl border border-border/60 bg-card/85 p-3">
           <div className="text-xs text-muted-foreground">Transactions</div>
           <div className="mt-1 text-sm font-semibold">
             {txQuery.isLoading ? <Skeleton className="h-5 w-10" /> : count}
           </div>
         </div>
-        <div className="rounded-2xl border border-border/60 bg-card/40 p-3">
+        <div className="rounded-2xl border border-border/60 bg-card/85 p-3">
           <div className="text-xs text-muted-foreground">Total</div>
           <div className="mt-1 text-sm font-semibold">
             {txQuery.isLoading ? <Skeleton className="h-5 w-20" /> : <AnimatedMoneyCents cents={totalCents} />}
           </div>
         </div>
-        <div className="rounded-2xl border border-border/60 bg-card/40 p-3">
+        <div className="rounded-2xl border border-border/60 bg-card/85 p-3">
           <div className="text-xs text-muted-foreground">Last used</div>
           <div className="mt-1 text-sm font-semibold">
             {txQuery.isLoading ? (
@@ -82,6 +82,7 @@ function StatsBlock(props: { categoryId: string; from?: string; to?: string }) {
 function CategoryInspectorContent(props: InspectorProps) {
   const { category, allCategories, from, to, onRequestDelete, onClose } = props;
   const update = useUpdateCategoryMutation();
+  const { confirm } = useConfirmDialog();
 
   const [name, setName] = React.useState(category.name);
   const [parentId, setParentId] = React.useState<string | null>(category.parentId ?? null);
@@ -97,8 +98,6 @@ function CategoryInspectorContent(props: InspectorProps) {
 
   const trimmedName = name.trim();
   const dirty = trimmedName !== category.name || (parentId ?? null) !== (category.parentId ?? null) || active !== category.active;
-
-  const colorOptions = React.useMemo(() => getCategoryColorOptions(), []);
 
   const parentOptions = React.useMemo(() => {
     const options = allCategories
@@ -143,8 +142,14 @@ function CategoryInspectorContent(props: InspectorProps) {
   }
 
   async function toggleArchived(nextActive: boolean) {
-    const label = nextActive ? "Restore this category?" : "Archive this category?";
-    const ok = window.confirm(label);
+    const ok = await confirm({
+      title: nextActive ? "Restore category" : "Archive category",
+      description: nextActive 
+        ? `Restore "${category.name}"? It will appear in category pickers again.`
+        : `Archive "${category.name}"? It won't appear in pickers but historical data is preserved.`,
+      confirmText: nextActive ? "Restore" : "Archive",
+      cancelText: "Cancel",
+    });
     if (!ok) return;
     setActive(nextActive);
     await update.mutateAsync({ id: category.id, payload: { active: nextActive } });
@@ -157,7 +162,15 @@ function CategoryInspectorContent(props: InspectorProps) {
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Inspector</div>
           <div className="mt-1 truncate text-lg font-semibold tracking-tight">{category.name}</div>
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <Badge variant="subtle">{kindLabel(category.kind)}</Badge>
+            <Badge 
+              variant="subtle" 
+              className={cn(
+                category.kind === "expense" && "bg-expense/10 text-expense border-expense/20",
+                category.kind === "income" && "bg-income/10 text-income border-income/20",
+              )}
+            >
+              {kindLabel(category.kind)}
+            </Badge>
             {!category.active ? <Badge variant="subtle">Inactive</Badge> : null}
           </div>
         </div>
@@ -181,16 +194,8 @@ function CategoryInspectorContent(props: InspectorProps) {
           {!trimmedName ? <div className="text-xs text-danger">Name is required.</div> : null}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Type</Label>
-            <div className="rounded-2xl border border-border/60 bg-background/30 px-3 py-2 text-sm">
-              {kindLabel(category.kind)}
-              <div className="text-xs text-muted-foreground">Type changes aren’t supported here yet.</div>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Parent</Label>
+        <div className="space-y-1.5">
+          <Label>Parent</Label>
             <Select
               value={parentId ?? "none"}
               onValueChange={(v) => setParentId(v === "none" ? null : v)}
@@ -213,29 +218,6 @@ function CategoryInspectorContent(props: InspectorProps) {
                 {moveError}
               </div>
             ) : null}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Color / icon</Label>
-            <div className="text-xs text-muted-foreground">Coming soon</div>
-          </div>
-          <div className="grid grid-cols-7 gap-2">
-            {colorOptions.map((c) => (
-              <button
-                key={c}
-                type="button"
-                disabled
-                className={cn(
-                  "h-7 w-7 rounded-2xl border border-border/60 opacity-60",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                )}
-                style={{ backgroundColor: c }}
-                aria-label="Color option (coming soon)"
-              />
-            ))}
-          </div>
         </div>
 
         <div className="rounded-2xl border border-border/60 bg-background/30 p-3">
@@ -294,8 +276,9 @@ function CategoryInspectorContent(props: InspectorProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border/60 bg-background/20 p-3">
-          <div className="text-xs font-semibold text-muted-foreground">Danger zone</div>
+        {/* Danger zone with visual separation per Color Psychology guidelines */}
+        <div className="rounded-2xl border border-danger/30 bg-danger/5 p-3">
+          <div className="text-xs font-semibold text-danger">Danger zone</div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Button
               variant="secondary"
@@ -328,7 +311,7 @@ export function CategoryInspectorPanel(props: InspectorProps & { containerRef?: 
   return (
     <div
       ref={containerRef as any}
-      className="h-[calc(100dvh-7.25rem)] rounded-3xl border border-border/60 bg-card/50 p-4 shadow-soft-lg"
+      className="h-[calc(100dvh-7.25rem)] rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg"
     >
       <CategoryInspectorContent {...rest} />
     </div>

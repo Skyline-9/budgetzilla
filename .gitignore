@@ -63,6 +63,14 @@ webapp/.turbo/
 # --- Rust ---
 target/
 
+# --- Tauri ---
+webapp/src-tauri/target/
+webapp/src-tauri/gen/schemas/
+webapp/src-tauri/gen/apple/build/
+webapp/src-tauri/gen/apple/Externals/
+webapp/src-tauri/gen/apple/*.xcodeproj/xcuserdata/
+webapp/src-tauri/gen/apple/*.xcodeproj/project.xcworkspace/xcuserdata/
+
 # --- macOS Build ---
 # Build working directory (contains generated files, PyInstaller output, etc.)
 .mac_build/

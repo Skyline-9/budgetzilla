@@ -47,12 +47,47 @@ import { TableRowActions } from "@/components/transactions/TableRowActions";
 import { TableSummary } from "@/components/transactions/TableSummary";
 import { useTransactionUiEvents } from "@/lib/transactionUiEvents";
 
+
 type Props = {
   transactions: Transaction[];
   categories: Category[];
   onRowClick?: (t: Transaction) => void;
   isFiltered?: boolean;
 };
+
+// Generate a consistent hue from a string (for merchant avatars)
+function stringToHue(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % 360;
+}
+
+function MerchantAvatar({ merchant }: { merchant: string | undefined }) {
+  if (!merchant) {
+    return (
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted/50 text-xs font-medium text-muted-foreground">
+        —
+      </div>
+    );
+  }
+
+  const letter = merchant.charAt(0).toUpperCase();
+  const hue = stringToHue(merchant);
+  const bgColor = `hsl(${hue}, 35%, 25%)`;
+  const textColor = `hsl(${hue}, 40%, 75%)`;
+
+  return (
+    <div
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+      style={{ backgroundColor: bgColor, color: textColor }}
+      aria-hidden="true"
+    >
+      {letter}
+    </div>
+  );
+}
 
 function SortIcon({ dir }: { dir: false | "asc" | "desc" }) {
   if (dir === "asc") return <ArrowUp className="h-4 w-4" />;
@@ -256,8 +291,11 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
           </Button>
         ),
         cell: ({ row }) => (
-          <div className={cn("truncate text-sm", !row.original.merchant && "text-muted-foreground")}>
-            {row.original.merchant ?? "—"}
+          <div className="flex items-center gap-2.5">
+            <MerchantAvatar merchant={row.original.merchant} />
+            <span className={cn("truncate text-sm", !row.original.merchant && "text-muted-foreground")}>
+              {row.original.merchant ?? "—"}
+            </span>
           </div>
         ),
       },
@@ -301,9 +339,10 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
         ),
         cell: ({ row }) => {
           const cents = row.original.amountCents;
+          const colorClass = cents >= 0 ? "text-income" : "text-expense";
           return (
             <div className="text-sm font-semibold">
-              <AnimatedMoneyCents cents={cents} />
+              <AnimatedMoneyCents cents={cents} className={colorClass} />
             </div>
           );
         },
@@ -352,8 +391,22 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
   const rows = table.getRowModel().rows;
   const colCount = table.getAllLeafColumns().length;
 
+  // Compute which row indices should show a date header (when date changes from previous row)
+  const dateHeaderIndices = React.useMemo(() => {
+    const indices = new Set<number>();
+    let prevDate: string | null = null;
+    for (let i = 0; i < rows.length; i++) {
+      const date = rows[i].original.date;
+      if (date !== prevDate) {
+        indices.add(i);
+        prevDate = date;
+      }
+    }
+    return indices;
+  }, [rows]);
+
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/50 shadow-soft-lg corner-glow tint-neutral">
+    <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/90 shadow-soft-lg corner-glow tint-neutral">
       <div className="p-4 space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -464,8 +517,8 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
       </div>
 
       <div className="border-t border-border/60">
-        <div className="h-[480px] overflow-auto bg-background/5 md:h-[560px]">
-          <Table className="min-w-[980px]">
+        <div className="h-[400px] overflow-auto bg-background/5 sm:h-[480px] md:h-[560px]">
+          <Table className="min-w-[800px] sm:min-w-[980px]">
             <TableHeader>
               {table.getHeaderGroups().map((hg) => (
                 <TableRow key={hg.id} className="bg-background/40">
@@ -486,13 +539,34 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
             <TableBody>
               <AnimatePresence initial={false}>
                 {rows.length ? (
-                  rows.map((row) => {
+                  rows.flatMap((row, rowIndex) => {
                     const txn = row.original;
                     const isCreated = createdId === txn.id;
                     const isFlashing = flash?.id === txn.id;
                     const flashOverlay = isFlashing && !reduceMotion ? "rgba(148,163,184,0.08)" : "rgba(0,0,0,0)";
+                    const showDateHeader = dateHeaderIndices.has(rowIndex);
 
-                    return (
+                    const elements: React.ReactNode[] = [];
+
+                    // Date group header
+                    if (showDateHeader) {
+                      elements.push(
+                        <tr
+                          key={`date-${txn.date}`}
+                          className="border-b border-border/40 bg-background/30"
+                        >
+                          <td
+                            colSpan={colCount}
+                            className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                          >
+                            {formatDateDisplay(txn.date)}
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    // Transaction row
+                    elements.push(
                       <motion.tr
                         key={row.id}
                         layout={!reduceMotion}
@@ -561,6 +635,8 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
                         ))}
                       </motion.tr>
                     );
+
+                    return elements;
                   })
                 ) : (
                   <motion.tr
@@ -591,7 +667,7 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
                             </div>
                             <div className="space-y-1 text-center">
                               <div className="font-semibold text-foreground/80">No transactions yet</div>
-                              <div className="text-sm">Use Quick Add above to log your first one.</div>
+                              <div className="text-sm">Press N or click Add Transaction to log your first one.</div>
                             </div>
                           </>
                         )}

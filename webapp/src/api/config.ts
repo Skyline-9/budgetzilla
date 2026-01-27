@@ -1,23 +1,19 @@
-export type ApiMode = "mock" | "real";
+export type ApiMode = "mock" | "local";
 
-// Handle both dev and packaged Mac app scenarios:
-// - Dev: VITE_API_BASE_URL="http://127.0.0.1:8123"
-// - Packaged Mac app: VITE_API_BASE_URL="" -> use empty string, let fetchJson/fetchForm handle it
-function getApiBaseUrl(): string {
-  const env = import.meta.env.VITE_API_BASE_URL;
-  // If env is undefined, null, or empty string, use window.location.origin
-  if (!env || env.trim() === "") {
-    return window.location.origin;
-  }
-  return env.replace(/\/$/, "");
+// Determine API mode:
+// - "local" (default): Uses SQLite WASM with local storage
+// - "mock": Uses in-memory mock data
+function getApiMode(): ApiMode {
+  const env = import.meta.env.VITE_API_MODE;
+  if (env === "mock") return "mock";
+  return "local"; // Default to local mode (frontend-only)
 }
 
-export const API_BASE_URL = getApiBaseUrl();
+export const API_MODE: ApiMode = getApiMode();
 
-export const API_MODE: ApiMode =
-  (import.meta.env.VITE_API_MODE === "real" ? "real" : "mock") satisfies ApiMode;
-
-
+// Google OAuth Client ID for Drive sync (frontend-only)
+// Set via VITE_GOOGLE_CLIENT_ID environment variable
+export const GOOGLE_CLIENT_ID: string = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
 
 
