@@ -1,8 +1,11 @@
 import React from "react";
-import { Database, Download, FileSpreadsheet, Moon, Palette, Sun, Trash2, Upload } from "lucide-react";
+import { Cloud, CloudOff, Database, Download, FileSpreadsheet, Moon, Palette, RefreshCw, Sun, Trash2, Upload } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { API_MODE } from "@/api/config";
+import { API_MODE, GOOGLE_CLIENT_ID } from "@/api/config";
+import { useDriveStatusQuery, useSmartSyncMutation, driveQk } from "@/api/queries";
+import { connect as connectDrive } from "@/services/driveSync";
+import { api } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -60,6 +63,120 @@ function Card({
       </div>
       <div className="mt-3">{children}</div>
     </div>
+  );
+}
+
+function GoogleDriveSyncCard() {
+  const queryClient = useQueryClient();
+  const { data: status, isLoading } = useDriveStatusQuery();
+  const { mutate: syncNow, isPending: isSyncing } = useSmartSyncMutation();
+  const [isConnecting, setIsConnecting] = React.useState(false);
+  const [isDisconnecting, setIsDisconnecting] = React.useState(false);
+
+  const handleConnect = async () => {
+    if (!GOOGLE_CLIENT_ID) {
+      toast.error("Google Client ID not configured. Set VITE_GOOGLE_CLIENT_ID environment variable.");
+      return;
+    }
+    setIsConnecting(true);
+    try {
+      await connectDrive(GOOGLE_CLIENT_ID);
+      await queryClient.invalidateQueries({ queryKey: driveQk.status() });
+      toast.success("Connected to Google Drive");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to connect");
+      console.error(e);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    setIsDisconnecting(true);
+    try {
+      await api.disconnectDrive();
+      await queryClient.invalidateQueries({ queryKey: driveQk.status() });
+      toast.success("Disconnected from Google Drive");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to disconnect");
+      console.error(e);
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
+
+  const handleSync = () => {
+    syncNow(undefined, {
+      onSuccess: () => {
+        toast.success("Sync complete");
+      },
+    });
+  };
+
+  const isConnected = status?.connected ?? false;
+  const lastSyncAt = status?.last_sync_at;
+
+  return (
+    <Card
+      title="Google Drive"
+      icon={isConnected ? <Cloud className="h-4 w-4" /> : <CloudOff className="h-4 w-4" />}
+      tint={isConnected ? "income" : "neutral"}
+    >
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 text-sm">
+          <div
+            className={cn(
+              "h-2 w-2 rounded-full",
+              isConnected ? "bg-green-500" : "bg-muted-foreground/40"
+            )}
+          />
+          <span className={isConnected ? "text-green-600 dark:text-green-400 font-medium" : "text-muted-foreground"}>
+            {isLoading ? "Checking..." : isConnected ? "Connected" : "Not connected"}
+          </span>
+        </div>
+
+        {isConnected && lastSyncAt && (
+          <div className="text-xs text-muted-foreground">
+            Last synced: {new Date(lastSyncAt).toLocaleString()}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {!isConnected ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleConnect}
+              disabled={isConnecting || isLoading}
+            >
+              <Cloud className="mr-1.5 h-4 w-4" />
+              {isConnecting ? "Connecting..." : "Connect Google Drive"}
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSync}
+                disabled={isSyncing}
+              >
+                <RefreshCw className={cn("mr-1.5 h-4 w-4", isSyncing && "animate-spin")} />
+                {isSyncing ? "Syncing..." : "Sync Now"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDisconnect}
+                disabled={isDisconnecting}
+              >
+                <CloudOff className="mr-1.5 h-4 w-4" />
+                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -289,6 +406,12 @@ export function SettingsPage() {
             </div>
           </Card>
         </div>
+      </section>
+
+      {/* Cloud Sync section */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Cloud Sync</h2>
+        <GoogleDriveSyncCard />
       </section>
 
       {/* Danger zone */}
