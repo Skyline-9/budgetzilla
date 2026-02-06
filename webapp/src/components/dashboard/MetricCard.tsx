@@ -87,7 +87,7 @@ function useAutoScaleText({
 }
 
 function Sparkline({
-  values,
+  values: rawValues,
   className,
 }: {
   values: number[];
@@ -95,6 +95,9 @@ function Sparkline({
 }) {
   const width = 108;
   const height = 28;
+
+  // Filter out any non-numeric values to avoid NaN in path
+  const values = rawValues.filter((v) => typeof v === "number" && Number.isFinite(v));
   if (values.length < 2) return null;
 
   const min = Math.min(...values);
@@ -106,21 +109,19 @@ function Sparkline({
     y: height - ((v - min) / range) * height,
   }));
 
-  // Create smooth curve using cubic bezier spline (Catmull-Rom to Bezier conversion)
+  // Create smooth curve using cubic bezier spline
   const tension = 0.3;
   let d = `M ${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
 
   for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[Math.max(0, i - 1)];
     const p1 = points[i];
     const p2 = points[i + 1];
-    const p3 = points[Math.min(points.length - 1, i + 2)];
 
-    // Control points for cubic bezier
-    const cp1x = p1.x + (p2.x - p0.x) * tension;
-    const cp1y = p1.y + (p2.y - p0.y) * tension;
-    const cp2x = p2.x - (p3.x - p1.x) * tension;
-    const cp2y = p2.y - (p3.y - p1.y) * tension;
+    // Simple control points to avoid excessive curvature outside bounds
+    const cp1x = p1.x + (p2.x - p1.x) * tension;
+    const cp1y = p1.y;
+    const cp2x = p2.x - (p2.x - p1.x) * tension;
+    const cp2y = p2.y;
 
     d += ` C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
   }

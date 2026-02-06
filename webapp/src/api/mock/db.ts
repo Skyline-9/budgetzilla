@@ -215,12 +215,12 @@ export function getMockDb(): MockDb {
     const base = rand();
     const dollars =
       cat.id.includes("groceries") ? 35 + base * 140 :
-      cat.id.includes("dining") ? 12 + base * 90 :
-      cat.id.includes("transport") ? 8 + base * 55 :
-      cat.id.includes("entertainment") ? 10 + base * 70 :
-      cat.id.includes("subscriptions") ? 8 + base * 25 :
-      cat.id.includes("health") ? 10 + base * 90 :
-      8 + base * 80;
+        cat.id.includes("dining") ? 12 + base * 90 :
+          cat.id.includes("transport") ? 8 + base * 55 :
+            cat.id.includes("entertainment") ? 10 + base * 70 :
+              cat.id.includes("subscriptions") ? 8 + base * 25 :
+                cat.id.includes("health") ? 10 + base * 90 :
+                  8 + base * 80;
     const cents = -Math.floor(dollars * 100);
 
     addTxn({
@@ -235,7 +235,7 @@ export function getMockDb(): MockDb {
   // Add more transactions specifically for Jan-Feb 2026
   const jan2026Start = new Date(2026, 0, 1);
   const feb2026End = new Date(2026, 1, 28);
-  
+
   // Weekly groceries in Jan-Feb
   for (let week = 0; week < 8; week++) {
     const date = toYmd(addDays(jan2026Start, week * 7 + Math.floor(rand() * 3)));
@@ -420,24 +420,32 @@ export function mockDashboardCharts(params: GetDashboardParams) {
     }
   }
 
-  const monthlyTrend =
-    interval === "day" && params.from && params.to
-      ? (() => {
-          const start = parseISO(params.from!);
-          const end = parseISO(params.to!);
-          if (!isValid(start) || !isValid(end)) return [];
-          const days: string[] = [];
-          for (let d = start; d <= end; d = addDays(d, 1)) {
-            days.push(toYmd(d));
-          }
-          return days.map((day) => {
-            const v = byPeriod.get(day) ?? { income: 0, expenseAbs: 0 };
-            return { month: day, incomeCents: v.income, expenseCents: v.expenseAbs };
-          });
-        })()
-      : Array.from(byPeriod.entries())
-          .sort((a, b) => a[0].localeCompare(b[0]))
-          .map(([month, v]) => ({ month, incomeCents: v.income, expenseCents: v.expenseAbs }));
+  const monthlyTrend = (() => {
+    if (!params.from || !params.to) {
+      return Array.from(byPeriod.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([month, v]) => ({ month, incomeCents: v.income, expenseCents: v.expenseAbs }));
+    }
+
+    const startRaw = parseISO(params.from!);
+    const endRaw = parseISO(params.to!);
+    if (!isValid(startRaw) || !isValid(endRaw)) {
+      return Array.from(byPeriod.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([month, v]) => ({ month, incomeCents: v.income, expenseCents: v.expenseAbs }));
+    }
+
+    const start = interval === "day" ? startRaw : startOfMonth(startRaw);
+    const end = interval === "day" ? endRaw : startOfMonth(endRaw);
+    const result: { month: string; incomeCents: number; expenseCents: number }[] = [];
+
+    for (let d = start; d <= end; d = interval === "day" ? addDays(d, 1) : addMonths(d, 1)) {
+      const key = interval === "day" ? toYmd(d) : monthKey(toYmd(d));
+      const v = byPeriod.get(key) ?? { income: 0, expenseAbs: 0 };
+      result.push({ month: key, incomeCents: v.income, expenseCents: v.expenseAbs });
+    }
+    return result;
+  })();
 
   const categoryBreakdown = Array.from(byCategoryExpense.entries())
     .map(([categoryId, totalCents]) => ({

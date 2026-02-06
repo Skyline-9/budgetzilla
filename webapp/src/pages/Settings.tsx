@@ -16,6 +16,7 @@ import { useTheme } from "@/providers/ThemeProvider";
 import { getCurrency, setCurrency } from "@/lib/format";
 import { downloadXLSX, downloadTransactionsCSV } from "@/services/export";
 import { importCashewCSV } from "@/services/importCashew";
+import { importXLSX } from "@/services/importXLSX";
 import { clearAllData } from "@/db/schema";
 import { cn } from "@/lib/cn";
 
@@ -83,6 +84,8 @@ function GoogleDriveSyncCard() {
       await connectDrive(GOOGLE_CLIENT_ID);
       await queryClient.invalidateQueries({ queryKey: driveQk.status() });
       toast.success("Connected to Google Drive");
+      // Automatically trigger a sync after connecting
+      handleSync();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to connect");
       console.error(e);
@@ -187,7 +190,9 @@ export function SettingsPage() {
   const [currency, setCurrencyState] = React.useState(() => getCurrency());
   const [isExporting, setIsExporting] = React.useState(false);
   const [isImporting, setIsImporting] = React.useState(false);
+  const [isImportingXLSX, setIsImportingXLSX] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const xlsxInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleExportXLSX = async () => {
     setIsExporting(true);
@@ -219,6 +224,10 @@ export function SettingsPage() {
     fileInputRef.current?.click();
   };
 
+  const handleImportXLSXClick = () => {
+    xlsxInputRef.current?.click();
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -245,6 +254,31 @@ export function SettingsPage() {
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleXLSXFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImportingXLSX(true);
+    try {
+      const result = await importXLSX(file);
+
+      if (result.errors.length > 0) {
+        toast.warning(`XLSX Import: ${result.errors.length} error(s). ${result.transactionsImported} transactions, ${result.categoriesImported} categories imported.`);
+      } else {
+        toast.success(
+          `Successfully imported ${result.transactionsImported} transactions, ${result.categoriesImported} categories, and ${result.budgetsImported} budget entries.`
+        );
+      }
+      await queryClient.invalidateQueries();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "XLSX Import failed");
+      console.error(err);
+    } finally {
+      setIsImportingXLSX(false);
+      if (xlsxInputRef.current) xlsxInputRef.current.value = "";
     }
   };
 
@@ -365,9 +399,10 @@ export function SettingsPage() {
           <Card title="Import" icon={<Upload className="h-4 w-4" />} tint="accent">
             <div className="space-y-3">
               <div className="text-xs text-muted-foreground">
-                Import transactions from Cashew CSV format.
-                <HelpTooltip content="Supports Cashew app export format with columns: date, amount, title, category, etc." />
+                Import data from Excel or Cashew CSV format.
+                <HelpTooltip content="Supports native Budget XLSX export and Cashew app export format." />
               </div>
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -375,15 +410,34 @@ export function SettingsPage() {
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleImportClick}
-                disabled={isImporting}
-              >
-                <Upload className="mr-1.5 h-4 w-4" />
-                {isImporting ? "Importing..." : "Import CSV"}
-              </Button>
+              <input
+                ref={xlsxInputRef}
+                type="file"
+                accept=".xlsx"
+                onChange={handleXLSXFileChange}
+                className="hidden"
+              />
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleImportXLSXClick}
+                  disabled={isImportingXLSX}
+                >
+                  <FileSpreadsheet className="mr-1.5 h-4 w-4" />
+                  {isImportingXLSX ? "Importing..." : "Import Excel"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleImportClick}
+                  disabled={isImporting}
+                >
+                  <Upload className="mr-1.5 h-4 w-4" />
+                  {isImporting ? "Importing..." : "Import CSV"}
+                </Button>
+              </div>
             </div>
           </Card>
 

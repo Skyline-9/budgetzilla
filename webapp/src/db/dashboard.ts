@@ -1,7 +1,11 @@
-/**
- * Dashboard aggregation queries.
- * Ports the logic from dashboard_service.py to SQL.
- */
+import {
+  addDays,
+  addMonths,
+  format,
+  parseISO,
+  startOfMonth,
+  startOfToday
+} from "date-fns";
 import { execSQL } from "./sqlite";
 import { getCategories } from "./categories";
 import type {
@@ -104,12 +108,32 @@ async function getMonthlyTrend(params: DashboardParams): Promise<MonthlyTrendPoi
   `;
 
   const rows = await execSQL(sql, values) as [string, number, number][];
-  
-  return rows.map(([month, income, expense]) => ({
+
+  const results = rows.map(([month, income, expense]) => ({
     month,
     incomeCents: income,
     expenseCents: expense,
   }));
+
+  // Fill gaps if from/to are provided
+  if (params.from && params.to) {
+    const start = startOfMonth(parseISO(params.from));
+    const end = startOfMonth(parseISO(params.to));
+    const filled: MonthlyTrendPoint[] = [];
+
+    for (let d = start; d <= end; d = addMonths(d, 1)) {
+      const monthStr = format(d, "yyyy-MM");
+      const existing = results.find((r) => r.month === monthStr);
+      if (existing) {
+        filled.push(existing);
+      } else {
+        filled.push({ month: monthStr, incomeCents: 0, expenseCents: 0 });
+      }
+    }
+    return filled;
+  }
+
+  return results;
 }
 
 /**
@@ -130,12 +154,32 @@ async function getDailyTrend(params: DashboardParams): Promise<MonthlyTrendPoint
   `;
 
   const rows = await execSQL(sql, values) as [string, number, number][];
-  
-  return rows.map(([month, income, expense]) => ({
+
+  const results = rows.map(([month, income, expense]) => ({
     month,
     incomeCents: income,
     expenseCents: expense,
   }));
+
+  // Fill gaps if from/to are provided
+  if (params.from && params.to) {
+    const start = parseISO(params.from);
+    const end = parseISO(params.to);
+    const filled: MonthlyTrendPoint[] = [];
+
+    for (let d = start; d <= end; d = addDays(d, 1)) {
+      const dayStr = format(d, "yyyy-MM-dd");
+      const existing = results.find((r) => r.month === dayStr);
+      if (existing) {
+        filled.push(existing);
+      } else {
+        filled.push({ month: dayStr, incomeCents: 0, expenseCents: 0 });
+      }
+    }
+    return filled;
+  }
+
+  return results;
 }
 
 /**
@@ -148,7 +192,7 @@ async function getCategoryBreakdown(params: DashboardParams, limit = 10): Promis
   const { clause, values } = buildWhereClause(params);
 
   // Only expenses (negative amounts)
-  const expenseClause = clause 
+  const expenseClause = clause
     ? `${clause} AND amount_cents < 0`
     : "WHERE deleted = 0 AND amount_cents < 0";
 
@@ -201,7 +245,7 @@ async function getCategoryMonthly(params: DashboardParams, topN = 5): Promise<{
 
   // Get monthly breakdown for top categories
   const categoryPlaceholders = topCategoryIds.map(() => "?").join(", ");
-  const expenseClause = clause 
+  const expenseClause = clause
     ? `${clause} AND amount_cents < 0 AND category_id IN (${categoryPlaceholders})`
     : `WHERE deleted = 0 AND amount_cents < 0 AND category_id IN (${categoryPlaceholders})`;
 
