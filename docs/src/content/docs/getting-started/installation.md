@@ -9,9 +9,13 @@ Before installing Budget, ensure you have:
 
 - **Node.js 18+** — [Download from nodejs.org](https://nodejs.org/)
 - **Git** — For cloning the repository
+- **Rust** — Required for the desktop app ([rustup.rs](https://rustup.rs/))
 
-For the macOS app, you also need:
-- **Xcode Command Line Tools** — `xcode-select --install`
+### Platform Specific Requirements
+
+- **macOS**: Xcode Command Line Tools (`xcode-select --install`)
+- **Windows**: [Microsoft Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and WebView2
+- **Linux**: Build essentials and WebKit2GTK (see [Tauri docs](https://tauri.app/v1/guides/getting-started/prerequisites/))
 
 ## Clone the Repository
 
@@ -46,67 +50,57 @@ npm run preview
 
 The built files are in `webapp/dist/` and can be served by any static file server.
 
-## macOS App
+## Desktop App (Tauri)
 
-### One-Command Build
-
-```bash
-./build_mac_app.sh
-```
-
-This creates `dist/Budget.app` with everything bundled inside.
-
-### Build Options
+### Development
 
 ```bash
-# Full rebuild from scratch
-CLEAN=1 ./build_mac_app.sh
-
-# Fast frontend-only rebuild (for UI development)
-DEV_MODE=1 ./build_mac_app.sh
-
-# Show detailed build output
-VERBOSE=1 ./build_mac_app.sh
-
-# Preview what would be built without building
-DRY_RUN=1 ./build_mac_app.sh
-
-# Custom app name and version
-APP_NAME="MyBudget" APP_VERSION="2.0" ./build_mac_app.sh
-
-# Code signing for distribution
-CODESIGN_IDENTITY="Developer ID Application: Your Name" ./build_mac_app.sh
+cd webapp
+npm run tauri:dev
 ```
+
+This starts the Vite dev server and opens the native application window.
+
+### Production Build
+
+```bash
+cd webapp
+npm run tauri:build
+```
+
+Build artifacts are output to `src-tauri/target/release/bundle/`.
+
+| Platform | Output Format |
+|----------|---------------|
+| **macOS** | `.app`, `.dmg` |
+| **Windows** | `.msi`, `.exe` |
+| **Linux** | `.deb`, `.AppImage` |
 
 ### How the Build Works
 
-The build system is written in Rust and optimized for speed:
+Budgetzilla uses Tauri to bridge the web frontend with a native Rust backend:
 
-1. **Parallel builds** — Frontend and Swift compile simultaneously
-2. **Incremental** — Only rebuilds what changed
-3. **Auto icon generation** — Creates proper macOS icon from PNG
-4. **No Rust required** — Prebuilt universal binary included
+1. **Vite Build** — Compiles the React application into static assets.
+2. **Rust Compilation** — Compiles the native backend and bundles the assets.
+3. **Packaging** — Creates platform-specific installers and bundles.
 
 ## Data Storage
 
-### Browser
+### Browser Mode
 
-Data is stored in your browser using OPFS (Origin Private File System). This means:
+Data is stored using OPFS (Origin Private File System). This means:
 
-- Data persists across browser sessions
-- Each browser has its own separate database
-- Private/incognito mode won't persist data
-- Clearing browser data will delete your budget data
+- Data persists across browser sessions.
+- Private/incognito mode won't persist data.
+- Clearing browser data WILL delete your budget data.
 
-### macOS App
+### Desktop App Mode
 
-The macOS app stores data in its application container:
+The desktop app stores data in the standard system application data folder:
 
-```
-~/Library/Containers/com.yourname.Budget/Data/
-```
-
-This location persists across app updates.
+- **macOS**: `~/Library/Application Support/com.budgetzilla.app/`
+- **Windows**: `%APPDATA%\com.budgetzilla.app\`
+- **Linux**: `~/.local/share/com.budgetzilla.app/`
 
 ## Troubleshooting
 

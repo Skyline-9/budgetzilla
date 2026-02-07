@@ -3,7 +3,7 @@ title: Keyboard Shortcuts
 description: Quick reference for all keyboard shortcuts.
 ---
 
-Budget supports keyboard shortcuts for common actions.
+Budgetzilla supports keyboard shortcuts for common actions.
 
 ## Global Shortcuts
 
@@ -40,7 +40,7 @@ Budget supports keyboard shortcuts for common actions.
 | `Tab` | Move to next field |
 | `Shift + Tab` | Move to previous field |
 
-## macOS App Only
+## Desktop App Shortcuts
 
 | Shortcut | Action |
 |----------|--------|

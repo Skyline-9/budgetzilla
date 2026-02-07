@@ -3,7 +3,7 @@ title: Transactions
 description: Managing your income and expenses.
 ---
 
-Transactions are the core of Budget. Every purchase, payment, or income you record becomes a transaction.
+Transactions are the core of Budgetzilla. Every purchase, payment, or income you record becomes a transaction.
 
 ## Adding Transactions
 

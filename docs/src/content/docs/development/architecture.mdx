@@ -1,33 +1,41 @@
 ---
 title: Architecture
-description: Technical overview of Budget's architecture.
+description: Technical overview of Budgetzilla's architecture.
 ---
 
-Budget follows a **local-first** architecture where all data operations happen in the browser without requiring a backend server.
+Budgetzilla follows a **local-first** architecture where all data operations happen in the browser or local desktop process without requiring a shared backend server.
 
 ## High-Level Overview
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     Budget App                          │
-├─────────────────────────────────────────────────────────┤
-│  React UI Layer                                         │
-│  ├── Pages (Dashboard, Transactions, Categories, etc.) │
-│  ├── Components (UI primitives, forms, charts)         │
-│  └── Hooks (data fetching, state management)           │
-├─────────────────────────────────────────────────────────┤
-│  API Layer                                              │
-│  ├── Unified API interface                              │
-│  └── Local implementation (SQLite operations)          │
-├─────────────────────────────────────────────────────────┤
-│  Database Layer                                         │
-│  ├── SQLite WASM (sql.js)                              │
-│  └── OPFS persistence                                   │
-├─────────────────────────────────────────────────────────┤
-│  Services                                               │
-│  ├── Google Drive sync                                  │
-│  └── Import/Export                                      │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+subgraph "UI Layer (React)"
+Pages[Pages: Dashboard, Trans, etc.]
+Comp[Components: UI, Charts, Forms]
+Hooks[Hooks: Query, State]
+Pages --> Comp
+Pages --> Hooks
+end
+
+subgraph "API Layer"
+Unified[Unified API Interface]
+Local[Local SQLite Implementation]
+Mock[Mock In-Memory Mode]
+Unified --> Local
+Unified --> Mock
+end
+
+subgraph "Storage Layer"
+WASM[SQLite WASM]
+OPFS[OPFS / Native FS]
+WASM --> OPFS
+end
+
+Hooks --> Unified
+Local --> WASM
+
+Services[Services: Drive Sync, Export]
+Services --> Unified
 ```
 
 ## Project Structure
@@ -39,22 +47,18 @@ budget/
 │   │   ├── api/           # API client layer
 │   │   │   ├── index.ts   # Unified API exports
 │   │   │   ├── config.ts  # API configuration
-│   │   │   └── local/     # Local SQLite implementation
+│   │   │   └── local/     # SQLite implementation
 │   │   ├── db/            # Database operations
-│   │   │   ├── schema.ts  # SQLite schema definitions
-│   │   │   └── queries.ts # SQL query functions
 │   │   ├── services/      # External services
-│   │   │   ├── drive/     # Google Drive integration
-│   │   │   └── export/    # Export functionality
 │   │   ├── components/    # React components
 │   │   ├── pages/         # Page components
 │   │   ├── hooks/         # Custom React hooks
 │   │   └── providers/     # React context providers
+│   ├── src-tauri/         # Tauri desktop wrapper
+│   │   ├── src/           # Rust backend code
+│   │   └── tauri.conf.json # Tauri configuration
 │   ├── public/            # Static assets
 │   └── index.html         # Entry point
-├── macos-app/             # Native macOS wrapper
-│   ├── Sources/           # Swift source code
-│   └── build_tool/        # Rust build orchestrator
 └── docs/                  # Documentation (Starlight)
 ```
 
@@ -70,7 +74,7 @@ budget/
 | Tailwind CSS | Styling |
 | Radix UI | Accessible UI primitives |
 | TanStack Query | Data fetching and caching |
-| Recharts | Charts and visualizations |
+| ECharts | Charts and visualizations |
 
 ### Database
 
@@ -79,13 +83,13 @@ budget/
 | sql.js | SQLite compiled to WebAssembly |
 | OPFS | Browser file system for persistence |
 
-### macOS App
+### Desktop App (Tauri)
 
 | Technology | Purpose |
 |------------|---------|
-| Swift | Native app code |
-| WKWebView | Embedded web view |
-| Rust | Build orchestration tool |
+| Rust | Native backend and system integration |
+| Tauri | Desktop application framework |
+| WebView2 / WKWebView | Native web views (Windows / macOS) |
 
 ## Data Flow
 

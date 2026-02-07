@@ -7,7 +7,7 @@ Categories help you organize and understand where your money goes.
 
 ## Default Categories
 
-Budget comes with common categories pre-configured:
+Budgetzilla comes with common categories pre-configured:
 
 **Expenses:**
 - Food & Dining

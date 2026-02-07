@@ -120,7 +120,7 @@ jobs:
         with:
           projectPath: webapp
           tagName: v__VERSION__
-          releaseName: 'Budget v__VERSION__'
+          releaseName: 'Budgetzilla v__VERSION__'
           releaseBody: 'See the assets to download this version.'
           releaseDraft: true
           prerelease: false

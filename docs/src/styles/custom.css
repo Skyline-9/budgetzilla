@@ -1,7 +1,8 @@
 :root {
-	--sl-color-accent-low: #1e3a5f;
-	--sl-color-accent: #3b82f6;
-	--sl-color-accent-high: #93c5fd;
+	/* Budgetzilla Primary Palette (Dark by default in Starlight) */
+	--sl-color-accent-low: hsl(258, 94%, 20%);
+	--sl-color-accent: hsl(258, 94%, 85%);
+	--sl-color-accent-high: hsl(258, 94%, 95%);
 	--sl-color-white: #ffffff;
 	--sl-color-gray-1: #eceef2;
 	--sl-color-gray-2: #c0c2c7;
@@ -10,10 +11,49 @@
 	--sl-color-gray-5: #353841;
 	--sl-color-gray-6: #24272f;
 	--sl-color-black: #17181c;
+	--sl-color-bg: hsl(240, 7%, 7%);
+
+	/* Themed background variables */
+	--bg-gradient-1: rgba(167, 139, 250, 0.1);
+	--bg-gradient-2: rgba(56, 189, 248, 0.08);
+	--bg-grid-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Light Theme Overrides */
 :root[data-theme='light'] {
-	--sl-color-accent-low: #dbeafe;
-	--sl-color-accent: #2563eb;
-	--sl-color-accent-high: #1e40af;
+	--sl-color-accent-low: hsl(262, 83%, 95%);
+	--sl-color-accent: hsl(262, 83%, 55%);
+	--sl-color-accent-high: hsl(262, 83%, 45%);
+	--sl-color-bg: hsl(210, 35%, 98%);
+	--sl-color-white: hsl(222, 84%, 5%);
+	--sl-color-gray-1: hsl(222, 16%, 20%);
+	--sl-color-gray-2: hsl(222, 10%, 40%);
+	--sl-color-gray-3: hsl(222, 10%, 55%);
+	--sl-color-gray-4: hsl(222, 10%, 70%);
+	--sl-color-gray-5: hsl(222, 10%, 85%);
+	--sl-color-gray-6: hsl(222, 10%, 92%);
+	--sl-color-black: hsl(210, 35%, 98%);
+
+	/* Navigation and Card Overrides for Light Mode */
+	--sl-color-bg-nav: hsl(210, 35%, 98%);
+	--sl-color-bg-sidebar: hsl(210, 35%, 98%);
+	--sl-color-bg-inline-code: hsl(222, 10%, 92%);
+	--sl-color-bg-card: hsl(0, 0%, 100%);
+	--sl-color-border: hsl(222, 10%, 90%);
+
+	--bg-gradient-1: rgba(167, 139, 250, 0.08);
+	--bg-gradient-2: rgba(56, 189, 248, 0.06);
+	--bg-grid-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Base background implementation */
+body {
+	background-color: var(--sl-color-bg);
+	background-image:
+		radial-gradient(1200px 600px at 12% 0%, var(--bg-gradient-1), transparent 55%),
+		radial-gradient(900px 420px at 86% 10%, var(--bg-gradient-2), transparent 60%),
+		linear-gradient(to right, var(--bg-grid-color) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--bg-grid-color) 1px, transparent 1px);
+	background-size: auto, auto, 24px 24px, 24px 24px;
+	background-attachment: fixed;
 }

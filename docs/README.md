@@ -1,49 +1,43 @@
-# Starlight Starter Kit: Basics
+# Budgetzilla Documentation Site
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+This is the documentation site for **Budgetzilla**, a local-first budgeting application.
 
-```
-npm create astro@latest -- --template starlight
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Built with [Starlight](https://starlight.astro.build/) and [Astro](https://astro.build/).
 
 ## 🚀 Project Structure
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
 ```
 .
-├── public/
+├── public/                 # Static assets
 ├── src/
-│   ├── assets/
+│   ├── assets/            # Local images/logo
 │   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+│   │   └── docs/          # Markdown documentation files
+│   └── styles/            # Custom CSS (Budgetzilla branding)
+├── astro.config.mjs        # Astro / Starlight configuration
+├── package.json            # Dependencies and scripts
+└── tsconfig.json           # TypeScript configuration
 ```
-
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
-
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
-
-Static assets, like favicons, can be placed in the `public/` directory.
 
 ## 🧞 Commands
 
-All commands are run from the root of the project, from a terminal:
+All commands are run from the `docs/` directory:
 
 | Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
+| :------------------------ | :---------------- :----------------------------------------------- |
 | `npm install`             | Installs dependencies                            |
 | `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+| `npm run build`           | Build the production site to `./dist/`           |
+| `npm run preview`         | Preview your build locally                       |
 
-## 👀 Want to learn more?
+## 🎨 Theme & Branding
 
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+The documentation uses a custom design system mapped to the Budgetzilla webapp:
+
+- **System Autodetection**: Automatically respects the user's OS theme.
+- **Theme Toggle**: Accessible in the header for manual dark/light switching.
+- **Custom Background**: Implements a rich, radial-glow gradient and grid pattern via `src/styles/custom.css`.
+
+## 🤝 Contributing
+
+Documentation updates are welcome! Please see the [Contributing Guide](https://github.com/your-username/budget/blob/main/docs/src/content/docs/development/contributing.md) for details.

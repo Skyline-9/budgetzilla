@@ -1,15 +1,15 @@
 # Architecture
 
 Budgetzilla is a local-first budgeting app. The primary runtime is a React + SQLite
-WASM webapp that stores all data locally in the browser (OPFS). The macOS app
-is a thin Swift wrapper that serves the built webapp over a local HTTP server
-and loads it in a WKWebView.
+WASM webapp that stores all data locally in the browser (OPFS). The desktop app
+is built using Tauri, which provides a native Rust-based backend and a 
+WebView-based frontend across macOS, Windows, and Linux.
 
 ## High-level layout
 
 - `webapp/`: React + TypeScript frontend and SQLite WASM storage
-- `macos-app/`: Swift wrapper app and Rust build tool
-- `build_mac_app.sh`: top-level build entrypoint for macOS app
+- `webapp/src-tauri/`: Tauri configuration and Rust-based desktop backend
+- `webapp/build_tauri.bat`: Build entrypoint for Windows Tauri app
 
 ## Runtime architecture
 
@@ -24,14 +24,14 @@ and loads it in a WKWebView.
 5. Optional services (import/export, Google Drive sync) live in
    `webapp/src/services/`.
 
-### macOS app
+### Desktop app (Tauri)
 
-1. `BackendManager` starts a local HTTP server on a random port.
-2. The server serves the built webapp’s static assets from the app bundle and
-   falls back to `index.html` for SPA routes.
-3. `WKWebView` loads the local server URL.
-4. The webapp uses `window.location.origin` as the API base in packaged builds,
-   so the app can fetch relative to the local server.
+1. Tauri starts a native process using Rust.
+2. It uses the native WebView component (WKWebView on macOS, WebView2 on Windows).
+3. The webapp is served via a custom protocol (`tauri://`) in production or 
+   `localhost` in development.
+4. Data access still flows through the same API layer, but Tauri provides 
+   additional system capabilities (native menus, file system access).
 
 ## Data flow
 
@@ -51,10 +51,9 @@ and loads it in a WKWebView.
 
 ## Build and packaging
 
-- The macOS build is orchestrated by `build_mac_app.sh`, which runs the Rust
-  build tool in `macos-app/build_tool/` and SwiftPM for the wrapper.
-- The webapp build output is bundled into the macOS app and served by the local
-  HTTP server at runtime.
+- Built using the Tauri CLI (`npm run tauri:build`).
+- Compiles a Rust binary that bundles the built React webapp.
+- Produces platform-specific installers (.app/dmg for macOS, .msi/exe for Windows).
 
 ## Key modules (webapp)
 

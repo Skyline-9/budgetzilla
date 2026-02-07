@@ -1,10 +1,11 @@
-// @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import mermaid from 'astro-mermaid';
 
 // https://astro.build/config
 export default defineConfig({
 	integrations: [
+		mermaid(),
 		starlight({
 			title: 'Budgetzilla',
 			description: 'Local-first budgeting that just works.',
@@ -39,7 +40,7 @@ export default defineConfig({
 					label: 'Development',
 					items: [
 						{ label: 'Architecture', slug: 'development/architecture' },
-						{ label: 'Building macOS App', slug: 'development/macos-build' },
+						{ label: 'Building Desktop App', slug: 'development/desktop-build' },
 						{ label: 'Contributing', slug: 'development/contributing' },
 					],
 				},

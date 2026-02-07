@@ -1,9 +1,9 @@
 ---
 title: Import & Export
-description: Moving data in and out of Budget.
+description: Moving data in and out of Budgetzilla.
 ---
 
-Budget supports various import and export formats for data portability.
+Budgetzilla supports various import and export formats for data portability.
 
 ## Export Options
 
@@ -13,7 +13,7 @@ Export individual data types as CSV files:
 
 - **Transactions** — All transaction data
 - **Categories** — Your category definitions
-- **Budgets** — Budget allocations
+- **Budgets** — Budgetzilla allocations
 
 Go to **Settings > Export** and select the data type to export.
 
@@ -35,7 +35,7 @@ The workbook includes:
 
 ### Cashew Import
 
-Budget supports importing from [Cashew](https://cashewapp.web.app/), a popular budgeting app:
+Budgetzilla supports importing from [Cashew](https://cashewapp.web.app/), a popular budgeting app:
 
 1. Export your data from Cashew as CSV
 2. Go to **Settings > Import**
@@ -51,7 +51,7 @@ Import transactions from any CSV file:
 1. Go to **Settings > Import**
 2. Select **CSV**
 3. Upload your file
-4. Map columns to Budget fields
+4. Map columns to Budgetzilla fields
 5. Preview the data
 6. Confirm import
 

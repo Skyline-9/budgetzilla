@@ -5,21 +5,20 @@ description: Get Budgetzilla running in minutes.
 
 Choose your preferred way to run Budgetzilla:
 
-## Option 1: macOS App (Recommended)
+## Option 1: Desktop App (Tauri)
 
-The easiest way to use Budgetzilla on macOS:
+The recommended way to use Budgetzilla:
 
 ```bash
 git clone https://github.com/your-username/budget.git
-cd budgetzilla
-./build_mac_app.sh
-open dist/Budgetzilla.app
+cd budget/webapp
+npm install
+npm run tauri:dev
 ```
 
 **Requirements:**
-- macOS 12 or later
-- Xcode Command Line Tools: `xcode-select --install`
-- Node.js 18+
+- **Rust** (install via [rustup.rs](https://rustup.rs/))
+- macOS 12+ or Windows 10/11
 
 ## Option 2: Browser (Development)
 
@@ -58,5 +57,6 @@ Once Budgetzilla is running:
 ## Next Steps
 
 - [Full installation guide](/getting-started/installation/)
+- [Building the desktop app](/development/desktop-build/)
 - [Understanding transactions](/features/transactions/)
 - [Setting up Google Drive sync](/features/google-drive-sync/)
