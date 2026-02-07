@@ -1,6 +1,6 @@
 # Architecture
 
-Budget is a local-first budgeting app. The primary runtime is a React + SQLite
+Budgetzilla is a local-first budgeting app. The primary runtime is a React + SQLite
 WASM webapp that stores all data locally in the browser (OPFS). The macOS app
 is a thin Swift wrapper that serves the built webapp over a local HTTP server
 and loads it in a WKWebView.

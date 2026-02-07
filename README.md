@@ -2,7 +2,7 @@
   <img src="webapp/public/favicon/favicon-256.png" alt="Budget" width="120" height="120" />
 </p>
 
-<h1 align="center">Budget</h1>
+<h1 align="center">Budgetzilla</h1>
 
 <p align="center">
   <strong>Local-first budgeting that just works.</strong><br/>

@@ -1,6 +1,6 @@
 {
-  "name": "Budget",
-  "short_name": "Budget",
+  "name": "Budgetzilla",
+  "short_name": "Budgetzilla",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f13",
@@ -23,5 +23,3 @@
     }
   ]
 }
-
-

@@ -308,7 +308,7 @@ export function SettingsPage() {
       <section className="space-y-1">
         <div className="text-2xl font-semibold tracking-tight">Settings</div>
         <div className="text-sm text-muted-foreground text-balance">
-          Manage preferences, import/export data, and configure your budget app.
+          Manage preferences, import/export data, and configure your Budgetzilla app.
         </div>
       </section>
 
@@ -400,7 +400,7 @@ export function SettingsPage() {
             <div className="space-y-3">
               <div className="text-xs text-muted-foreground">
                 Import data from Excel or Cashew CSV format.
-                <HelpTooltip content="Supports native Budget XLSX export and Cashew app export format." />
+                <HelpTooltip content="Supports native Budgetzilla XLSX export and Cashew app export format." />
               </div>
 
               <input

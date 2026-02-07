@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 export function LogoMark({
   className,
   size = 36,
-  alt = "Budget",
+  alt = "Budgetzilla",
 }: {
   className?: string;
   size?: number;

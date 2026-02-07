@@ -1,19 +1,19 @@
 ---
 title: Quick Start
-description: Get Budget running in minutes.
+description: Get Budgetzilla running in minutes.
 ---
 
-Choose your preferred way to run Budget:
+Choose your preferred way to run Budgetzilla:
 
 ## Option 1: macOS App (Recommended)
 
-The easiest way to use Budget on macOS:
+The easiest way to use Budgetzilla on macOS:
 
 ```bash
 git clone https://github.com/your-username/budget.git
-cd budget
+cd budgetzilla
 ./build_mac_app.sh
-open dist/Budget.app
+open dist/Budgetzilla.app
 ```
 
 **Requirements:**
@@ -23,7 +23,7 @@ open dist/Budget.app
 
 ## Option 2: Browser (Development)
 
-Run Budget in your browser for development or if you're not on macOS:
+Run Budgetzilla in your browser for development or if you're not on macOS:
 
 ```bash
 git clone https://github.com/your-username/budget.git
@@ -40,7 +40,7 @@ Open http://localhost:5173 in your browser.
 
 ## First Steps
 
-Once Budget is running:
+Once Budgetzilla is running:
 
 1. **Add your first transaction** — Press `N` or click the + button
 2. **Create categories** — Go to Categories page to organize your spending

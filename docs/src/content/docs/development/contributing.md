@@ -1,9 +1,9 @@
 ---
 title: Contributing
-description: How to contribute to Budget.
+description: How to contribute to Budgetzilla.
 ---
 
-Thank you for your interest in contributing to Budget! This guide will help you get started.
+Thank you for your interest in contributing to Budgetzilla! This guide will help you get started.
 
 ## Getting Started
 
@@ -152,4 +152,4 @@ DEV_MODE=1 ./build_mac_app.sh
 - Provide constructive feedback
 - Help others learn and grow
 
-Thank you for contributing to Budget!
+Thank you for contributing to Budgetzilla!

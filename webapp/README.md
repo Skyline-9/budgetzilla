@@ -1,4 +1,4 @@
-## Budget Webapp (Frontend)
+## Budgetzilla Webapp (Frontend)
 
 Local-first budgeting UI built with **React + TypeScript + Vite**, **Tailwind**, Radix-based **shadcn-style components**, **TanStack Query/Table/Virtual**, and **ECharts**.
 

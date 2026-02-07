@@ -155,7 +155,7 @@ function SidebarContent({
           <LogoMark size={36} className="shrink-0" />
           {!collapsed ? (
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold tracking-tight">Budget</div>
+              <div className="truncate text-sm font-semibold tracking-tight">Budgetzilla</div>
               <div className="truncate text-xs text-muted-foreground">Personal finance</div>
             </div>
           ) : null}
@@ -289,7 +289,7 @@ export function Sidebar() {
   const collapsed = mdUp ? collapsedPref : false;
 
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
-  
+
   // Try to use context, but fall back to local state if not wrapped
   const mobileSidebarCtx = React.useContext(MobileSidebarContext);
   const [localMobileOpen, setLocalMobileOpen] = React.useState(false);

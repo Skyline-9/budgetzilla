@@ -1,15 +1,15 @@
 ---
 title: Introduction
-description: What is Budget and why use it?
+description: What is Budgetzilla and why use it?
 ---
 
-Budget is a **local-first** personal finance application that helps you track spending, manage budgets, and understand your financial habits — all while keeping your data completely private.
+Budgetzilla is a **local-first** personal finance application that helps you track spending, manage budgets, and understand your financial habits — all while keeping your data completely private.
 
-## Why Budget?
+## Why Budgetzilla?
 
 ### Local-First Philosophy
 
-Unlike traditional budgeting apps that store your sensitive financial data on remote servers, Budget keeps everything on your device:
+Unlike traditional budgeting apps that store your sensitive financial data on remote servers, Budgetzilla keeps everything on your device:
 
 - **Privacy**: Your financial data never leaves your browser
 - **Speed**: No network latency — everything is instant
@@ -18,7 +18,7 @@ Unlike traditional budgeting apps that store your sensitive financial data on re
 
 ### Modern Technology
 
-Budget is built with modern web technologies:
+Budgetzilla is built with modern web technologies:
 
 - **React 18** with TypeScript for a responsive UI
 - **SQLite WASM** for robust local database storage
@@ -27,7 +27,7 @@ Budget is built with modern web technologies:
 
 ### Native macOS App
 
-While Budget runs great in any modern browser, we also provide a native macOS app that:
+While Budgetzilla runs great in any modern browser, we also provide a native macOS app that:
 
 - Runs as a standalone application
 - Has native menus and keyboard shortcuts
@@ -36,7 +36,7 @@ While Budget runs great in any modern browser, we also provide a native macOS ap
 ## Key Features
 
 - **Transaction tracking** with categories and tags
-- **Budget management** with monthly allocations
+- **Budgetzilla management** with monthly allocations
 - **Visual dashboard** with charts and trends
 - **Fast search** (Cmd+K) across all transactions
 - **Import/Export** for data portability
@@ -44,7 +44,7 @@ While Budget runs great in any modern browser, we also provide a native macOS ap
 
 ## Who Is This For?
 
-Budget is ideal for:
+Budgetzilla is ideal for:
 
 - Privacy-conscious individuals who want control over their financial data
 - Users who prefer local applications over cloud services

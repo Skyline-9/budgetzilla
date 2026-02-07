@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Budget",
+  "productName": "Budgetzilla",
   "version": "0.1.0",
-  "identifier": "com.budgetapp.budget",
+  "identifier": "com.budgetzilla.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Budget",
+        "title": "Budgetzilla",
         "width": 1200,
         "height": 800,
         "minWidth": 800,

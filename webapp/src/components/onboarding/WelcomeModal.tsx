@@ -45,7 +45,7 @@ export function WelcomeModal() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl">Welcome to Budget</DialogTitle>
+          <DialogTitle className="text-xl">Welcome to Budgetzilla</DialogTitle>
           <DialogDescription>
             Your personal finance dashboard. Here's a quick overview of what you can do.
           </DialogDescription>

@@ -6,7 +6,7 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: 'Budget',
+			title: 'Budgetzilla',
 			description: 'Local-first budgeting that just works.',
 			logo: {
 				src: './src/assets/logo.png',

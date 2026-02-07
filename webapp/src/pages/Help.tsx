@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useId } from "react";
-import { 
-  ArrowRight, 
+import {
+  ArrowRight,
   ArrowUp,
-  BarChart3, 
+  BarChart3,
   ChevronDown,
   ChevronRight,
   Keyboard,
   Lightbulb,
-  Receipt, 
+  Receipt,
   Settings,
-  Tags, 
+  Tags,
   Target,
   TrendingUp,
   Zap,
@@ -32,9 +32,9 @@ function useIsMac() {
 type SectionTheme = "hero" | "feature" | "reference" | "tips";
 
 // Section theme styles - using semantic colors per Toptal/Elementor guidelines
-const SECTION_THEMES: Record<SectionTheme, { 
-  iconBg: string; 
-  iconRing: string; 
+const SECTION_THEMES: Record<SectionTheme, {
+  iconBg: string;
+  iconRing: string;
   iconText: string;
   accentText: string;
   tint?: string;
@@ -81,19 +81,19 @@ const SECTIONS = [
 type SectionId = typeof SECTIONS[number]["id"];
 
 // Collapsible Section component with ARIA support and semantic coloring
-function Section({ 
+function Section({
   id,
-  title, 
-  icon, 
-  children, 
+  title,
+  icon,
+  children,
   theme = "feature",
   className,
   defaultOpen = true,
   showGlow = false,
-}: { 
+}: {
   id: string;
-  title: string; 
-  icon: React.ReactNode; 
+  title: string;
+  icon: React.ReactNode;
   children: React.ReactNode;
   theme?: SectionTheme;
   className?: string;
@@ -142,11 +142,11 @@ function Section({
           </span>
           {title}
         </div>
-        <ChevronDown 
+        <ChevronDown
           className={cn(
             "h-5 w-5 text-muted-foreground transition-transform duration-200",
             isOpen && "rotate-180"
-          )} 
+          )}
         />
       </button>
       <div
@@ -167,12 +167,12 @@ function Section({
 }
 
 // Feature component with theme-aware accent color
-function Feature({ 
-  title, 
+function Feature({
+  title,
   description,
   accentColor = "text-primary"
-}: { 
-  title: string; 
+}: {
+  title: string;
   description: string;
   accentColor?: string;
 }) {
@@ -192,7 +192,7 @@ function Shortcut({ macKey, winKey, description }: { macKey: string; winKey: str
   const isMac = useIsMac();
   const key = isMac ? macKey : winKey;
   const keys = key.split(" + ");
-  
+
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="text-muted-foreground">{description}</div>
@@ -228,7 +228,7 @@ function TableOfContents({ activeSection }: { activeSection: SectionId | null })
         const Icon = section.icon;
         const isActive = activeSection === section.id;
         const themeStyles = SECTION_THEMES[section.theme];
-        
+
         return (
           <a
             key={section.id}
@@ -236,12 +236,12 @@ function TableOfContents({ activeSection }: { activeSection: SectionId | null })
             className={cn(
               "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
               "hover:bg-muted/50",
-              isActive 
+              isActive
                 ? cn(
-                    // Use info (blue) for active state - distinct from primary red
-                    "bg-info/10 text-info font-medium",
-                    "dark:bg-info/15"
-                  )
+                  // Use info (blue) for active state - distinct from primary red
+                  "bg-info/10 text-info font-medium",
+                  "dark:bg-info/15"
+                )
                 : "text-muted-foreground hover:text-foreground"
             )}
             aria-current={isActive ? "location" : undefined}
@@ -331,7 +331,7 @@ export function HelpPage() {
         <div className="space-y-6">
           <header>
             <div className="text-xs uppercase tracking-widest text-muted-foreground">Help & Documentation</div>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">How to use Budget</h1>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight">How to use Budgetzilla</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Everything you need to know to track your finances effectively
             </p>
@@ -349,9 +349,9 @@ export function HelpPage() {
           </details>
 
           {/* Getting Started - Hero theme (purple) */}
-          <Section 
+          <Section
             id="getting-started"
-            title="Getting Started" 
+            title="Getting Started"
             icon={<Zap className="h-4 w-4" />}
             theme="hero"
             showGlow
@@ -361,7 +361,7 @@ export function HelpPage() {
               <img src={dotsOverlayUrl} alt="" className="h-full w-full object-cover scale-80" />
             </div>
             <p className="relative z-10">
-              Budget is a personal finance app designed for speed and simplicity. Track income and expenses, 
+              Budgetzilla is a personal finance app designed for speed and simplicity. Track income and expenses,
               organize with categories, set budgets, and visualize your spending patterns.
             </p>
             <div className="relative z-10 space-y-3">
@@ -467,7 +467,7 @@ export function HelpPage() {
           {/* Categories - Feature theme */}
           <Section id="categories" title="Categories" icon={<Tags className="h-4 w-4" />} theme="feature">
             <p>
-              Organize transactions with hierarchical categories. Create income and expense categories, 
+              Organize transactions with hierarchical categories. Create income and expense categories,
               customize colors, and nest them for detailed tracking.
             </p>
             <div className="space-y-3">
@@ -581,7 +581,7 @@ export function HelpPage() {
           </Section>
 
           {/* Quick Links */}
-          <section 
+          <section
             aria-labelledby="quick-links-heading"
             className="rounded-3xl border border-border/60 bg-card/90 p-6 shadow-soft-lg"
           >
