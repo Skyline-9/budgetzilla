@@ -10,7 +10,7 @@ Choose your preferred way to run Budgetzilla:
 The recommended way to use Budgetzilla:
 
 ```bash
-git clone https://github.com/your-username/budget.git
+git clone https://github.com/Skyline-9/budgetzilla.git
 cd budget/webapp
 npm install
 npm run tauri:dev
@@ -25,7 +25,7 @@ npm run tauri:dev
 Run Budgetzilla in your browser for development or if you're not on macOS:
 
 ```bash
-git clone https://github.com/your-username/budget.git
+git clone https://github.com/Skyline-9/budgetzilla.git
 cd budget/webapp
 npm install
 npm run dev

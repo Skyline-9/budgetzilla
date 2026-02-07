@@ -10,7 +10,7 @@ Thank you for your interest in contributing to Budgetzilla! This guide will help
 ### 1. Fork and Clone
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/budget.git
+git clone https://github.com/Skyline-9/budgetzilla.git
 cd budget
 ```
 

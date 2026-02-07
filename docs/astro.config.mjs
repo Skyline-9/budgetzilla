@@ -14,7 +14,7 @@ export default defineConfig({
 				replacesTitle: false,
 			},
 			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/your-username/budget' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/Skyline-9/budgetzilla' },
 			],
 			sidebar: [
 				{

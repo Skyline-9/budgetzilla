@@ -40,4 +40,4 @@ The documentation uses a custom design system mapped to the Budgetzilla webapp:
 
 ## 🤝 Contributing
 
-Documentation updates are welcome! Please see the [Contributing Guide](https://github.com/your-username/budget/blob/main/docs/src/content/docs/development/contributing.md) for details.
+Documentation updates are welcome! Please see the [Contributing Guide](https://github.com/Skyline-9/budgetzilla/blob/main/docs/src/content/docs/development/contributing.md) for details.

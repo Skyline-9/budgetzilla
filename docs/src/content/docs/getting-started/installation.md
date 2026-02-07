@@ -20,8 +20,8 @@ Before installing Budget, ensure you have:
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/budget.git
-cd budget
+git clone https://github.com/Skyline-9/budgetzilla.git
+cd budgetzilla
 ```
 
 ## Browser Version
