@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
 import { buildCategoryTreeRows } from "@/lib/categoryHierarchy";
 
@@ -248,10 +247,9 @@ export function TransactionDialog(props: {
               <StickyNote className="h-3.5 w-3.5 text-muted-foreground" />
               Notes
             </Label>
-            <Textarea
+            <Input
               id="txn-notes"
               placeholder="Optional"
-              className="resize-none"
               {...form.register("notes")}
             />
           </div>
@@ -259,7 +257,7 @@ export function TransactionDialog(props: {
           <div className={cn("space-y-1.5", "hidden")}>
             {/* reserved for future advanced fields */}
             <Label>Details</Label>
-            <Textarea />
+            <Input />
           </div>
 
           <DialogFooter>
