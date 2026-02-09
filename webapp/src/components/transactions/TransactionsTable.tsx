@@ -3,6 +3,7 @@ import {
   type ColumnDef,
   type PaginationState,
   type SortingState,
+  type ColumnOrderState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
@@ -361,14 +362,52 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
 
   const [sorting, setSorting] = React.useState<SortingState>(() => [{ id: "date", desc: true }]);
   const [pagination, setPagination] = React.useState<PaginationState>(() => ({ pageIndex: 0, pageSize: 50 }));
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => [
+    "date",
+    "category",
+    "merchant",
+    "notes",
+    "amount",
+    "actions",
+  ]);
+
+  const [draggingColumnId, setDraggingColumnId] = React.useState<string | null>(null);
+
+  const handleDragStart = (columnId: string) => {
+    setDraggingColumnId(columnId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetColumnId: string) => {
+    e.preventDefault();
+    if (draggingColumnId === targetColumnId) return;
+  };
+
+  const handleDrop = (targetColumnId: string) => {
+    if (!draggingColumnId || draggingColumnId === targetColumnId) {
+      setDraggingColumnId(null);
+      return;
+    }
+
+    const newOrder = [...columnOrder];
+    const draggingIdx = newOrder.indexOf(draggingColumnId);
+    const targetIdx = newOrder.indexOf(targetColumnId);
+
+    if (draggingIdx !== -1 && targetIdx !== -1) {
+      newOrder.splice(draggingIdx, 1);
+      newOrder.splice(targetIdx, 0, draggingColumnId);
+      setColumnOrder(newOrder);
+    }
+    setDraggingColumnId(null);
+  };
 
   const table = useReactTable({
     data: transactions,
     columns,
     getRowId: (t) => t.id,
-    state: { sorting, pagination },
+    state: { sorting, pagination, columnOrder },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
+    onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -525,8 +564,14 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
                   {hg.headers.map((header) => (
                     <TableHead
                       key={header.id}
+                      draggable
+                      onDragStart={() => handleDragStart(header.column.id)}
+                      onDragOver={(e) => handleDragOver(e, header.column.id)}
+                      onDrop={() => handleDrop(header.column.id)}
                       className={cn(
                         "sticky top-0 z-10 bg-background/70 backdrop-blur-xl",
+                        "cursor-grab active:cursor-grabbing select-none",
+                        draggingColumnId === header.column.id && "opacity-50",
                         headerClassFor(header.column.id),
                       )}
                     >
