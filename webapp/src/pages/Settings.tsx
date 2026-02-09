@@ -17,6 +17,7 @@ import { getCurrency, setCurrency } from "@/lib/format";
 import { downloadXLSX, downloadTransactionsCSV } from "@/services/export";
 import { importCashewCSV } from "@/services/importCashew";
 import { importXLSX } from "@/services/importXLSX";
+import { importSpreadsheetCSV } from "@/services/importSpreadsheet";
 import { clearAllData } from "@/db/schema";
 import { cn } from "@/lib/cn";
 
@@ -191,8 +192,10 @@ export function SettingsPage() {
   const [isExporting, setIsExporting] = React.useState(false);
   const [isImporting, setIsImporting] = React.useState(false);
   const [isImportingXLSX, setIsImportingXLSX] = React.useState(false);
+  const [isImportingSpreadsheet, setIsImportingSpreadsheet] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const xlsxInputRef = React.useRef<HTMLInputElement>(null);
+  const spreadsheetInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleExportXLSX = async () => {
     setIsExporting(true);
@@ -226,6 +229,10 @@ export function SettingsPage() {
 
   const handleImportXLSXClick = () => {
     xlsxInputRef.current?.click();
+  };
+
+  const handleImportSpreadsheetClick = () => {
+    spreadsheetInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,6 +286,34 @@ export function SettingsPage() {
     } finally {
       setIsImportingXLSX(false);
       if (xlsxInputRef.current) xlsxInputRef.current.value = "";
+    }
+  };
+
+  const handleSpreadsheetFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImportingSpreadsheet(true);
+    try {
+      const result = await importSpreadsheetCSV(file, {
+        commit: true,
+        skipDuplicates: true,
+      });
+
+      if (result.errors.length > 0) {
+        toast.warning(`Spreadsheet Import: ${result.errors.length} error(s).`);
+      } else {
+        toast.success(
+          `Successfully imported ${result.transactionsCreated} transactions and ${result.categoriesCreated} categories from spreadsheet.`
+        );
+      }
+      await queryClient.invalidateQueries();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Spreadsheet Import failed");
+      console.error(err);
+    } finally {
+      setIsImportingSpreadsheet(false);
+      if (spreadsheetInputRef.current) spreadsheetInputRef.current.value = "";
     }
   };
 
@@ -399,8 +434,8 @@ export function SettingsPage() {
           <Card title="Import" icon={<Upload className="h-4 w-4" />} tint="accent">
             <div className="space-y-3">
               <div className="text-xs text-muted-foreground">
-                Import data from Excel or Cashew CSV format.
-                <HelpTooltip content="Supports native Budgetzilla XLSX export and Cashew app export format." />
+                Import data from Excel, Cashew CSV, or raw spreadsheet format.
+                <HelpTooltip content="Supports native Budgetzilla XLSX export, Cashew app export, and custom spreadsheet CSV formats." />
               </div>
 
               <input
@@ -415,6 +450,13 @@ export function SettingsPage() {
                 type="file"
                 accept=".xlsx"
                 onChange={handleXLSXFileChange}
+                className="hidden"
+              />
+              <input
+                ref={spreadsheetInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleSpreadsheetFileChange}
                 className="hidden"
               />
 
@@ -435,7 +477,16 @@ export function SettingsPage() {
                   disabled={isImporting}
                 >
                   <Upload className="mr-1.5 h-4 w-4" />
-                  {isImporting ? "Importing..." : "Import CSV"}
+                  {isImporting ? "Importing..." : "Import Cashew CSV"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleImportSpreadsheetClick}
+                  disabled={isImportingSpreadsheet}
+                >
+                  <FileSpreadsheet className="mr-1.5 h-4 w-4" />
+                  {isImportingSpreadsheet ? "Importing..." : "Import Spreadsheet CSV"}
                 </Button>
               </div>
             </div>
