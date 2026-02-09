@@ -602,7 +602,7 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
                         onDrop={() => handleDrop(header.column.id)}
                         onDragEnd={handleDragEnd}
                         className={cn(
-                          "sticky top-0 z-10 bg-background/70 backdrop-blur-xl transition-all duration-200",
+                          "sticky top-0 z-10 bg-background/70 backdrop-blur-xl transition-all duration-200 group",
                           !isActionColumn && "cursor-grab active:cursor-grabbing select-none",
                           isDragging && "opacity-40 scale-95",
                           isDragOver && "bg-primary/10 ring-2 ring-primary/30 ring-inset",
@@ -617,7 +617,7 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
                           {!isActionColumn && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="shrink-0 opacity-0 group-hover/header:opacity-60 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing -ml-1 p-0.5 rounded hover:bg-background/50">
+                                <div className="shrink-0 opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing -ml-1 p-0.5 rounded hover:bg-background/50">
                                   <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
                               </TooltipTrigger>

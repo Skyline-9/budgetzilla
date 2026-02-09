@@ -51,17 +51,17 @@ interface MonthYearNavProps {
 
 function MonthYearNav({ displayMonth, onMonthChange, onPrevMonth, onNextMonth }: MonthYearNavProps) {
   const years = generateYearRange(displayMonth);
-  
+
   const handleMonthSelect = (monthIndex: string) => {
     const newDate = setMonth(displayMonth, parseInt(monthIndex));
     onMonthChange(newDate);
   };
-  
+
   const handleYearSelect = (year: string) => {
     const newDate = setYear(displayMonth, parseInt(year));
     onMonthChange(newDate);
   };
-  
+
   return (
     <div className="flex items-center justify-between gap-1 px-1">
       <button
@@ -221,16 +221,23 @@ export function DateInput({
   id,
 }: DateInputProps) {
   const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState(value ?? "");
+  const [inputValue, setInputValue] = React.useState("");
   const [month, setMonth] = React.useState<Date>(parseDate(value) ?? new Date());
+  const [isFocused, setIsFocused] = React.useState(false);
   const selected = parseDate(value);
 
+  // Only sync from parent value when not focused (to avoid interfering with typing)
   React.useEffect(() => {
-    setInputValue(value ?? "");
-    if (selected) {
+    if (isFocused) return; // Don't update while user is typing
+
+    // Convert yyyy-MM-dd to MM/dd/yyyy for display
+    if (value && selected) {
+      setInputValue(format(selected, "MM/dd/yyyy"));
       setMonth(selected);
+    } else {
+      setInputValue("");
     }
-  }, [value]);
+  }, [value, selected, isFocused]);
 
   const handlePrevMonth = () => {
     setMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -243,21 +250,22 @@ export function DateInput({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInputValue(val);
-    
-    // Try to parse as date
-    const parsed = parse(val, "MM/dd/yyyy", new Date());
-    if (!isNaN(parsed.getTime())) {
-      onChange(formatToYmd(parsed));
-    }
+    // Don't parse on every keystroke - wait for blur
+  };
+
+  const handleInputFocus = () => {
+    setIsFocused(true);
   };
 
   const handleInputBlur = () => {
+    setIsFocused(false);
+
     // On blur, try to parse various formats
     if (!inputValue) {
       onChange(undefined);
       return;
     }
-    
+
     const formats = ["MM/dd/yyyy", "M/d/yyyy", "yyyy-MM-dd"];
     for (const fmt of formats) {
       const parsed = parse(inputValue, fmt, new Date());
@@ -290,14 +298,14 @@ export function DateInput({
             type="text"
             value={inputValue}
             onChange={handleInputChange}
+            onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              "flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background",
-              "file:border-0 file:bg-transparent file:text-sm file:font-medium",
-              "placeholder:text-muted-foreground",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "flex h-9 w-full rounded-2xl border border-input bg-card/85 px-3 py-1 pr-10 text-sm",
+              "placeholder:text-muted-foreground/90",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-ring/40 transition",
               "disabled:cursor-not-allowed disabled:opacity-50",
               className
             )}

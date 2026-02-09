@@ -2,13 +2,13 @@ import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, CornerDownRight, DollarSign, StickyNote, Store, Tag, TrendingDown, TrendingUp, Trash2, X } from "lucide-react";
+import { Calendar, Check, CornerDownRight, DollarSign, StickyNote, Store, Tag, TrendingDown, TrendingUp, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Transaction } from "@/types";
 import { useCategoriesQuery, useCreateTransactionMutation, useDeleteTransactionMutation, useUpdateTransactionMutation } from "@/api/queries";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
+import { DateInput } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -142,8 +142,11 @@ export function TransactionDialog(props: {
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="txn-date">Date</Label>
-              <DatePicker
+              <Label htmlFor="txn-date" className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                Date
+              </Label>
+              <DateInput
                 id="txn-date"
                 value={form.watch("date")}
                 onChange={(date) => form.setValue("date", date ?? "", { shouldValidate: true })}
@@ -232,26 +235,25 @@ export function TransactionDialog(props: {
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="txn-merchant" className="flex items-center gap-1.5">
-                <Store className="h-3.5 w-3.5 text-muted-foreground" />
-                Merchant
-              </Label>
-              <Input id="txn-merchant" placeholder="e.g. Trader Joe's" {...form.register("merchant")} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="txn-notes" className="flex items-center gap-1.5">
-                <StickyNote className="h-3.5 w-3.5 text-muted-foreground" />
-                Notes
-              </Label>
-              <Textarea
-                id="txn-notes"
-                placeholder="Optional"
-                className="resize-none"
-                {...form.register("notes")}
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="txn-merchant" className="flex items-center gap-1.5">
+              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+              Merchant
+            </Label>
+            <Input id="txn-merchant" placeholder="e.g. Trader Joe's" {...form.register("merchant")} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="txn-notes" className="flex items-center gap-1.5">
+              <StickyNote className="h-3.5 w-3.5 text-muted-foreground" />
+              Notes
+            </Label>
+            <Textarea
+              id="txn-notes"
+              placeholder="Optional"
+              className="resize-none"
+              {...form.register("notes")}
+            />
           </div>
 
           <div className={cn("space-y-1.5", "hidden")}>
