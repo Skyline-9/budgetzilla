@@ -27,6 +27,7 @@ import {
   TrendingDown,
   CornerDownRight,
   Minus,
+  GripVertical,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useCategoriesQuery } from "@/api/queries";
@@ -39,6 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
 import { buildCategoryTreeRows } from "@/lib/categoryHierarchy";
 import { formatDateDisplay } from "@/lib/format";
@@ -372,19 +374,37 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
   ]);
 
   const [draggingColumnId, setDraggingColumnId] = React.useState<string | null>(null);
+  const [dragOverColumnId, setDragOverColumnId] = React.useState<string | null>(null);
 
-  const handleDragStart = (columnId: string) => {
+  const handleDragStart = (e: React.DragEvent, columnId: string) => {
     setDraggingColumnId(columnId);
+    e.dataTransfer.effectAllowed = "move";
+    // Set a transparent drag image for cleaner look
+    const dragImage = document.createElement("div");
+    dragImage.style.opacity = "0";
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
   const handleDragOver = (e: React.DragEvent, targetColumnId: string) => {
     e.preventDefault();
-    if (draggingColumnId === targetColumnId) return;
+    e.dataTransfer.dropEffect = "move";
+    if (draggingColumnId === targetColumnId) {
+      setDragOverColumnId(null);
+      return;
+    }
+    setDragOverColumnId(targetColumnId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverColumnId(null);
   };
 
   const handleDrop = (targetColumnId: string) => {
     if (!draggingColumnId || draggingColumnId === targetColumnId) {
       setDraggingColumnId(null);
+      setDragOverColumnId(null);
       return;
     }
 
@@ -398,6 +418,12 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
       setColumnOrder(newOrder);
     }
     setDraggingColumnId(null);
+    setDragOverColumnId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingColumnId(null);
+    setDragOverColumnId(null);
   };
 
   const table = useReactTable({
@@ -560,24 +586,51 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
           <Table className="min-w-[800px] sm:min-w-[980px]">
             <TableHeader>
               {table.getHeaderGroups().map((hg) => (
-                <TableRow key={hg.id} className="bg-background/40">
-                  {hg.headers.map((header) => (
-                    <TableHead
-                      key={header.id}
-                      draggable
-                      onDragStart={() => handleDragStart(header.column.id)}
-                      onDragOver={(e) => handleDragOver(e, header.column.id)}
-                      onDrop={() => handleDrop(header.column.id)}
-                      className={cn(
-                        "sticky top-0 z-10 bg-background/70 backdrop-blur-xl",
-                        "cursor-grab active:cursor-grabbing select-none",
-                        draggingColumnId === header.column.id && "opacity-50",
-                        headerClassFor(header.column.id),
-                      )}
-                    >
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
+                <TableRow key={hg.id} className="bg-background/40 group/header">
+                  {hg.headers.map((header) => {
+                    const isDragging = draggingColumnId === header.column.id;
+                    const isDragOver = dragOverColumnId === header.column.id && draggingColumnId !== header.column.id;
+                    const isActionColumn = header.column.id === "actions";
+
+                    return (
+                      <TableHead
+                        key={header.id}
+                        draggable={!isActionColumn}
+                        onDragStart={(e) => !isActionColumn && handleDragStart(e, header.column.id)}
+                        onDragOver={(e) => handleDragOver(e, header.column.id)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={() => handleDrop(header.column.id)}
+                        onDragEnd={handleDragEnd}
+                        className={cn(
+                          "sticky top-0 z-10 bg-background/70 backdrop-blur-xl transition-all duration-200",
+                          !isActionColumn && "cursor-grab active:cursor-grabbing select-none",
+                          isDragging && "opacity-40 scale-95",
+                          isDragOver && "bg-primary/10 ring-2 ring-primary/30 ring-inset",
+                          headerClassFor(header.column.id),
+                        )}
+                      >
+                        <motion.div
+                          layout={!reduceMotion}
+                          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                          className="flex items-center gap-1"
+                        >
+                          {!isActionColumn && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="shrink-0 opacity-0 group-hover/header:opacity-60 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing -ml-1 p-0.5 rounded hover:bg-background/50">
+                                  <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">
+                                Drag to reorder columns
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                        </motion.div>
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               ))}
             </TableHeader>
