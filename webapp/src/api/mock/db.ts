@@ -228,9 +228,28 @@ export function getMockDb(): MockDb {
       amountCents: cents,
       categoryId: cat.id,
       merchant,
-      notes: rand() < 0.18 ? "—" : undefined,
+      notes: rand() < 0.1 ? "This is a very long note that should wrap to multiple lines to test the layout of the transactions table. It contains multiple sentences and should be long enough to exceed the column width." :
+        rand() < 0.2 ? "Another fairly lengthy note about this specific purchase, including details about what was bought and why it was necessary for the household." :
+          rand() < 0.3 ? "—" : undefined,
     });
   }
+
+  // Add specific transactions with extremely long notes
+  addTxn({
+    date: "2026-02-25",
+    amountCents: -5420,
+    categoryId: "cat_expense_groceries",
+    merchant: "Whole Foods",
+    notes: "Weekly grocery run for the family. Bought organic milk, eggs, bread, some fresh vegetables (carrots, kale, spinach), several pounds of chicken breast, and a specialty wheel of brie cheese that was on sale. Also grabbed some sparkling water and a bag of coffee beans for the morning. Total was a bit higher than usual because of the coffee beans and the cheese, but it should last us through the end of next week.",
+  });
+
+  addTxn({
+    date: "2026-02-15",
+    amountCents: -12500,
+    categoryId: "cat_expense_entertainment",
+    merchant: "Concert Venue",
+    notes: "Tickets for the upcoming indie rock festival in the park. This includes the general admission entry fee for two people, plus the convenience fees charged by the ticketing platform, and a small donation to the park's local preservation society. I really hope the weather stays clear for the event, as it's outdoors and they don't have a very good rain policy. Should be a great time though, with over twelve bands performing.",
+  });
 
   // Add more transactions specifically for Jan-Feb 2026
   const jan2026Start = new Date(2026, 0, 1);

@@ -245,7 +245,12 @@ export function TransactionDialog(props: {
                 <StickyNote className="h-3.5 w-3.5 text-muted-foreground" />
                 Notes
               </Label>
-              <Input id="txn-notes" placeholder="Optional" {...form.register("notes")} />
+              <Textarea
+                id="txn-notes"
+                placeholder="Optional"
+                className="resize-none"
+                {...form.register("notes")}
+              />
             </div>
           </div>
 

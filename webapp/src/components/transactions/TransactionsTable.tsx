@@ -315,7 +315,7 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
           </Button>
         ),
         cell: ({ row }) => (
-          <div className={cn("truncate text-sm", !row.original.notes && "text-muted-foreground")}>
+          <div className={cn("whitespace-normal break-words text-sm", !row.original.notes && "text-muted-foreground")}>
             {row.original.notes ?? "—"}
           </div>
         ),
