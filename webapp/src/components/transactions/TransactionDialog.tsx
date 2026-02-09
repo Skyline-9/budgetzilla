@@ -68,7 +68,7 @@ export function TransactionDialog(props: {
     defaultValues: {
       date: initial?.date ?? todayYmd(),
       categoryId: initial?.categoryId ?? "",
-      amount: initial ? String(initial.amountCents / 100) : "",
+      amount: initial ? String(Math.abs(initial.amountCents / 100)) : "",
       merchant: initial?.merchant ?? "",
       notes: initial?.notes ?? "",
     },
@@ -80,7 +80,7 @@ export function TransactionDialog(props: {
     form.reset({
       date: initial?.date ?? todayYmd(),
       categoryId: initial?.categoryId ?? "",
-      amount: initial ? String(initial.amountCents / 100) : "",
+      amount: initial ? String(Math.abs(initial.amountCents / 100)) : "",
       merchant: initial?.merchant ?? "",
       notes: initial?.notes ?? "",
     });
@@ -96,7 +96,7 @@ export function TransactionDialog(props: {
       return;
     }
 
-    let amountCents = parseAmountToCents(values.amount);
+    let amountCents = Math.abs(parseAmountToCents(values.amount));
     if (amountCents === 0) {
       toast.error("Amount cannot be 0");
       return;
@@ -166,6 +166,11 @@ export function TransactionDialog(props: {
                 placeholder="e.g. 42.50"
                 {...form.register("amount")}
                 onKeyDown={(e) => {
+                  // Block negative sign
+                  if (e.key === "-") {
+                    e.preventDefault();
+                    return;
+                  }
                   // Allow: backspace, delete, tab, escape, enter, decimal point
                   if (
                     ["Backspace", "Delete", "Tab", "Escape", "Enter", "."].includes(e.key) ||
