@@ -95,7 +95,7 @@ export function AiChatWidget() {
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-glow-accent hover:-translate-y-1 transition-all bg-card/80 backdrop-blur-lg border border-border/60 text-accent-foreground animate-pulse-slow"
           onClick={() => setIsOpen(true)}
         >
-          <Stars className="h-7 w-7" fill="url(#ai-gradient)" stroke="url(#ai-gradient)" strokeWidth={0.5} /> {/* Changed to Stars */}
+          <Stars className="h-7 w-7" color="url(#ai-gradient)" /> {/* Changed to Stars */}
         </Button>
       </div>
 
@@ -109,7 +109,7 @@ export function AiChatWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-background/40 rounded-t-2xl">
           <div className="flex items-center gap-2 font-semibold">
-            <Stars className="h-5 w-5" fill="url(#ai-gradient)" stroke="url(#ai-gradient)" strokeWidth={0.5} /> {/* Changed to Stars */}
+            <Stars className="h-5 w-5" color="url(#ai-gradient)" /> {/* Changed to Stars */}
             Financial Assistant
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>

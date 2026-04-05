@@ -49,7 +49,7 @@ export function AiThinkingIndicator({ isVisible }: { isVisible: boolean }) {
               </linearGradient>
             </defs>
           </svg>
-          <Stars className="h-4 w-4 animate-spin-slow" fill="url(#ai-gradient-thinking)" stroke="url(#ai-gradient-thinking)" strokeWidth={0.5} /> {/* Changed to Stars */}
+          <Stars className="h-4 w-4 animate-spin-slow" color="url(#ai-gradient-thinking)" /> {/* Changed to Stars */}
           <div className="text-xs font-medium text-muted-foreground overflow-hidden h-4 relative w-48">
             <AnimatePresence mode="wait">
               <motion.span
