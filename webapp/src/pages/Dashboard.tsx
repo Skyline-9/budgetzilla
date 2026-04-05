@@ -35,6 +35,8 @@ import {
   writeOrDelete,
 } from "@/lib/urlState";
 
+import { AiChatWidget } from "@/components/dashboard/AiChatWidget";
+
 const DashboardChartsLazy = React.lazy(() => import("@/components/dashboard/DashboardCharts"));
 
 function thisMonthRange() {
@@ -473,6 +475,8 @@ export function DashboardPage() {
           <DashboardChartsLazy charts={chartsQuery.data} categories={categories} />
         </React.Suspense>
       )}
+
+      <AiChatWidget />
     </div>
   );
 }

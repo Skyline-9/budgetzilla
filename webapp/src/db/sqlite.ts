@@ -233,6 +233,28 @@ export async function closeDatabase(): Promise<void> {
 }
 
 /**
+ * Execute a SQL statement safely, allowing only read-only SELECT queries.
+ * Designed for safe AI/User-generated query execution.
+ */
+export async function execReadOnlySQL(sql: string, params?: unknown[]): Promise<unknown[][]> {
+  const normalized = sql.trim().toUpperCase();
+  if (!normalized.startsWith("SELECT ")) {
+    throw new Error("Only SELECT queries are allowed for safety.");
+  }
+  
+  // Basic safety check against multiple statements or prohibited keywords
+  const prohibited = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "REPLACE", "TRUNCATE", "PRAGMA"];
+  for (const word of prohibited) {
+    // Regex matches the word as a distinct token, avoiding partial matches inside string literals
+    if (new RegExp(`\\b${word}\\b`, 'i').test(sql)) {
+      throw new Error(`Prohibited keyword found in read-only query: ${word}`);
+    }
+  }
+
+  return execSQL(sql, params);
+}
+
+/**
  * Execute a SQL statement and return results.
  * Works for both Tauri and browser.
  */
