@@ -50,9 +50,10 @@ Tips for categories:
 - To group or filter by a parent category like "Shopping", use \`c.name LIKE 'Shopping%'\` or group by \`SUBSTR(c.name, 1, CASE WHEN INSTR(c.name, ' - ') > 0 THEN INSTR(c.name, ' - ') - 1 ELSE LENGTH(c.name) END)\`.
 
 Tips for "what-if" or affordability questions:
-- Use a query that calculates the required components in a single row.
-- To calculate monthly averages across the dataset, use: \`SUM(amount_cents) / NULLIF(COUNT(DISTINCT SUBSTR(date, 1, 7)), 0)\`.
-- Return multiple columns so the interpreter has all the baseline data it needs to calculate the hypothetical scenario (e.g., \`SELECT (income_query) AS avg_income, (expense_query) AS avg_expense, (category_query) AS avg_category_spend\`).
+- DO NOT DO THE HYPOTHETICAL MATH IN SQL AND DO NOT WRITE COMPLEX SUBQUERIES.
+- Instead, use this exact pattern to fetch the raw baseline averages so the interpreter can do the math:
+  \`SELECT (SELECT SUM(amount_cents) FROM transactions WHERE amount_cents > 0) / COUNT(DISTINCT SUBSTR(date,1,7)) as avg_income, (SELECT SUM(amount_cents) FROM transactions WHERE amount_cents < 0) / COUNT(DISTINCT SUBSTR(date,1,7)) as avg_expense, (SELECT SUM(amount_cents) FROM transactions t JOIN categories c ON t.category_id=c.id WHERE c.name LIKE 'Dining%') / COUNT(DISTINCT SUBSTR(date,1,7)) as avg_target_category FROM transactions\`
+- The interpreter step will use these raw averages to calculate the hypothetical affordability itself.
 
 The user asks: "${userQuestion}"
 
@@ -113,12 +114,12 @@ Do not return any other text, markdown, or explanations.`;
     queryFailed ? 
       "To answer this, I attempted to run a database query but it failed with this error:\n" + sqlResultStr + "\n\nApologize to the user, explain briefly why you couldn't pull that specific data (e.g., the query was too complex or subjective), and suggest a similar but simpler question they could ask." 
     : [
-      "To answer this, I ran a database query. The result was:",
+      "To answer this, I ran a database query to get the baseline averages. The result (e.g. Income, Total Expenses, Target Category Expenses) was:",
       sqlResultStr,
       "",
       "Note: monetary amounts in the database are stored in cents (e.g. 1500 = $15.00). Expenses are often stored as negative numbers.",
       "Analyze the result and formulate a friendly, concise, and helpful response to the user.",
-      "For 'what-if' or affordability questions, use the baseline averages provided by the database to calculate the hypothetical scenario yourself and explain the math clearly.",
+      "For 'what-if' or affordability questions, carefully extract the baseline averages provided by the database. Then, calculate the hypothetical savings or costs step-by-step (e.g., cutting $1000 by 50% saves $500) before determining the final affordability.",
       "If the result contains many subcategories (e.g., 'Shopping - Clothes', 'Shopping - Electronics'), try to sum them up or summarize them by their parent category for a cleaner response.",
       "If the result is empty '[]', tell the user no matching data was found.",
       "Format the monetary amounts nicely as dollars and cents."
