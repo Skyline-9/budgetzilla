@@ -5,7 +5,7 @@ import { useCategoriesQuery, useCreateTransactionMutation } from "@/api/queries"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileImage, FileText, Loader2, Sparkles, Trash2, CheckCircle2, Calendar, Store, DollarSign, Tag, TrendingUp, TrendingDown, CornerDownRight } from "lucide-react";
+import { FileImage, FileText, Loader2, Sparkles, Trash2, CheckCircle2, Calendar, Store, DollarSign, Tag, TrendingUp, TrendingDown, CornerDownRight, X } from "lucide-react";
 import type { TransactionCreate } from "@/types";
 import { DateInput } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,29 +33,42 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
     return pl[depth - 1]!;
   }, []);
 
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<{ url: string; name: string; type: string }[]>([]);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState({ current: 0, total: 0 });
   const [parsedItems, setParsedItems] = useState<TransactionCreate[] | null>(null);
 
   const resetState = () => {
-    setFile(null);
-    setPreviewUrl(null);
+    setFiles([]);
+    setPreviews([]);
     setParsedItems(null);
     setIsScanning(false);
+    setScanProgress({ current: 0, total: 0 });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selected = e.target.files[0];
-      setFile(selected);
-      if (selected.type.startsWith("image/")) {
-        setPreviewUrl(URL.createObjectURL(selected));
-      } else {
-        setPreviewUrl(null);
-      }
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setFiles(prev => [...prev, ...selectedFiles]);
+      
+      const newPreviews = selectedFiles.map(file => ({
+        url: file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
+        name: file.name,
+        type: file.type
+      }));
+      setPreviews(prev => [...prev, ...newPreviews]);
       setParsedItems(null);
     }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => {
+      const toRemove = prev[index];
+      if (toRemove?.url) URL.revokeObjectURL(toRemove.url);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const convertToBase64 = (f: File): Promise<string> => {
@@ -85,45 +98,52 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
   };
 
   const handleScan = async () => {
-    if (!file) return;
+    if (files.length === 0) return;
     setIsScanning(true);
+    setScanProgress({ current: 0, total: files.length });
+    
+    const allExtractedItems: TransactionCreate[] = [];
+    const isValidDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d);
+    const today = new Date().toISOString().split("T")[0];
+    const catList = categories.map(c => ({ id: c.id, name: c.name }));
+
     try {
-      const catList = categories.map(c => ({ id: c.id, name: c.name }));
-      
-      let result;
-      if (file.type.startsWith("image/")) {
-        const b64 = await convertToBase64(file);
-        result = await parseWithOllama(catList, { base64Image: b64 });
-      } else if (file.type === "application/pdf") {
-        const textContent = await extractTextFromPdf(file);
-        result = await parseWithOllama(catList, { textContent });
-      } else {
-        throw new Error("Unsupported file type");
-      }
-      
-      const isValidDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d);
-      const today = new Date().toISOString().split("T")[0];
-      
-      const validItems = result.map((item: any) => {
-        let date = item.date;
-        if (!date || !isValidDate(date)) {
-          date = today;
+      for (let i = 0; i < files.length; i++) {
+        setScanProgress(prev => ({ ...prev, current: i + 1 }));
+        const file = files[i];
+        let result;
+
+        if (file.type.startsWith("image/")) {
+          const b64 = await convertToBase64(file);
+          result = await parseWithOllama(catList, { base64Image: b64 });
+        } else if (file.type === "application/pdf") {
+          const textContent = await extractTextFromPdf(file);
+          result = await parseWithOllama(catList, { textContent });
+        } else {
+          continue; // Skip unsupported
         }
 
-        return {
-          date,
-          amountCents: Math.abs(typeof item.amountCents === "number" ? item.amountCents : parseInt(item.amountCents || "0", 10)),
-          merchant: item.merchant || "",
-          categoryId: item.categoryId || categories[0]?.id || "",
-          notes: item.notes || (file.type === "application/pdf" ? "Imported from PDF" : "Imported from image"),
-        };
-      });
+        const validItems = result.map((item: any) => {
+          let date = item.date;
+          if (!date || !isValidDate(date)) date = today;
 
-      setParsedItems(validItems);
-      toast.success(`Found ${validItems.length} transactions`);
+          return {
+            date,
+            amountCents: Math.abs(typeof item.amountCents === "number" ? item.amountCents : parseInt(item.amountCents || "0", 10)),
+            merchant: item.merchant || "",
+            categoryId: item.categoryId || categories[0]?.id || "",
+            notes: item.notes || (file.type === "application/pdf" ? `From ${file.name}` : `From image ${file.name}`),
+          };
+        });
+
+        allExtractedItems.push(...validItems);
+      }
+
+      setParsedItems(allExtractedItems);
+      toast.success(`Scanning complete. Found ${allExtractedItems.length} transactions across ${files.length} files.`);
     } catch (error) {
       console.error(error);
-      toast.error("Scanning failed. Check Ollama settings.");
+      toast.error("Scanning failed for one or more files. Check Ollama settings.");
     } finally {
       setIsScanning(false);
     }
@@ -131,7 +151,6 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
 
   const handleSaveAll = async () => {
     if (!parsedItems) return;
-    
     let successCount = 0;
 
     for (const item of parsedItems) {
@@ -176,39 +195,51 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
       {!parsedItems && (
         <div className="space-y-4">
           <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="document-upload">Upload Receipt or PDF Statement</Label>
+            <Label htmlFor="document-upload">Upload Receipts or PDF Statements (Multiple allowed)</Label>
             <Input 
               id="document-upload" 
               type="file" 
               accept="image/*,.pdf" 
+              multiple
               onChange={handleFileChange} 
               disabled={isScanning} 
             />
           </div>
 
-          {previewUrl && (
-            <div className="mt-4 rounded-xl border p-2 bg-muted/10">
-              <img src={previewUrl} alt="Preview" className="max-h-[240px] w-auto mx-auto object-contain rounded-lg shadow-sm" />
+          {previews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 max-h-[300px] overflow-y-auto p-1 custom-scrollbar">
+              {previews.map((preview, idx) => (
+                <div key={idx} className="relative group rounded-xl border border-border/60 overflow-hidden aspect-square bg-muted/10 flex flex-col items-center justify-center p-2 shadow-sm">
+                  {preview.type.startsWith("image/") ? (
+                    <img src={preview.url} alt="Preview" className="w-full h-full object-cover rounded-lg" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <FileText className="h-8 w-8 opacity-50" />
+                      <div className="text-[10px] truncate max-w-full px-1">{preview.name}</div>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => removeFile(idx)}
+                    disabled={isScanning}
+                    className="absolute top-1 right-1 h-6 w-6 rounded-full bg-background/80 backdrop-blur shadow-sm border flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
-          {file && file.type === "application/pdf" && (
-            <div className="mt-4 rounded-xl border p-8 bg-muted/10 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-              <FileText className="h-12 w-12 opacity-50" />
-              <div className="text-sm font-medium">{file.name}</div>
-            </div>
-          )}
-
-          <Button onClick={handleScan} disabled={!file || isScanning} className="w-full h-11 rounded-xl">
+          <Button onClick={handleScan} disabled={files.length === 0 || isScanning} className="w-full h-11 rounded-xl shadow-soft-md">
             {isScanning ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing Document...
+                Processing {scanProgress.current} of {scanProgress.total}...
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Scan Document
+                Scan {files.length > 0 ? `${files.length} Document${files.length > 1 ? 's' : ''}` : "Documents"}
               </>
             )}
           </Button>
