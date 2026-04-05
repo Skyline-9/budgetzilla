@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, X, Send, Loader2, Bot, User } from "lucide-react";
+import { MessageSquare, X, Send, Loader2, Bot, User, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +79,15 @@ export function AiChatWidget() {
 
   return (
     <>
+      <svg width="0" height="0" className="absolute">
+        <defs>
+          <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(var(--accent))" />
+            <stop offset="50%" stopColor="hsl(var(--primary))" />
+            <stop offset="100%" stopColor="hsl(var(--secondary))" />
+          </linearGradient>
+        </defs>
+      </svg>
       {/* Floating Button */}
       <div className={cn("fixed bottom-6 right-6 z-50 transition-all duration-300", isOpen && "opacity-0 scale-95 pointer-events-none")}>
         <Button 
@@ -86,16 +95,7 @@ export function AiChatWidget() {
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-glow-accent hover:-translate-y-1 transition-all bg-card/80 backdrop-blur-lg border border-border/60 text-accent-foreground animate-pulse-slow"
           onClick={() => setIsOpen(true)}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{stopColor: "hsl(var(--accent))"}} />
-                <stop offset="50%" style={{stopColor: "hsl(var(--primary))"}} />
-                <stop offset="100%" style={{stopColor: "hsl(var(--secondary))"}} />
-              </linearGradient>
-            </defs>
-            <path d="M12 2L9.5 9.5L2 12L9.5 14.5L12 22L14.5 14.5L22 12L14.5 9.5L12 2Z" fill="url(#icon-gradient)" stroke="url(#icon-gradient)" strokeWidth="1.5" strokeLinejoin="round"/>
-          </svg>
+          <Sparkles className="h-6 w-6" stroke="url(#ai-gradient)" />
         </Button>
       </div>
 
@@ -109,16 +109,7 @@ export function AiChatWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-background/40 rounded-t-2xl">
           <div className="flex items-center gap-2 font-semibold">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{stopColor: "hsl(var(--accent))"}} />
-                  <stop offset="50%" style={{stopColor: "hsl(var(--primary))"}} />
-                  <stop offset="100%" style={{stopColor: "hsl(var(--secondary))"}} />
-                </linearGradient>
-              </defs>
-              <path d="M12 2L9.5 9.5L2 12L9.5 14.5L12 22L14.5 14.5L22 12L14.5 9.5L12 2Z" fill="url(#icon-gradient)" stroke="url(#icon-gradient)" strokeWidth="1.5" strokeLinejoin="round"/>
-            </svg>
+            <Sparkles className="h-5 w-5" stroke="url(#ai-gradient)" />
             Financial Assistant
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
@@ -153,7 +144,7 @@ export function AiChatWidget() {
             ))
           )}
           
-          <AiThinkingIndicator text={thinkingText} isVisible={isLoading && thinkingText.length > 0} />
+          <AiThinkingIndicator isVisible={isLoading && thinkingText.length > 0} />
           
           <div ref={messagesEndRef} />
         </div>
