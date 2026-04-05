@@ -71,10 +71,10 @@ export function AiChatWidget() {
       <div className={cn("fixed bottom-6 right-6 z-50 transition-all duration-300", isOpen && "opacity-0 scale-95 pointer-events-none")}>
         <Button 
           size="icon" 
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all bg-accent hover:bg-accent/90 text-accent-foreground"
+          className="h-14 w-14 rounded-full shadow-lg hover:shadow-glow-accent hover:-translate-y-1 transition-all bg-gradient-to-br from-accent via-primary/80 to-secondary text-accent-foreground animate-pulse-slow"
           onClick={() => setIsOpen(true)}
         >
-          <Sparkles className="h-6 w-6" />
+          <Sparkles className="h-6 w-6 text-white" />
         </Button>
       </div>
 

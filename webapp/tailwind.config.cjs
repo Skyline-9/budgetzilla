@@ -82,7 +82,17 @@ module.exports = {
       boxShadow: {
         soft: "var(--shadow-soft)",
         lift: "var(--shadow-lift)",
-        "soft-lg": "var(--shadow-soft-lg)"
+        "soft-lg": "var(--shadow-soft-lg)",
+        "glow-accent": "0 0 12px 1px hsl(var(--accent) / 0.4)"
+      },
+      animation: {
+        "pulse-slow": "pulse-slow 3s infinite"
+      },
+      keyframes: {
+        "pulse-slow": {
+          "0%, 100%": { opacity: 1, transform: "scale(1)" },
+          "50%": { opacity: 0.9, transform: "scale(1.05)" }
+        }
       }
     }
   },
