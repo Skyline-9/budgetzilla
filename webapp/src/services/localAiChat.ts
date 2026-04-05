@@ -40,6 +40,11 @@ Today's date is ${today}.
 Here is the database schema:
 ${DATABASE_SCHEMA}
 
+Tips for subjective queries (e.g., "impulse buys", "wants vs needs", "unnecessary spending"):
+- "Impulse buys" are usually frequent, low-amount purchases at specific merchants (e.g. Amazon, Starbucks, Target) or in categories like "Shopping", "Dining", or "Entertainment".
+- Use JOIN transactions t ON t.category_id = c.id to filter by category names.
+- Group by merchant or category and use COUNT(*) or SUM(amount_cents) to find the most frequent or highest spend.
+
 The user asks: "${userQuestion}"
 
 Write a valid, read-only SQLite SELECT statement to answer the user's question. 
@@ -80,12 +85,14 @@ Do not return any other text, markdown, or explanations.`;
   // Step 2: Execute SQL locally
   onUpdate?.("Querying database...");
   let sqlResultStr = "";
+  let queryFailed = false;
   try {
     const resultRows = await execReadOnlySQL(sqlQuery);
     sqlResultStr = JSON.stringify(resultRows, null, 2);
-  } catch (e) {
+  } catch (e: any) {
     console.error("Safe Execution Error on query:", sqlQuery, e);
-    return "I encountered an error trying to query your data. The generated query was invalid or prohibited for safety.";
+    queryFailed = true;
+    sqlResultStr = `ERROR EXECUTING QUERY: ${e.message}. The generated query was: ${sqlQuery}`;
   }
 
   // Step 3: Interpret Results
@@ -94,13 +101,18 @@ Do not return any other text, markdown, or explanations.`;
     "You are a helpful financial assistant inside a budgeting app.",
     `The user asked: "${userQuestion}"`,
     "",
-    "To answer this, I ran a database query. The result was:",
-    sqlResultStr,
+    queryFailed ? 
+      "To answer this, I attempted to run a database query but it failed with this error:\n" + sqlResultStr + "\n\nApologize to the user, explain briefly why you couldn't pull that specific data (e.g., the query was too complex or subjective), and suggest a similar but simpler question they could ask." 
+    : [
+      "To answer this, I ran a database query. The result was:",
+      sqlResultStr,
+      "",
+      "Note: monetary amounts in the database are stored in cents (e.g. 1500 = $15.00). Expenses are often stored as negative numbers.",
+      "Analyze the result and formulate a friendly, concise, and helpful response to the user.",
+      "If the result is empty '[]', tell the user no matching data was found.",
+      "Format the monetary amounts nicely as dollars and cents."
+    ].join("\n"),
     "",
-    "Note: monetary amounts in the database are stored in cents (e.g. 1500 = $15.00). Expenses are often stored as negative numbers.",
-    "Analyze the result and formulate a friendly, concise, and helpful response to the user.",
-    "If the result is empty '[]', tell the user no matching data was found.",
-    "Format the monetary amounts nicely as dollars and cents.",
     "Provide only the final response text without greetings or sign-offs."
   ].join("\n");
 
