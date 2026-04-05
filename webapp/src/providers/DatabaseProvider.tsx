@@ -7,7 +7,7 @@ import { API_MODE, GOOGLE_CLIENT_ID } from "@/api/config";
 import { initDatabase, isDatabaseReady } from "@/db/sqlite";
 import { runMigrations } from "@/db/schema";
 import { setDriveService } from "@/api/local/client";
-import { createDriveService, initGoogleAuth, setClientId } from "@/services";
+import { createDriveService, initGoogleAuth, setClientId, autoAuthenticate } from "@/services";
 
 interface DatabaseContextValue {
   isReady: boolean;
@@ -53,6 +53,8 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
             await initGoogleAuth(GOOGLE_CLIENT_ID);
             // Set up drive service for local API client
             setDriveService(createDriveService());
+            // Attempt to restore session silently (fire and forget to not block UI)
+            autoAuthenticate();
           } catch (authErr) {
             console.warn("Google Auth initialization failed:", authErr);
             // Non-fatal - app can work without Drive sync

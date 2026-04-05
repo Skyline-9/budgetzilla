@@ -64,6 +64,7 @@ interface ErrorResponse {
 // Storage keys
 const TOKEN_KEY = "google_access_token";
 const TOKEN_EXPIRY_KEY = "google_token_expiry";
+const CONNECTED_KEY = "google_drive_connected";
 
 // Scopes - using appDataFolder for hidden app data
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
@@ -125,6 +126,7 @@ export async function loadGisClient(): Promise<void> {
  * Must be called before any other auth operations.
  */
 export async function initGoogleAuth(clientId: string): Promise<void> {
+  setClientId(clientId);
   await Promise.all([loadGapiClient(), loadGisClient()]);
 
   return new Promise((resolve) => {
@@ -134,6 +136,7 @@ export async function initGoogleAuth(clientId: string): Promise<void> {
       callback: (response) => {
         if (response.access_token) {
           saveToken(response.access_token, response.expires_in);
+          setGapiToken(response.access_token);
         }
       },
       error_callback: (error) => {
@@ -148,7 +151,7 @@ export async function initGoogleAuth(clientId: string): Promise<void> {
  * Request an access token via OAuth popup.
  * Returns a promise that resolves with the token or rejects on error/cancel.
  */
-export function requestAccessToken(): Promise<string> {
+export function requestAccessToken(options: { prompt?: string } = { prompt: "" }): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!tokenClient) {
       reject(new Error("Google auth not initialized. Call initGoogleAuth first."));
@@ -163,9 +166,6 @@ export function requestAccessToken(): Promise<string> {
       return;
     }
 
-    // Create a one-time callback
-    const originalCallback = (window.google!.accounts.oauth2 as any)._tokenClient?.callback;
-    
     tokenClient = window.google!.accounts.oauth2.initTokenClient({
       client_id: getClientId(),
       scope: DRIVE_SCOPE,
@@ -185,7 +185,7 @@ export function requestAccessToken(): Promise<string> {
       },
     });
 
-    tokenClient.requestAccessToken({ prompt: "" });
+    tokenClient.requestAccessToken(options);
   });
 }
 
@@ -193,33 +193,7 @@ export function requestAccessToken(): Promise<string> {
  * Request a new access token, forcing the consent screen.
  */
 export function requestAccessTokenWithConsent(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!tokenClient) {
-      reject(new Error("Google auth not initialized. Call initGoogleAuth first."));
-      return;
-    }
-
-    tokenClient = window.google!.accounts.oauth2.initTokenClient({
-      client_id: getClientId(),
-      scope: DRIVE_SCOPE,
-      callback: (response) => {
-        if (response.error) {
-          reject(new Error(response.error_description || response.error));
-          return;
-        }
-        if (response.access_token) {
-          saveToken(response.access_token, response.expires_in);
-          setGapiToken(response.access_token);
-          resolve(response.access_token);
-        }
-      },
-      error_callback: (error) => {
-        reject(new Error(error.message || "Authentication failed"));
-      },
-    });
-
-    tokenClient.requestAccessToken({ prompt: "consent" });
-  });
+  return requestAccessToken({ prompt: "consent" });
 }
 
 /**
@@ -228,6 +202,7 @@ export function requestAccessTokenWithConsent(): Promise<string> {
 export function revokeToken(): Promise<void> {
   return new Promise((resolve) => {
     const token = getStoredToken();
+    localStorage.removeItem(CONNECTED_KEY);
     if (token) {
       window.google?.accounts.oauth2.revoke(token, () => {
         clearStoredToken();
@@ -241,10 +216,10 @@ export function revokeToken(): Promise<void> {
 }
 
 /**
- * Check if we have a valid (non-expired) token.
+ * Check if we have a valid (non-expired) token or were previously connected.
  */
 export function isAuthenticated(): boolean {
-  return getStoredToken() !== null;
+  return getStoredToken() !== null || localStorage.getItem(CONNECTED_KEY) === "true";
 }
 
 /**
@@ -259,7 +234,9 @@ export function getStoredToken(): string | null {
   // Check if token is expired (with 5 minute buffer)
   const expiryTime = parseInt(expiry, 10);
   if (Date.now() > expiryTime - 5 * 60 * 1000) {
-    clearStoredToken();
+    // Note: We don't clear the CONNECTED_KEY here, only the short-lived token
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXPIRY_KEY);
     return null;
   }
 
@@ -272,6 +249,8 @@ export function getStoredToken(): string | null {
 function saveToken(token: string, expiresIn: number): void {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + expiresIn * 1000));
+  localStorage.setItem(CONNECTED_KEY, "true");
+  window.dispatchEvent(new CustomEvent("google-auth-changed"));
 }
 
 /**
@@ -280,6 +259,7 @@ function saveToken(token: string, expiresIn: number): void {
 function clearStoredToken(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  window.dispatchEvent(new CustomEvent("google-auth-changed"));
 }
 
 /**
@@ -318,6 +298,19 @@ export async function ensureAuthenticated(): Promise<string> {
     return token;
   }
   return requestAccessToken();
+}
+
+/**
+ * Attempt to refresh authentication silently if previously connected.
+ */
+export async function autoAuthenticate(): Promise<void> {
+  if (localStorage.getItem(CONNECTED_KEY) === "true" && !getStoredToken()) {
+    try {
+      await requestAccessToken({ prompt: "" });
+    } catch (err) {
+      console.warn("Silent Google Auth refresh failed:", err);
+    }
+  }
 }
 
 /**

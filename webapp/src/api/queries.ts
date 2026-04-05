@@ -278,6 +278,16 @@ export const driveQk = {
 };
 
 export function useDriveStatusQuery() {
+  const qc = useQueryClient();
+
+  React.useEffect(() => {
+    const handler = () => {
+      qc.invalidateQueries({ queryKey: driveQk.status() });
+    };
+    window.addEventListener("google-auth-changed", handler);
+    return () => window.removeEventListener("google-auth-changed", handler);
+  }, [qc]);
+
   return useQuery({
     queryKey: driveQk.status(),
     queryFn: () => api.getDriveStatus(),
