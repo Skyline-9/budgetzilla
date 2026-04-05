@@ -49,6 +49,11 @@ Tips for categories:
 - Categories often have subcategories separated by a hyphen (e.g., "Shopping - Clothes", "Food - Groceries"). 
 - To group or filter by a parent category like "Shopping", use \`c.name LIKE 'Shopping%'\` or group by \`SUBSTR(c.name, 1, CASE WHEN INSTR(c.name, ' - ') > 0 THEN INSTR(c.name, ' - ') - 1 ELSE LENGTH(c.name) END)\`.
 
+Tips for "what-if" or affordability questions:
+- Use a query that calculates the required components in a single row.
+- To calculate monthly averages across the dataset, use: \`SUM(amount_cents) / NULLIF(COUNT(DISTINCT SUBSTR(date, 1, 7)), 0)\`.
+- Return multiple columns so the interpreter has all the baseline data it needs to calculate the hypothetical scenario (e.g., \`SELECT (income_query) AS avg_income, (expense_query) AS avg_expense, (category_query) AS avg_category_spend\`).
+
 The user asks: "${userQuestion}"
 
 Write a valid, read-only SQLite SELECT statement to answer the user's question. 
@@ -113,6 +118,7 @@ Do not return any other text, markdown, or explanations.`;
       "",
       "Note: monetary amounts in the database are stored in cents (e.g. 1500 = $15.00). Expenses are often stored as negative numbers.",
       "Analyze the result and formulate a friendly, concise, and helpful response to the user.",
+      "For 'what-if' or affordability questions, use the baseline averages provided by the database to calculate the hypothetical scenario yourself and explain the math clearly.",
       "If the result contains many subcategories (e.g., 'Shopping - Clothes', 'Shopping - Electronics'), try to sum them up or summarize them by their parent category for a cleaner response.",
       "If the result is empty '[]', tell the user no matching data was found.",
       "Format the monetary amounts nicely as dollars and cents."
