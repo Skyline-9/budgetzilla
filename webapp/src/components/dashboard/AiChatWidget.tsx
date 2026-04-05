@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MessageSquare, X, Send, Sparkles, Loader2, Bot, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
@@ -114,9 +115,13 @@ export function AiChatWidget() {
                   "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm",
                   msg.role === "user" 
                     ? "bg-primary text-primary-foreground rounded-br-sm" 
-                    : "bg-muted/50 border border-border/50 text-foreground rounded-bl-sm"
+                    : "bg-muted/50 border border-border/50 text-foreground rounded-bl-sm [&_strong]:font-bold [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_p]:mb-2 last:[&_p]:mb-0"
                 )}>
-                  {msg.content || (msg.role === "ai" && <Loader2 className="h-4 w-4 animate-spin opacity-50" />)}
+                  {msg.content ? (
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  ) : (
+                    msg.role === "ai" && <Loader2 className="h-4 w-4 animate-spin opacity-50" />
+                  )}
                 </div>
               </div>
             ))
