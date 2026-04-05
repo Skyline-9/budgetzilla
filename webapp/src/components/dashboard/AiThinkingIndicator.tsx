@@ -49,7 +49,7 @@ export function AiThinkingIndicator({ isVisible }: { isVisible: boolean }) {
               </linearGradient>
             </defs>
           </svg>
-          <Sparkles className="h-4 w-4 animate-spin-slow" stroke="url(#ai-gradient-thinking)" fill="url(#ai-gradient-thinking)" fillOpacity="0.8" />
+          <Sparkles className="h-4 w-4 animate-spin-slow" stroke="url(#ai-gradient-thinking)" strokeWidth={2.5} />
           <div className="text-xs font-medium text-muted-foreground overflow-hidden h-4 relative w-48">
             <AnimatePresence mode="wait">
               <motion.span
