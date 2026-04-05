@@ -45,6 +45,10 @@ Tips for subjective queries (e.g., "impulse buys", "wants vs needs", "unnecessar
 - Use JOIN transactions t ON t.category_id = c.id to filter by category names.
 - Group by merchant or category and use COUNT(*) or SUM(amount_cents) to find the most frequent or highest spend.
 
+Tips for categories:
+- Categories often have subcategories separated by a hyphen (e.g., "Shopping - Clothes", "Food - Groceries"). 
+- To group or filter by a parent category like "Shopping", use \`c.name LIKE 'Shopping%'\` or group by \`SUBSTR(c.name, 1, CASE WHEN INSTR(c.name, ' - ') > 0 THEN INSTR(c.name, ' - ') - 1 ELSE LENGTH(c.name) END)\`.
+
 The user asks: "${userQuestion}"
 
 Write a valid, read-only SQLite SELECT statement to answer the user's question. 
@@ -109,6 +113,7 @@ Do not return any other text, markdown, or explanations.`;
       "",
       "Note: monetary amounts in the database are stored in cents (e.g. 1500 = $15.00). Expenses are often stored as negative numbers.",
       "Analyze the result and formulate a friendly, concise, and helpful response to the user.",
+      "If the result contains many subcategories (e.g., 'Shopping - Clothes', 'Shopping - Electronics'), try to sum them up or summarize them by their parent category for a cleaner response.",
       "If the result is empty '[]', tell the user no matching data was found.",
       "Format the monetary amounts nicely as dollars and cents."
     ].join("\n"),
