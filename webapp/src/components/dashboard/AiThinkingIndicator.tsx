@@ -40,7 +40,16 @@ export function AiThinkingIndicator({ isVisible }: { isVisible: boolean }) {
           transition={{ duration: 0.2 }}
           className="flex items-center justify-start gap-2 p-3 bg-muted/40 border border-border/50 rounded-2xl w-fit"
         >
-          <Sparkles className="h-4 w-4 text-accent animate-spin-slow" />
+          <svg width="0" height="0" className="absolute">
+            <defs>
+              <linearGradient id="ai-gradient-thinking" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" />
+                <stop offset="50%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#a855f7" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <Sparkles className="h-4 w-4 animate-spin-slow" stroke="url(#ai-gradient-thinking)" fill="url(#ai-gradient-thinking)" fillOpacity="0.8" />
           <div className="text-xs font-medium text-muted-foreground overflow-hidden h-4 relative w-48">
             <AnimatePresence mode="wait">
               <motion.span

@@ -95,7 +95,7 @@ export function AiChatWidget() {
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-glow-accent hover:-translate-y-1 transition-all bg-card/80 backdrop-blur-lg border border-border/60 text-accent-foreground animate-pulse-slow"
           onClick={() => setIsOpen(true)}
         >
-          <Sparkles className="h-6 w-6" stroke="url(#ai-gradient)" />
+          <Sparkles className="h-7 w-7" stroke="url(#ai-gradient)" fill="url(#ai-gradient)" fillOpacity="0.8" />
         </Button>
       </div>
 
@@ -109,7 +109,7 @@ export function AiChatWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-background/40 rounded-t-2xl">
           <div className="flex items-center gap-2 font-semibold">
-            <Sparkles className="h-5 w-5" stroke="url(#ai-gradient)" />
+            <Sparkles className="h-5 w-5" stroke="url(#ai-gradient)" fill="url(#ai-gradient)" fillOpacity="0.8" />
             Financial Assistant
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
