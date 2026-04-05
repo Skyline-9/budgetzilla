@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 import { pingOllama, askLocalAi } from "@/services/localAiChat";
+import { AiThinkingIndicator } from "./AiThinkingIndicator";
 
 interface ChatMessage {
   id: string;
@@ -18,6 +19,7 @@ export function AiChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [thinkingText, setThinkingText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,29 +42,39 @@ export function AiChatWidget() {
 
     const userText = input.trim();
     setInput("");
-    const tempUserId = Date.now().toString();
-    const tempAiId = (Date.now() + 1).toString();
+    const tempUserId = `user-${Date.now()}`;
+    const tempAiId = `ai-${Date.now()}`;
 
     setMessages(prev => [
       ...prev,
       { id: tempUserId, role: "user", content: userText },
-      { id: tempAiId, role: "ai", content: "" }
     ]);
     setIsLoading(true);
+    setThinkingText("Preparing to think...");
 
-    try {
-      await askLocalAi(userText, (chunk) => {
-        setMessages(prev => prev.map(msg => 
-          msg.id === tempAiId ? { ...msg, content: chunk } : msg
-        ));
-      });
-    } catch (err) {
-      setMessages(prev => prev.map(msg => 
-        msg.id === tempAiId ? { ...msg, content: "Sorry, I encountered an error." } : msg
-      ));
-    } finally {
-      setIsLoading(false);
-    }
+    await askLocalAi(userText, (update) => {
+      if (update.type === "progress") {
+        setThinkingText(update.content);
+      } else if (update.type === "chunk") {
+        setThinkingText(""); // Hide thinking indicator once chunks start arriving
+        setMessages(prev => {
+          const existing = prev.find(m => m.id === tempAiId);
+          if (existing) {
+            return prev.map(m => m.id === tempAiId ? { ...m, content: existing.content + update.content } : m);
+          }
+          // First chunk, create the message
+          return [...prev, { id: tempAiId, role: "ai", content: update.content }];
+        });
+      } else if (update.type === "error") {
+        setMessages(prev => [
+          ...prev,
+          { id: `err-${Date.now()}`, role: "ai", content: update.content }
+        ]);
+      }
+    });
+    
+    setIsLoading(false);
+    setThinkingText("");
   };
 
   return (
@@ -117,15 +129,14 @@ export function AiChatWidget() {
                     ? "bg-primary text-primary-foreground rounded-br-sm" 
                     : "bg-muted/50 border border-border/50 text-foreground rounded-bl-sm [&_strong]:font-bold [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_p]:mb-2 last:[&_p]:mb-0"
                 )}>
-                  {msg.content ? (
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                  ) : (
-                    msg.role === "ai" && <Loader2 className="h-4 w-4 animate-spin opacity-50" />
-                  )}
+                  <ReactMarkdown>{msg.content}</ReactMarkdown>
                 </div>
               </div>
             ))
           )}
+          
+          <AiThinkingIndicator text={thinkingText} isVisible={isLoading && thinkingText.length > 0} />
+          
           <div ref={messagesEndRef} />
         </div>
 

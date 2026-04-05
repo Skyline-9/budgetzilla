@@ -86,7 +86,8 @@ module.exports = {
         "glow-accent": "0 0 12px 1px hsl(var(--accent) / 0.4)"
       },
       animation: {
-        "pulse-slow": "pulse-slow 3s infinite"
+        "pulse-slow": "pulse-slow 3s infinite",
+        "spin-slow": "spin 2s linear infinite"
       },
       keyframes: {
         "pulse-slow": {
