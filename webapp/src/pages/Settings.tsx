@@ -8,6 +8,7 @@ import { connect as connectDrive } from "@/services/driveSync";
 import { api } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
@@ -517,6 +518,42 @@ export function SettingsPage() {
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Cloud Sync</h2>
         <GoogleDriveSyncCard />
+      </section>
+
+      {/* Local AI section */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Local AI (Ollama)</h2>
+        <Card title="Vision Model Settings" icon={<Database className="h-4 w-4" />} tint="accent">
+          <div className="space-y-4">
+            <div className="text-xs text-muted-foreground">
+              Configure your local Ollama instance for analyzing receipts and screenshots completely offline.
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Ollama URL</Label>
+                <Input 
+                  defaultValue={localStorage.getItem("ollamaUrl") || "http://localhost:11434"} 
+                  onBlur={(e) => {
+                    localStorage.setItem("ollamaUrl", e.target.value);
+                    toast.success("Ollama URL saved");
+                  }} 
+                  placeholder="http://localhost:11434" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Model Name</Label>
+                <Input 
+                  defaultValue={localStorage.getItem("ollamaModel") || "gemma4"} 
+                  onBlur={(e) => {
+                    localStorage.setItem("ollamaModel", e.target.value);
+                    toast.success("Model saved");
+                  }} 
+                  placeholder="e.g. gemma4" 
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
       </section>
 
       {/* Danger zone */}

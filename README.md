@@ -49,10 +49,70 @@ npm run dev
 - 📊 **Visual dashboard** with spending trends and charts
 - 🔍 **Fast search** (Cmd+K) across all transactions
 - ⌨️ **Keyboard shortcuts** (N to add transaction)
+- 🤖 **Local AI Document Scanner** (Ollama) to auto-extract transactions from images and PDFs
 - 💾 **Local SQLite storage** in your browser (OPFS)
 - ☁️ **Optional Google Drive sync** for backup
 - 🎨 **Modern UI** with dark mode and smooth animations
 - 🚀 **Zero backend** - runs entirely in your browser
+
+---
+
+## 🤖 Local AI Document Scanner
+
+Budgetzilla can automatically extract transactions from your receipts (images) or bank statements (PDFs) using the local **Gemma 4** model via Ollama. No data ever leaves your machine.
+
+### 1. Install Ollama
+
+Download and install [Ollama](https://ollama.com/) on your Mac.
+
+### 2. Pull the Gemma 4 Vision Model
+
+Open your terminal and pull the Gemma 4 model:
+
+```bash
+ollama pull gemma4
+```
+
+*Note: Ensure Ollama is running in the background.*
+
+### 3. Configure Budgetzilla
+
+1. Go to **Settings** in Budgetzilla.
+2. Locate the **Local AI (Ollama)** section.
+3. Set your **Ollama URL** (usually `http://localhost:11434`).
+4. Enter the **Model Name** as `gemma4`.
+
+### 🌐 Deployment Note (CORS Setup)
+
+If you are using the hosted version at [https://budgetzilla-app.vercel.app/](https://budgetzilla-app.vercel.app/), you must configure your local Ollama instance to allow requests from the web app due to browser security (CORS).
+
+**For macOS:**
+1. Open your terminal.
+2. Run this command:
+   ```bash
+   launchctl setenv OLLAMA_ORIGINS "https://budgetzilla-app.vercel.app,http://localhost:5173"
+   ```
+3. Restart the Ollama application.
+
+**For Windows:**
+1. Search for "Edit the system environment variables" in the Start menu.
+2. Click "Environment Variables".
+3. Add a New User variable:
+   - Variable name: `OLLAMA_ORIGINS`
+   - Variable value: `https://budgetzilla-app.vercel.app,http://localhost:5173`
+4. Restart the Ollama application.
+
+### 4. Scan a Document
+
+1. Go to the **Transactions** page.
+2. Click the **Scan Document (AI)** button.
+3. Upload a receipt image (.jpg, .png) or a bank statement (.pdf).
+4. Review the extracted transactions, edit if necessary, and click **Confirm & Save**.
+
+1. Go to the **Transactions** page.
+2. Click the **Scan Receipt (AI)** button.
+3. Upload an image or screenshot.
+4. Review the extracted transactions, edit if necessary, and click **Confirm & Save**.
 
 ---
 
