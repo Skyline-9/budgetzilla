@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { Stars } from "lucide-react"; // Changed Sparkles to Stars
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/cn";
 
@@ -49,7 +49,7 @@ export function AiThinkingIndicator({ isVisible }: { isVisible: boolean }) {
               </linearGradient>
             </defs>
           </svg>
-          <Sparkles className="h-4 w-4 animate-spin-slow" stroke="url(#ai-gradient-thinking)" strokeWidth={2.5} />
+          <Stars className="h-4 w-4 animate-spin-slow" fill="url(#ai-gradient-thinking)" stroke="url(#ai-gradient-thinking)" strokeWidth={0.5} /> {/* Changed to Stars */}
           <div className="text-xs font-medium text-muted-foreground overflow-hidden h-4 relative w-48">
             <AnimatePresence mode="wait">
               <motion.span

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, X, Send, Loader2, Bot, User, Sparkles } from "lucide-react";
+import { MessageSquare, X, Send, Loader2, Bot, User, Stars } from "lucide-react"; // Changed Sparkles to Stars
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,7 @@ export function AiChatWidget() {
     const userText = input.trim();
     setInput("");
     const tempUserId = `user-${Date.now()}`;
-    const tempAiId = `ai-${Date.now()}`;
+    const tempAiId = `ai-${Date.now()}`; // Use now() for better uniqueness
 
     setMessages(prev => [
       ...prev,
@@ -95,7 +95,7 @@ export function AiChatWidget() {
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-glow-accent hover:-translate-y-1 transition-all bg-card/80 backdrop-blur-lg border border-border/60 text-accent-foreground animate-pulse-slow"
           onClick={() => setIsOpen(true)}
         >
-          <Sparkles className="h-7 w-7" stroke="url(#ai-gradient)" strokeWidth={2.5} />
+          <Stars className="h-7 w-7" fill="url(#ai-gradient)" stroke="url(#ai-gradient)" strokeWidth={0.5} /> {/* Changed to Stars */}
         </Button>
       </div>
 
@@ -109,7 +109,7 @@ export function AiChatWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-background/40 rounded-t-2xl">
           <div className="flex items-center gap-2 font-semibold">
-            <Sparkles className="h-5 w-5" stroke="url(#ai-gradient)" strokeWidth={2.5} />
+            <Stars className="h-5 w-5" fill="url(#ai-gradient)" stroke="url(#ai-gradient)" strokeWidth={0.5} /> {/* Changed to Stars */}
             Financial Assistant
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
