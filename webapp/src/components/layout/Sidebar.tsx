@@ -138,25 +138,25 @@ function SidebarContent({
     <div className="flex h-full min-h-0 flex-col">
       <div
         className={cn(
-          "flex h-[60px] items-center justify-between gap-2 border-b border-border/70",
-          collapsed ? "px-3" : "px-4",
+          "flex h-[80px] items-center justify-between gap-2 border-b border-border/70",
+          collapsed ? "px-3" : "px-6",
         )}
       >
         <Link
           to={{ pathname: "/dashboard", search }}
           className={cn(
-            "group inline-flex min-w-0 items-center gap-3 rounded-2xl",
+            "group inline-flex min-w-0 items-center gap-4 rounded-squircle",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
           )}
           aria-label="Go to Dashboard"
           title="Dashboard"
           onClick={onNavClick}
         >
-          <LogoMark size={36} className="shrink-0" />
+          <LogoMark size={44} className="shrink-0 shadow-lg shadow-primary/10 transition-transform group-hover:scale-105" />
           {!collapsed ? (
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold tracking-tight">Budgetzilla</div>
-              <div className="truncate text-xs text-muted-foreground">Personal finance</div>
+              <div className="truncate text-base font-bold tracking-tight">Budgetzilla</div>
+              <div className="truncate text-[10px] uppercase tracking-widest text-muted-foreground/60 font-bold">Personal Finance</div>
             </div>
           ) : null}
         </Link>
@@ -165,34 +165,28 @@ function SidebarContent({
           <Button
             variant="ghost"
             size="icon"
+            className="rounded-full h-8 w-8 hover:bg-primary/5"
             onClick={() => setCollapsedPref((v) => !v)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={collapsed ? "Expand" : "Collapse"}
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </Button>
         ) : null}
       </div>
 
       <nav
         className={cn(
-          "min-h-0 flex-1 overflow-auto py-3",
-          "flex flex-col gap-1",
-          collapsed ? "items-center px-2" : "px-3",
+          "min-h-0 flex-1 overflow-auto py-6",
+          "flex flex-col gap-2",
+          collapsed ? "items-center px-3" : "px-4",
         )}
       >
         <SidebarNavItem
           to="/dashboard"
           label="Dashboard"
           icon={<BarChart3 className="h-4 w-4" />}
-          collapsed={collapsed}
-          search={search}
-          onClick={onNavClick}
-        />
-        <SidebarNavItem
-          to="/insights"
-          label="Insights"
-          icon={<Lightbulb className="h-4 w-4" />}
+          iconClassName="text-blue-500"
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
@@ -201,6 +195,7 @@ function SidebarContent({
           to="/transactions"
           label="Transactions"
           icon={<Receipt className="h-4 w-4" />}
+          iconClassName="text-emerald-500"
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
@@ -209,14 +204,7 @@ function SidebarContent({
           to="/categories"
           label="Categories"
           icon={<Tags className="h-4 w-4" />}
-          collapsed={collapsed}
-          search={search}
-          onClick={onNavClick}
-        />
-        <SidebarNavItem
-          to="/help"
-          label="Help"
-          icon={<HelpCircle className="h-4 w-4" />}
+          iconClassName="text-orange-500"
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
@@ -225,6 +213,7 @@ function SidebarContent({
           to="/settings"
           label="Settings"
           icon={<Settings className="h-4 w-4" />}
+          iconClassName="text-slate-500"
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
@@ -310,7 +299,7 @@ export function Sidebar() {
           "border-r border-border/70 bg-background/40 backdrop-blur-xl",
           "transition-[width] duration-200",
           "hidden md:block",
-          collapsed ? "w-[92px]" : "w-[240px]",
+          collapsed ? "w-[100px]" : "w-[280px]",
         )}
         aria-label="Sidebar"
       >
