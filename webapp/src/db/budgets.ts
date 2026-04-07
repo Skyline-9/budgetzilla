@@ -20,15 +20,16 @@ function rowToBudget(row: BudgetRow): Budget {
 
 // Empty string category_id is reserved for overall monthly budget
 const OVERALL_BUDGET_CATEGORY = "";
+const GLOBAL_MONTH = "global";
 
 /**
- * Get the overall budget for a month.
+ * Get the overall persistent monthly budget.
  */
-export async function getOverallBudget(month: string): Promise<Budget | null> {
+export async function getOverallBudget(_ignoredMonth?: string): Promise<Budget | null> {
   const rows = await execSQL(
     `SELECT month, category_id, budget_cents FROM budgets
      WHERE month = ? AND category_id = ?`,
-    [month, OVERALL_BUDGET_CATEGORY]
+    [GLOBAL_MONTH, OVERALL_BUDGET_CATEGORY]
   ) as BudgetRow[];
 
   if (rows.length === 0) return null;
@@ -36,31 +37,31 @@ export async function getOverallBudget(month: string): Promise<Budget | null> {
 }
 
 /**
- * Create or update the overall budget for a month.
+ * Create or update the overall persistent budget.
  */
-export async function upsertOverallBudget(month: string, budgetCents: number): Promise<Budget> {
+export async function upsertOverallBudget(_ignoredMonth: string, budgetCents: number): Promise<Budget> {
   await runSQL(
     `INSERT OR REPLACE INTO budgets (month, category_id, budget_cents)
      VALUES (?, ?, ?)`,
-    [month, OVERALL_BUDGET_CATEGORY, budgetCents]
+    [GLOBAL_MONTH, OVERALL_BUDGET_CATEGORY, budgetCents]
   );
 
   await persistDatabase();
 
   return {
-    month,
+    month: GLOBAL_MONTH,
     categoryId: OVERALL_BUDGET_CATEGORY,
     budgetCents,
   };
 }
 
 /**
- * Delete the overall budget for a month.
+ * Delete the overall persistent budget.
  */
-export async function deleteOverallBudget(month: string): Promise<void> {
+export async function deleteOverallBudget(_ignoredMonth: string): Promise<void> {
   await runSQL(
     "DELETE FROM budgets WHERE month = ? AND category_id = ?",
-    [month, OVERALL_BUDGET_CATEGORY]
+    [GLOBAL_MONTH, OVERALL_BUDGET_CATEGORY]
   );
   await persistDatabase();
 }

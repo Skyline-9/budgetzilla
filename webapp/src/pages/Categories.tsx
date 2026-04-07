@@ -211,16 +211,16 @@ function CategoryTreeRow(props: {
       aria-expanded={row.hasChildren ? row.isExpanded : undefined}
       tabIndex={isFocused ? 0 : -1}
       className={cn(
-        "group flex items-center justify-between gap-3 rounded-2xl px-3 py-1.5",
+        "group flex items-center justify-between gap-3 rounded-full px-4 py-2",
         "cursor-pointer select-none active:cursor-grabbing",
-        "transition-colors",
-        "hover:bg-accent/40",
-        isSelected && "bg-accent/35",
-        isActive && "ring-1 ring-ring/35 bg-accent/55",
+        "transition-all duration-200",
+        "hover:bg-primary/5",
+        isSelected && "bg-primary/10 text-primary font-semibold",
+        isActive && "bg-primary/15 text-primary font-bold shadow-sm",
         isFocused && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-        isDragging && "opacity-60",
-        isDropTarget && (dropValid ? "ring-2 ring-primary/40 bg-primary/10" : "ring-2 ring-destructive/40"),
-        !c.active && "opacity-60",
+        isDragging && "opacity-40 scale-95",
+        isDropTarget && (dropValid ? "bg-income/10 ring-2 ring-income/40" : "bg-destructive/10 ring-2 ring-destructive/40"),
+        !c.active && "opacity-40 grayscale",
       )}
       draggable
       onFocus={() => onFocusRow(c.id)}
@@ -377,26 +377,27 @@ function CategoryGroup(props: {
   );
 
   return (
-    <div className="rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg flex min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-squircle bg-card/85 p-5 shadow-surface flex min-h-0 flex-col transition-all duration-300 hover:shadow-surface-elevated">
+      <div className="flex items-center justify-between gap-3 px-1">
         <div>
-          <div className="text-sm font-semibold tracking-tight">{title}</div>
+          <div className="text-sm font-semibold tracking-tight uppercase tracking-[0.12em] text-muted-foreground/80">{title}</div>
           <div className="text-xs text-muted-foreground">{categories.length} categories</div>
         </div>
         <Button
           variant="secondary"
           size="sm"
+          className="rounded-full px-4"
           onClick={() => onQuickAdd(kind)}
           aria-label={`Add ${kind === "expense" ? "expense" : "income"} category`}
         >
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">
-            Add {kind === "expense" ? "Expense" : "Income"} category
+            Add {kind === "expense" ? "Expense" : "Income"}
           </span>
         </Button>
       </div>
 
-      <div className="mt-3 min-h-0 flex-1 space-y-0.5 overflow-auto px-1" role="tree" aria-label={`${title} category tree`}>
+      <div className="mt-5 min-h-0 flex-1 space-y-0.5 overflow-auto px-1" role="tree" aria-label={`${title} category tree`}>
         {rows.length ? (
           rows.map((row) => (
             <CategoryTreeRow
@@ -425,13 +426,10 @@ function CategoryGroup(props: {
             />
           ))
         ) : (
-          <div className="rounded-2xl border border-border/60 bg-background/30 p-6 text-center">
-            <FolderOpen className="mx-auto h-10 w-10 text-muted-foreground/40" />
-            <div className="mt-2 text-sm font-medium text-muted-foreground">
+          <div className="rounded-squircle border border-border/40 bg-background/20 p-8 text-center">
+            <FolderOpen className="mx-auto h-10 w-10 text-muted-foreground/30" />
+            <div className="mt-3 text-sm font-medium text-muted-foreground">
               {isSearching ? "No matching categories" : "No categories yet"}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground/70">
-              {isSearching ? "Try a different search term." : "Create your first category to get started."}
             </div>
           </div>
         )}
@@ -987,19 +985,19 @@ export function CategoriesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Categories</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground/80 font-bold">Categories</div>
           <div className="mt-1 text-2xl font-semibold tracking-tight">Organize your money</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Use parents for structure (e.g., Food → Groceries).
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="md" aria-label="Advanced category settings">
+              <Button variant="secondary" size="sm" className="rounded-full px-4" aria-label="Advanced category settings">
                 <MoreHorizontal className="h-4 w-4" />
                 Advanced
               </Button>
@@ -1015,6 +1013,8 @@ export function CategoriesPage() {
 
           <Button
             variant="secondary"
+            size="sm"
+            className="rounded-full px-4"
             onClick={() => {
               openCreateDialog("expense");
             }}
@@ -1026,20 +1026,20 @@ export function CategoriesPage() {
       </div>
 
       {categoriesQuery.isLoading ? (
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
-          <Skeleton className="h-[350px] sm:h-[420px]" />
-          <Skeleton className="h-[350px] sm:h-[420px]" />
-          <Skeleton className="hidden h-[420px] xl:block" />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
+          <Skeleton className="h-[350px] sm:h-[420px] rounded-squircle" />
+          <Skeleton className="h-[350px] sm:h-[420px] rounded-squircle" />
+          <Skeleton className="hidden h-[420px] xl:block rounded-squircle" />
         </div>
       ) : categoriesQuery.isError ? (
-        <div className="rounded-3xl border border-border/60 bg-card/90 p-6 shadow-soft-lg">
+        <div className="rounded-squircle bg-card/85 p-6 shadow-surface">
           <div className="text-sm font-semibold">Couldn't load categories</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Try again, or switch API mode back to mock.
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
           <CategoryGroup
             title="Expenses"
             kind="expense"

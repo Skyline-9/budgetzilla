@@ -1,5 +1,30 @@
 import React from "react";
-import { Cloud, CloudOff, Database, Download, FileSpreadsheet, Moon, Palette, RefreshCw, Sun, Trash2, Upload } from "lucide-react";
+import { 
+  Cloud, 
+  CloudOff, 
+  Database, 
+  Download, 
+  FileSpreadsheet, 
+  Moon, 
+  Palette, 
+  RefreshCw, 
+  Sun, 
+  Trash2, 
+  Upload,
+  HelpCircle,
+  BookOpen,
+  ChevronRight,
+  ArrowRight,
+  Receipt,
+  Tags,
+  Target,
+  Activity,
+  Lightbulb,
+  Keyboard,
+  ShieldCheck,
+  Smartphone,
+  Info
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { API_MODE, GOOGLE_CLIENT_ID } from "@/api/config";
@@ -21,6 +46,7 @@ import { importXLSX } from "@/services/importXLSX";
 import { importSpreadsheetCSV } from "@/services/importSpreadsheet";
 import { clearAllData } from "@/db/schema";
 import { cn } from "@/lib/cn";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type CardTint = "neutral" | "income" | "expense" | "accent" | "hero" | "warm";
 
@@ -49,26 +75,27 @@ function Card({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/85 p-5",
+        "group relative overflow-hidden rounded-squircle bg-card/85 p-6 shadow-surface",
         "corner-glow",
         tintClass,
-        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-lift",
+        "transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-card/90 hover:shadow-surface-elevated",
         className,
       )}
     >
-      <div className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+      <div className="flex items-center gap-2 text-sm font-semibold tracking-tight uppercase tracking-[0.12em] text-muted-foreground/80">
         {icon ? (
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-background/40 ring-1 ring-border/60 text-muted-foreground">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-background/40 text-muted-foreground">
             {icon}
           </span>
         ) : null}
         <span>{title}</span>
       </div>
-      <div className="mt-3">{children}</div>
+      <div className="mt-4">{children}</div>
     </div>
   );
 }
 
+// ... GoogleDriveSyncCard remains mostly same but uses refactored Card ...
 function GoogleDriveSyncCard() {
   const queryClient = useQueryClient();
   const { data: status, isLoading } = useDriveStatusQuery();
@@ -86,7 +113,6 @@ function GoogleDriveSyncCard() {
       await connectDrive(GOOGLE_CLIENT_ID);
       await queryClient.invalidateQueries({ queryKey: driveQk.status() });
       toast.success("Connected to Google Drive");
-      // Automatically trigger a sync after connecting
       handleSync();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to connect");
@@ -127,15 +153,15 @@ function GoogleDriveSyncCard() {
       icon={isConnected ? <Cloud className="h-4 w-4" /> : <CloudOff className="h-4 w-4" />}
       tint={isConnected ? "income" : "neutral"}
     >
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center gap-3 text-sm">
           <div
             className={cn(
               "h-2 w-2 rounded-full",
-              isConnected ? "bg-green-500" : "bg-muted-foreground/40"
+              isConnected ? "bg-income animate-pulse" : "bg-muted-foreground/40"
             )}
           />
-          <span className={isConnected ? "text-green-600 dark:text-green-400 font-medium" : "text-muted-foreground"}>
+          <span className={isConnected ? "text-income font-semibold" : "text-muted-foreground"}>
             {isLoading ? "Checking..." : isConnected ? "Connected" : "Not connected"}
           </span>
         </div>
@@ -151,31 +177,33 @@ function GoogleDriveSyncCard() {
             <Button
               variant="secondary"
               size="sm"
+              className="rounded-full px-4"
               onClick={handleConnect}
               disabled={isConnecting || isLoading}
             >
               <Cloud className="mr-1.5 h-4 w-4" />
-              {isConnecting ? "Connecting..." : "Connect Google Drive"}
+              {isConnecting ? "Connecting..." : "Connect"}
             </Button>
           ) : (
             <>
               <Button
                 variant="secondary"
                 size="sm"
+                className="rounded-full px-4"
                 onClick={handleSync}
                 disabled={isSyncing}
               >
                 <RefreshCw className={cn("mr-1.5 h-4 w-4", isSyncing && "animate-spin")} />
-                {isSyncing ? "Syncing..." : "Sync Now"}
+                Sync
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
+                className="rounded-full px-4"
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
               >
-                <CloudOff className="mr-1.5 h-4 w-4" />
-                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+                Disconnect
               </Button>
             </>
           )}
@@ -274,10 +302,10 @@ export function SettingsPage() {
       const result = await importXLSX(file);
 
       if (result.errors.length > 0) {
-        toast.warning(`XLSX Import: ${result.errors.length} error(s). ${result.transactionsImported} transactions, ${result.categoriesImported} categories imported.`);
+        toast.warning(`XLSX Import: ${result.errors.length} error(s).`);
       } else {
         toast.success(
-          `Successfully imported ${result.transactionsImported} transactions, ${result.categoriesImported} categories, and ${result.budgetsImported} budget entries.`
+          `Successfully imported ${result.transactionsImported} transactions.`
         );
       }
       await queryClient.invalidateQueries();
@@ -305,7 +333,7 @@ export function SettingsPage() {
         toast.warning(`Spreadsheet Import: ${result.errors.length} error(s).`);
       } else {
         toast.success(
-          `Successfully imported ${result.transactionsCreated} transactions and ${result.categoriesCreated} categories from spreadsheet.`
+          `Successfully imported ${result.transactionsCreated} transactions.`
         );
       }
       await queryClient.invalidateQueries();
@@ -340,237 +368,213 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-1">
+    <div className="space-y-10 pb-20">
+      <header className="space-y-1">
         <div className="text-2xl font-semibold tracking-tight">Settings</div>
         <div className="text-sm text-muted-foreground text-balance">
-          Manage preferences, import/export data, and configure your Budgetzilla app.
+          Manage your preferences, data, and find help.
         </div>
-      </section>
+      </header>
 
-      {/* Appearance section */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Appearance</h2>
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <Card title="Theme" icon={<Palette className="h-4 w-4" />} tint="hero">
-            <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/20 px-3 py-3">
-              <div className="flex items-center gap-3">
-                <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-background/40">
-                  {theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                </div>
-                <div>
-                  <div className="text-sm font-medium">{theme === "dark" ? "Dark mode" : "Light mode"}</div>
-                  <div className="text-xs text-muted-foreground">Toggle between themes</div>
-                </div>
-              </div>
-              <Switch checked={theme === "dark"} onCheckedChange={() => toggleTheme()} />
-            </div>
-          </Card>
+      <Tabs defaultValue="data" className="space-y-10">
+        <TabsList className="bg-background/40 p-1.5 rounded-full border border-border/40 h-14">
+          <TabsTrigger value="data" className="rounded-full px-8 h-full text-sm font-bold tracking-tight">Data & Sync</TabsTrigger>
+          <TabsTrigger value="preferences" className="rounded-full px-8 h-full text-sm font-bold tracking-tight">Preferences</TabsTrigger>
+          <TabsTrigger value="help" className="rounded-full px-8 h-full text-sm font-bold tracking-tight">Help & Support</TabsTrigger>
+        </TabsList>
 
-          <Card title="Currency" icon={<span className="text-sm">$</span>} tint="warm">
-            <div className="space-y-3">
-              <div className="text-xs text-muted-foreground">
-                Display currency for all amounts.
-              </div>
-              <div className="space-y-1.5">
-                <Label>Display currency</Label>
-                <Select
-                  value={currency}
-                  onValueChange={(v) => {
-                    setCurrencyState(v);
-                    setCurrency(v);
-                    toast.success("Currency saved");
-                  }}
-                >
-                  <SelectTrigger className="max-w-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="JPY">JPY (¥)</SelectItem>
-                    <SelectItem value="CAD">CAD ($)</SelectItem>
-                    <SelectItem value="AUD">AUD ($)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        <TabsContent value="preferences" className="space-y-10 outline-none">
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Appearance</h2>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <Card title="Theme" icon={<Palette className="h-4 w-4" />} tint="hero">
+                <div className="flex items-center justify-between rounded-2xl border border-border/40 bg-background/20 px-4 py-4 transition-all hover:bg-background/30">
+                  <div className="flex items-center gap-3">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-background/40">
+                      {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold">{theme === "dark" ? "Dark mode" : "Light mode"}</div>
+                      <div className="text-xs text-muted-foreground">OLED-ready deep blacks</div>
+                    </div>
+                  </div>
+                  <Switch checked={theme === "dark"} onCheckedChange={() => toggleTheme()} />
+                </div>
+              </Card>
+
+              <Card title="Currency" icon={<span className="text-sm font-bold">$</span>} tint="warm">
+                <div className="space-y-4">
+                  <div className="text-xs text-muted-foreground">
+                    Display currency for all amounts across the app.
+                  </div>
+                  <div className="space-y-2">
+                    <Select
+                      value={currency}
+                      onValueChange={(v) => {
+                        setCurrencyState(v);
+                        setCurrency(v);
+                        toast.success("Currency saved");
+                      }}
+                    >
+                      <SelectTrigger className="max-w-xs rounded-xl bg-background/20 border-border/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="EUR">EUR (€)</SelectItem>
+                        <SelectItem value="GBP">GBP (£)</SelectItem>
+                        <SelectItem value="JPY">JPY (¥)</SelectItem>
+                        <SelectItem value="CAD">CAD ($)</SelectItem>
+                        <SelectItem value="AUD">AUD ($)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </Card>
             </div>
-          </Card>
+          </section>
+
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Local AI (Ollama)</h2>
+            <Card title="Vision Model" icon={<Database className="h-4 w-4" />} tint="accent">
+              <div className="space-y-6">
+                <div className="text-xs text-muted-foreground">
+                  Configure your local Ollama instance for Analyzing receipts completely offline.
+                </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold">Ollama URL</Label>
+                    <Input 
+                      className="rounded-xl bg-background/20 border-border/40"
+                      defaultValue={localStorage.getItem("ollamaUrl") || "http://localhost:11434"} 
+                      onBlur={(e) => {
+                        localStorage.setItem("ollamaUrl", e.target.value);
+                        toast.success("Ollama URL saved");
+                      }} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold">Model Name</Label>
+                    <Input 
+                      className="rounded-xl bg-background/20 border-border/40"
+                      defaultValue={localStorage.getItem("ollamaModel") || "gemma4"} 
+                      onBlur={(e) => {
+                        localStorage.setItem("ollamaModel", e.target.value);
+                        toast.success("Model saved");
+                      }} 
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="data" className="space-y-10 outline-none">
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Cloud Sync</h2>
+            <GoogleDriveSyncCard />
+          </section>
+
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Import & Export</h2>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <Card title="Export" icon={<Download className="h-4 w-4" />} tint="income">
+                <div className="space-y-4">
+                  <div className="text-xs text-muted-foreground">Download your transaction history.</div>
+                  <div className="flex flex-wrap gap-3">
+                    <Button variant="secondary" size="sm" className="rounded-full px-5" onClick={handleExportXLSX} disabled={isExporting}>
+                      <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel
+                    </Button>
+                    <Button variant="secondary" size="sm" className="rounded-full px-5" onClick={handleExportCSV} disabled={isExporting}>
+                      <Download className="mr-2 h-4 w-4" /> CSV
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              <Card title="Import" icon={<Upload className="h-4 w-4" />} tint="accent">
+                <div className="space-y-4">
+                  <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+                  <input ref={xlsxInputRef} type="file" accept=".xlsx" onChange={handleXLSXFileChange} className="hidden" />
+                  <input ref={spreadsheetInputRef} type="file" accept=".csv" onChange={handleSpreadsheetFileChange} className="hidden" />
+                  <div className="text-xs text-muted-foreground">Restore from backup or external sources.</div>
+                  <div className="flex flex-wrap gap-3">
+                    <Button variant="secondary" size="sm" className="rounded-full px-5" onClick={handleImportXLSXClick} disabled={isImportingXLSX}>
+                      Excel
+                    </Button>
+                    <Button variant="secondary" size="sm" className="rounded-full px-5" onClick={handleImportClick} disabled={isImporting}>
+                      Cashew
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold text-destructive uppercase tracking-widest">Danger Zone</h2>
+            <Card title="Reset App" icon={<Trash2 className="h-4 w-4" />} tint="expense">
+              <div className="space-y-4">
+                <div className="text-xs text-muted-foreground">Permanently wipe all local data. This action is irreversible.</div>
+                <Button variant="destructive" size="sm" className="rounded-full px-6" onClick={handleClearData}>
+                  <Trash2 className="mr-2 h-4 w-4" /> Clear All Data
+                </Button>
+              </div>
+            </Card>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="help" className="space-y-10 outline-none">
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Learning Budgetzilla</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <HelpTopicCard title="Transactions" description="How to log and manage spending." icon={<Receipt className="h-5 w-5" />} />
+              <HelpTopicCard title="Categories" description="Organizing your money effectively." icon={<Tags className="h-5 w-5" />} />
+              <HelpTopicCard title="Budgets" description="Setting targets and staying on track." icon={<Target className="h-5 w-5" />} />
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Quick Tips</h2>
+            <Card title="Pro Features" icon={<Lightbulb className="h-4 w-4" />} tint="warm">
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex gap-3">
+                  <div className="h-5 w-5 rounded-full bg-warm/10 text-warm flex items-center justify-center shrink-0">1</div>
+                  <span>Drag-and-drop categories to nest them for better organization.</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="h-5 w-5 rounded-full bg-warm/10 text-warm flex items-center justify-center shrink-0">2</div>
+                  <span>Use the AI Chat widget to ask questions about your spending in natural language.</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="h-5 w-5 rounded-full bg-warm/10 text-warm flex items-center justify-center shrink-0">3</div>
+                  <span>Sync with Google Drive to keep your data safe and accessible across devices.</span>
+                </li>
+              </ul>
+            </Card>
+          </section>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function HelpTopicCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
+  return (
+    <div className="group relative overflow-hidden rounded-squircle bg-card/85 p-6 shadow-surface transition-all duration-300 hover:shadow-surface-elevated hover:-translate-y-1">
+      <div className="flex items-center gap-4">
+        <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:scale-110">
+          {icon}
         </div>
-      </section>
-
-      {/* Data section */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Data</h2>
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <Card title="Export" icon={<Download className="h-4 w-4" />} tint="income">
-            <div className="space-y-3">
-              <div className="text-xs text-muted-foreground">
-                Download your data as Excel or CSV files.
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleExportXLSX}
-                  disabled={isExporting}
-                >
-                  <FileSpreadsheet className="mr-1.5 h-4 w-4" />
-                  Export Excel
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleExportCSV}
-                  disabled={isExporting}
-                >
-                  <Download className="mr-1.5 h-4 w-4" />
-                  Export CSV
-                </Button>
-              </div>
-            </div>
-          </Card>
-
-          <Card title="Import" icon={<Upload className="h-4 w-4" />} tint="accent">
-            <div className="space-y-3">
-              <div className="text-xs text-muted-foreground">
-                Import data from Excel, Cashew CSV, or raw spreadsheet format.
-                <HelpTooltip content="Supports native Budgetzilla XLSX export, Cashew app export, and custom spreadsheet CSV formats." />
-              </div>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <input
-                ref={xlsxInputRef}
-                type="file"
-                accept=".xlsx"
-                onChange={handleXLSXFileChange}
-                className="hidden"
-              />
-              <input
-                ref={spreadsheetInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleSpreadsheetFileChange}
-                className="hidden"
-              />
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleImportXLSXClick}
-                  disabled={isImportingXLSX}
-                >
-                  <FileSpreadsheet className="mr-1.5 h-4 w-4" />
-                  {isImportingXLSX ? "Importing..." : "Import Excel"}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleImportClick}
-                  disabled={isImporting}
-                >
-                  <Upload className="mr-1.5 h-4 w-4" />
-                  {isImporting ? "Importing..." : "Import Cashew CSV"}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleImportSpreadsheetClick}
-                  disabled={isImportingSpreadsheet}
-                >
-                  <FileSpreadsheet className="mr-1.5 h-4 w-4" />
-                  {isImportingSpreadsheet ? "Importing..." : "Import Spreadsheet CSV"}
-                </Button>
-              </div>
-            </div>
-          </Card>
-
-          <Card title="Storage" icon={<Database className="h-4 w-4" />} className="xl:col-span-2">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="rounded-xl border border-border/60 bg-background/20 px-3 py-3">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  API mode
-                  <HelpTooltip content="'local' uses browser SQLite, 'mock' uses sample data, 'real' connects to a backend server." />
-                </div>
-                <div className="mt-1 text-sm font-semibold tracking-tight">{API_MODE}</div>
-              </div>
-              <div className="rounded-xl border border-border/60 bg-background/20 px-3 py-3">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  Storage engine
-                  <HelpTooltip content="Data is stored locally in your browser using SQLite compiled to WebAssembly, persisted via IndexedDB." />
-                </div>
-                <div className="mt-1 text-sm font-semibold tracking-tight">Browser SQLite (WASM)</div>
-              </div>
-            </div>
-          </Card>
+        <div>
+          <h3 className="text-sm font-bold tracking-tight">{title}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         </div>
-      </section>
-
-      {/* Cloud Sync section */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Cloud Sync</h2>
-        <GoogleDriveSyncCard />
-      </section>
-
-      {/* Local AI section */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Local AI (Ollama)</h2>
-        <Card title="Vision Model Settings" icon={<Database className="h-4 w-4" />} tint="accent">
-          <div className="space-y-4">
-            <div className="text-xs text-muted-foreground">
-              Configure your local Ollama instance for analyzing receipts and screenshots completely offline.
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Ollama URL</Label>
-                <Input 
-                  defaultValue={localStorage.getItem("ollamaUrl") || "http://localhost:11434"} 
-                  onBlur={(e) => {
-                    localStorage.setItem("ollamaUrl", e.target.value);
-                    toast.success("Ollama URL saved");
-                  }} 
-                  placeholder="http://localhost:11434" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Model Name</Label>
-                <Input 
-                  defaultValue={localStorage.getItem("ollamaModel") || "gemma4"} 
-                  onBlur={(e) => {
-                    localStorage.setItem("ollamaModel", e.target.value);
-                    toast.success("Model saved");
-                  }} 
-                  placeholder="e.g. gemma4" 
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
-      </section>
-
-      {/* Danger zone */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-medium text-destructive uppercase tracking-wide">Danger zone</h2>
-        <Card title="Clear data" icon={<Trash2 className="h-4 w-4" />} tint="expense">
-          <div className="space-y-3">
-            <div className="text-xs text-muted-foreground">
-              Permanently delete all transactions, categories, and budgets. This cannot be undone.
-            </div>
-            <Button variant="destructive" size="sm" onClick={handleClearData}>
-              <Trash2 className="mr-1.5 h-4 w-4" />
-              Clear all data
-            </Button>
-          </div>
-        </Card>
-      </section>
+      </div>
+      <Button variant="ghost" size="sm" className="mt-4 w-full justify-between rounded-xl">
+        Learn more <ArrowRight className="h-3 w-3 opacity-50" />
+      </Button>
     </div>
   );
 }

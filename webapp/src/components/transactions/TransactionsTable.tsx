@@ -471,8 +471,8 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
   }, [rows]);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/90 shadow-soft-lg corner-glow tint-neutral">
-      <div className="p-4 space-y-4">
+    <div className="relative overflow-hidden rounded-squircle bg-card/85 shadow-surface corner-glow tint-neutral">
+      <div className="p-6 space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 text-sm font-semibold tracking-tight">
@@ -486,14 +486,14 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
           <TableSummary transactions={transactions} />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="sm">
+              <Button variant="secondary" size="sm" className="rounded-full px-4">
                 <Filter className="h-4 w-4" />
                 Category
                 {categoryId.length ? (
-                  <span className="ml-1 rounded-full bg-background/40 px-2 py-0.5 text-xs ring-1 ring-border/60">
+                  <span className="ml-1 rounded-full bg-background/40 px-2 py-0.5 text-xs">
                     {categoryId.length}
                   </span>
                 ) : null}
@@ -582,8 +582,8 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
       </div>
 
       <div className="border-t border-border/60">
-        <div className="h-[400px] overflow-auto bg-background/5 sm:h-[480px] md:h-[560px]">
-          <Table className="min-w-[800px] sm:min-w-[980px]">
+        <div className="overflow-auto bg-background/5">
+          <Table className="w-full min-w-[800px]">
             <TableHeader>
               {table.getHeaderGroups().map((hg) => (
                 <TableRow key={hg.id} className="bg-background/40 group/header">

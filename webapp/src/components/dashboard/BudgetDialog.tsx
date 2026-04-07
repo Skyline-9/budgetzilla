@@ -78,42 +78,84 @@ export function BudgetDialog(props: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !submitting && onOpenChange(v)}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Monthly budget</DialogTitle>
-          <DialogDescription>Overall expense budget for {formatMonthKey(month)}.</DialogDescription>
+          <DialogTitle>Set Monthly Limit</DialogTitle>
+          <DialogDescription>
+            Your monthly budget is persistent and applies to every month.
+          </DialogDescription>
         </DialogHeader>
 
-        <form className="mt-5 space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Month</Label>
-              <Input type="month" value={month} disabled />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Budget</Label>
-              <Input inputMode="decimal" placeholder="e.g. 3000" {...form.register("budget")} />
-              {form.formState.errors.budget?.message ? (
-                <div className="text-xs text-danger">{form.formState.errors.budget.message}</div>
-              ) : null}
+        <form className="mt-6 space-y-8" onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+                Monthly Spending Goal
+              </Label>
+
+              <div className="space-y-2">
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground/40 transition-colors group-focus-within:text-primary/60">
+                    $
+                  </div>
+                  <Input
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    className="pl-10 h-12 text-xl font-bold rounded-xl bg-muted/30 border-none shadow-inner focus-visible:ring-2 focus-visible:ring-primary/20 transition-all tabular-nums"
+                    {...form.register("budget", {
+                      onChange: (e) => {
+                        const val = e.target.value;
+                        // Allow numbers and a single decimal point
+                        const cleaned = val.replace(/[^0-9.]/g, "");
+                        const parts = cleaned.split(".");
+                        if (parts.length > 2) {
+                          e.target.value = parts[0] + "." + parts.slice(1).join("");
+                        } else {
+                          e.target.value = cleaned;
+                        }
+                      },
+                    })}
+                  />
+                </div>
+                {form.formState.errors.budget?.message ? (
+                  <div className="text-xs text-danger font-semibold px-1">{form.formState.errors.budget.message}</div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground/50 leading-relaxed px-1">
+                    Budgetzilla will track your spending against this limit every month automatically.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          <DialogFooter className="flex items-center justify-between sm:justify-between">
+
+          <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between sm:gap-0">
             <div>
               {initialBudgetCents != null ? (
-                <Button type="button" variant="destructive" disabled={submitting} onClick={onDelete}>
-                  Delete budget
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-danger hover:text-danger hover:bg-danger/5 rounded-full px-6"
+                  disabled={submitting}
+                  onClick={onDelete}
+                >
+                  Remove limit
                 </Button>
               ) : null}
             </div>
 
-            <div className="flex gap-2">
-              <Button type="button" variant="secondary" disabled={submitting} onClick={() => onOpenChange(false)}>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded-full px-8"
+                disabled={submitting}
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting}>
-                Save
+              <Button type="submit" className="rounded-full px-8 shadow-lg shadow-primary/20" disabled={submitting}>
+                Save Limit
               </Button>
             </div>
           </DialogFooter>
