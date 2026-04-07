@@ -10,18 +10,20 @@ import {
   parseISO,
   startOfMonth,
   subMonths,
+  getDaysInMonth,
 } from "date-fns";
-import { TrendingUp, TrendingDown, Minus, PiggyBank } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import {
   useCategoriesQuery,
   useDashboardChartsQuery,
   useDashboardSummaryQuery,
   useOverallBudgetsQuery,
+  useTransactionsQuery,
 } from "@/api/queries";
 import { ActiveFilterChips, type DashboardFilterState } from "@/components/dashboard/ActiveFilterChips";
 import { MetricCard, type MetricDelta } from "@/components/dashboard/MetricCard";
 import { BudgetCard } from "@/components/dashboard/BudgetCard";
+import { CashFlowSummary } from "@/components/dashboard/CashFlowCard";
 import { QuickInsights } from "@/components/dashboard/QuickInsights";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedMoneyCents } from "@/components/motion/AnimatedNumber";
@@ -34,8 +36,18 @@ import {
   writeListOrDelete,
   writeOrDelete,
 } from "@/lib/urlState";
+import {
+  analyzeWeekendSpending,
+  calculateTrend,
+  findRecurringTransactions,
+  forecastMonthEnd,
+  generateBudgetTips,
+} from "@/lib/analysis";
 
 import { AiChatWidget } from "@/components/dashboard/AiChatWidget";
+import { AnomalyTable } from "@/components/insights/AnomalyTable";
+import { BudgetTips } from "@/components/insights/BudgetTips";
+import { RecurringList } from "@/components/insights/RecurringList";
 
 const DashboardChartsLazy = React.lazy(() => import("@/components/dashboard/DashboardCharts"));
 
@@ -121,28 +133,18 @@ function formatSignedPercent(diff: number) {
   return `(${abs})`;
 }
 
-function formatSignedPp(diff: number) {
-  const abs = Math.abs(diff * 100);
-  const absText = `${abs.toFixed(1)}pp`;
-  if (diff > 0) return `+${absText}`;
-  if (diff < 0) return `-${absText}`;
-  return absText;
-}
-
 export function DashboardPage() {
   const [sp, setSp] = useSearchParams();
   const from = readString(sp, "from");
   const to = readString(sp, "to");
 
   React.useEffect(() => {
-    // Default dashboard to "This month" if no explicit range.
     if (from || to) return;
     const next = new URLSearchParams(sp);
     const r = thisMonthRange();
     writeOrDelete(next, "from", r.from);
     writeOrDelete(next, "to", r.to);
     setSp(next, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const q = readString(sp, "q");
@@ -196,6 +198,7 @@ export function DashboardPage() {
   };
   const summaryQuery = useDashboardSummaryQuery(params);
   const chartsQuery = useDashboardChartsQuery(params);
+  const transactionsQuery = useTransactionsQuery(params);
   const rangeLabel = labelForRange(from, to);
 
   const comparison = computeComparisonRange(from, to);
@@ -226,8 +229,6 @@ export function DashboardPage() {
     const netDiff = cur.netCents - prev.netCents;
     const netPct = prev.netCents !== 0 ? netDiff / prev.netCents : undefined;
 
-    const srDiff = cur.savingsRate - prev.savingsRate;
-
     const incomeDelta: MetricDelta = {
       label,
       valueText: formatSignedCents(incomeDiff),
@@ -239,7 +240,6 @@ export function DashboardPage() {
       label,
       valueText: formatSignedCents(expenseDiff),
       subText: expensePct === undefined ? undefined : formatSignedPercent(expensePct),
-      // Spending more is worse.
       intent: expenseDiff > 0 ? "negative" : expenseDiff < 0 ? "positive" : "neutral",
     };
 
@@ -250,23 +250,15 @@ export function DashboardPage() {
       intent: netDiff > 0 ? "positive" : netDiff < 0 ? "negative" : "neutral",
     };
 
-    const srDelta: MetricDelta = {
-      label,
-      valueText: formatSignedPp(srDiff),
-      intent: srDiff > 0 ? "positive" : srDiff < 0 ? "negative" : "neutral",
-    };
-
-    return { incomeDelta, expenseDelta, netDelta, srDelta };
+    return { incomeDelta, expenseDelta, netDelta };
   }, [comparison, prevSummaryQuery.data, summaryQuery.data]);
 
   const sparklines = React.useMemo(() => {
     const trend = chartsQuery.data?.monthlyTrend ?? [];
     if (trend.length < 2) return undefined;
     const income = trend.map((p) => p.incomeCents);
-    const expense = trend.map((p) => p.expenseCents);
     const net = trend.map((p) => p.incomeCents - p.expenseCents);
-    const savings = trend.map((p) => (p.incomeCents > 0 ? (p.incomeCents - p.expenseCents) / p.incomeCents : 0));
-    return { income, expense, net, savings };
+    return { income, net };
   }, [chartsQuery.data?.monthlyTrend]);
 
   const monthsInRange = React.useMemo(() => monthKeysForRange(from, to), [from, to]);
@@ -315,7 +307,6 @@ export function DashboardPage() {
     }
 
     const adjustedBudgetCents = present ? total : null;
-    // Prefer editing the first missing month in-range; otherwise edit the last month in-range.
     const firstMissing = monthsInRange.find((m) => (budgetByMonth.get(m) ?? null) == null);
     const editMonth = firstMissing ?? monthsInRange[monthsInRange.length - 1]!;
     return { adjustedBudgetCents, missingMonthsCount: missing, editMonth };
@@ -323,8 +314,43 @@ export function DashboardPage() {
 
   const editMonthBudgetCents = adjusted.editMonth ? budgetByMonth.get(adjusted.editMonth) ?? null : null;
 
+  // Detailed Insights Logic
+  const detailedInsights = React.useMemo(() => {
+    if (!summaryQuery.data || !chartsQuery.data) return null;
+
+    const now = new Date();
+    const daysInMonth = getDaysInMonth(now);
+    const isThisMonth = from === format(startOfMonth(now), "yyyy-MM-dd") && to === format(endOfMonth(now), "yyyy-MM-dd");
+
+    const forecast = isThisMonth ? forecastMonthEnd(summaryQuery.data.expenseCents, now.getDate(), { daysInMonth }) : null;
+
+    const transactions = transactionsQuery.data ?? [];
+    const weekendAnalysis = transactions.length > 0 ? analyzeWeekendSpending(transactions) : null;
+    const recurring = transactions.length > 0 ? findRecurringTransactions(transactions) : [];
+    const recurringTotalCents = recurring.reduce((sum, r) => sum + r.avgAmountCents, 0);
+
+    const interval = chartsQuery.data.trendInterval;
+    const expenseSeries = chartsQuery.data.monthlyTrend.map((p) => p.expenseCents);
+    const window = interval === "day" ? 14 : 3;
+    const recent = expenseSeries.slice(-window);
+    const prior = expenseSeries.slice(-(window * 2), -window);
+    const trend = recent.length && prior.length ? calculateTrend(recent, prior) : null;
+
+    const tips = generateBudgetTips({
+      summary: summaryQuery.data,
+      trend,
+      forecast,
+      budgetCents: adjusted.adjustedBudgetCents ?? null,
+      topCategory: null, // Simple for now
+      recurringTotalCents,
+      weekendAnalysis,
+    });
+
+    return { tips, transactions, forecast };
+  }, [summaryQuery.data, chartsQuery.data, transactionsQuery.data, adjusted.adjustedBudgetCents, from, to]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 pb-20">
       {/* Header */}
       <section className="space-y-3">
         <div>
@@ -338,28 +364,19 @@ export function DashboardPage() {
       </section>
 
       {summaryQuery.isLoading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 xl:grid-rows-2">
-          <Skeleton className="h-[200px] sm:h-[260px] sm:col-span-2 xl:col-span-1 xl:row-span-2" />
-          <Skeleton className="h-[100px] sm:h-[126px]" />
-          <Skeleton className="h-[100px] sm:h-[126px]" />
-          <Skeleton className="h-[100px] sm:h-[126px]" />
-          <Skeleton className="h-[100px] sm:h-[126px]" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <Skeleton className="h-[260px]" />
+          <Skeleton className="h-[260px]" />
         </div>
       ) : summaryQuery.isError || !summaryQuery.data ? (
-        <div className="rounded-2xl border border-border/60 bg-card/85 p-6">
+        <div className="rounded-squircle bg-card/85 p-6 shadow-surface">
           <div className="text-sm font-semibold">Couldn’t load dashboard summary</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Try again, or switch API mode back to mock.
           </div>
         </div>
       ) : (
-        <section
-          className={cn(
-            "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 xl:grid-rows-2",
-            // Prevent layout shift when prev summary loads: cards render regardless.
-            "min-h-[168px]",
-          )}
-        >
+        <section className="grid grid-cols-1 gap-12 sm:grid-cols-2">
           <BudgetCard
             subtitle={rangeLabel}
             editMonth={adjusted.editMonth}
@@ -369,111 +386,64 @@ export function DashboardPage() {
             missingMonthsCount={adjusted.missingMonthsCount}
             isLoading={budgetsLoading}
             isError={budgetsError}
-            className="sm:col-span-2 xl:col-span-1 xl:row-span-2"
           />
-          <MetricCard
-            title="Income"
-            value={<AnimatedMoneyCents cents={summaryQuery.data.incomeCents} />}
-            delta={deltas?.incomeDelta}
-            sparkline={sparklines?.income}
-            tone="income"
-            icon={<TrendingUp className="h-4 w-4" />}
-            showDots
+          <CashFlowSummary
+            incomeCents={summaryQuery.data.incomeCents}
+            expenseCents={summaryQuery.data.expenseCents}
+            netCents={summaryQuery.data.netCents}
+            incomeDelta={deltas?.incomeDelta}
+            expenseDelta={deltas?.expenseDelta}
+            netDelta={deltas?.netDelta}
+            savingsRate={summaryQuery.data.savingsRate}
           />
-          <MetricCard
-            title="Expenses"
-            value={<AnimatedMoneyCents cents={summaryQuery.data.expenseCents} />}
-            delta={deltas?.expenseDelta}
-            sparkline={sparklines?.expense}
-            tone="expense"
-            icon={<TrendingDown className="h-4 w-4" />}
-            showDots
-          />
-          <MetricCard
-            title="Net"
-            value={<AnimatedMoneyCents cents={summaryQuery.data.netCents} />}
-            valueSubtle="Income − Expenses"
-            delta={deltas?.netDelta}
-            sparkline={sparklines?.net}
-            tone={summaryQuery.data.netCents >= 0 ? "income" : "expense"}
-            icon={<Minus className="h-4 w-4" />}
-            showDots
-          />
-          <MetricCard
-            title="Savings rate"
-            value={formatPercent01(summaryQuery.data.savingsRate)}
-            valueSubtle="Net / Income"
-            delta={deltas?.srDelta}
-            sparkline={sparklines?.savings}
-            tone="warm"
-            icon={<PiggyBank className="h-4 w-4" />}
-            showDots
-            helpContent={
-              <div className="space-y-1">
-                <div className="font-semibold">Savings Rate</div>
-                <div>
-                  The percentage of your income that you've saved. Calculated as (Net Income ÷ Total Income) × 100.
-                  A higher rate indicates better savings habits.
-                </div>
-              </div>
-            }
-          />
-          {chartsQuery.isLoading ? (
-            <div
-              className={cn(
-                "rounded-2xl border border-border/60 bg-card/85 p-5",
-                "corner-glow tint-neutral",
-                "sm:col-span-2 xl:col-span-3",
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-6 w-6 rounded-xl" />
-                <Skeleton className="h-3 w-[140px]" />
-              </div>
-              <div className="mt-4 space-y-3">
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-[92%]" />
-                <Skeleton className="h-5 w-[80%]" />
-              </div>
-              <Skeleton className="mt-4 h-8 w-full rounded-xl" />
-            </div>
-          ) : chartsQuery.isError || !chartsQuery.data ? null : (
-            <QuickInsights
-              summary={summaryQuery.data}
-              charts={chartsQuery.data}
-              from={from ?? undefined}
-              to={to ?? undefined}
-              className="sm:col-span-2 xl:col-span-3"
-            />
-          )}
         </section>
       )}
 
-      {chartsQuery.isLoading ? (
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
-          <Skeleton className="h-[300px] sm:h-[380px] lg:col-span-2" />
-          <Skeleton className="h-[300px] sm:h-[380px]" />
-          <Skeleton className="h-[350px] sm:h-[420px] lg:col-span-3" />
-        </div>
-      ) : chartsQuery.isError || !chartsQuery.data ? (
-        <div className="rounded-2xl border border-border/60 bg-card/85 p-6">
-          <div className="text-sm font-semibold">Couldn’t load charts</div>
-          <div className="mt-1 text-sm text-muted-foreground">
-            Try adjusting filters or refreshing.
+      {/* Charts Section */}
+      <section className="space-y-6">
+        {chartsQuery.isLoading ? (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <Skeleton className="h-[380px] lg:col-span-2" />
+            <Skeleton className="h-[380px]" />
+            <Skeleton className="h-[420px] lg:col-span-3" />
           </div>
-        </div>
-      ) : (
-        <React.Suspense
-          fallback={
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
-              <Skeleton className="h-[300px] sm:h-[380px] lg:col-span-2" />
-              <Skeleton className="h-[300px] sm:h-[380px]" />
-              <Skeleton className="h-[350px] sm:h-[420px] lg:col-span-3" />
+        ) : chartsQuery.isError || !chartsQuery.data ? (
+          <div className="rounded-squircle bg-card/85 p-6 shadow-surface">
+            <div className="text-sm font-semibold">Couldn’t load charts</div>
+            <div className="mt-1 text-sm text-muted-foreground">
+              Try adjusting filters or refreshing.
             </div>
-          }
-        >
-          <DashboardChartsLazy charts={chartsQuery.data} categories={categories} />
-        </React.Suspense>
+          </div>
+        ) : (
+          <React.Suspense
+            fallback={
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <Skeleton className="h-[380px] lg:col-span-2" />
+                <Skeleton className="h-[380px]" />
+                <Skeleton className="h-[420px] lg:col-span-3" />
+              </div>
+            }
+          >
+            <DashboardChartsLazy charts={chartsQuery.data} categories={categories} />
+          </React.Suspense>
+        )}
+      </section>
+
+      {/* Detailed Insights Section (Bottom of Scroll) */}
+      {detailedInsights && (
+        <section className="space-y-8 border-t border-border/40 pt-10">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground/90">Deep Analysis</h2>
+            <p className="text-sm text-muted-foreground">Patterns and trends identified in your transaction history.</p>
+          </div>
+
+          {detailedInsights.tips.length > 0 && <BudgetTips tips={detailedInsights.tips} />}
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <RecurringList transactions={detailedInsights.transactions} />
+            <AnomalyTable transactions={detailedInsights.transactions} />
+          </div>
+        </section>
       )}
 
       <AiChatWidget />

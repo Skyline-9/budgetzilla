@@ -11,51 +11,28 @@ import { ChartLegendList, type LegendItem } from "@/components/dashboard/ChartLe
 import cornerShineSvg from "@/assets/dashboard/corner-shine.svg";
 import { getChartCategoricalPalette, getChartTableauPalette, getGlowRgbTriplet } from "@/theme/palette";
 
-function ChartCard({
+function ChartSection({
   title,
   children,
   className,
-  glow,
-  cornerShine,
   icon,
 }: {
   title: string;
   children: React.ReactNode;
   className?: string;
-  glow?: "neutral" | "income" | "expense" | "accent";
-  cornerShine?: boolean;
   icon?: React.ReactNode;
 }) {
   return (
-    <div
-      className={cn(
-        "group relative rounded-2xl border border-border/60 bg-card/85 p-5 overflow-hidden",
-        "transition-transform duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-lift",
-        glow && "corner-glow",
-        glow === "neutral" && "tint-neutral",
-        glow === "income" && "tint-income",
-        glow === "expense" && "tint-expense",
-        glow === "accent" && "tint-accent",
-        className,
-      )}
-    >
-      {cornerShine && (
-        <img
-          src={cornerShineSvg}
-          alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60"
-          aria-hidden="true"
-        />
-      )}
-      <div className="relative flex items-center gap-2 text-sm font-semibold tracking-tight">
+    <div className={cn("space-y-4", className)}>
+      <div className="flex items-center gap-2 px-1">
         {icon && (
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-background/40 ring-1 ring-border/60 text-muted-foreground">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-background/40 text-muted-foreground">
             {icon}
           </span>
         )}
-        <span>{title}</span>
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">{title}</h3>
       </div>
-      <div className="relative mt-3">{children}</div>
+      <div className="relative">{children}</div>
     </div>
   );
 }
@@ -561,54 +538,59 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
   );
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
-      <ChartCard
+    <div className="space-y-16">
+      {/* Primary Trend Graphic */}
+      <ChartSection
         title={
           charts.trendInterval === "day"
             ? "Daily trend (income vs expenses)"
             : "Monthly trend (income vs expenses)"
         }
-        className="lg:col-span-2"
-        glow="neutral"
-        cornerShine={charts.trendInterval === "day"}
+        className="w-full"
         icon={<TrendingUp className="h-4 w-4" />}
       >
-        <ReactECharts
-          option={monthlyTrendOption}
-          style={{ height: 280 }}
-          className="sm:[&>div]:!h-[320px]"
-          opts={{ renderer: "canvas" }}
-        />
-      </ChartCard>
-
-      <ChartCard title="Category ranking (expenses)" glow="neutral" icon={<BarChart3 className="h-4 w-4" />}>
-        <div className="flex h-[280px] sm:h-[320px] min-h-0 flex-col">
-          <div className="flex items-center justify-between border-b border-border/60 px-3 pb-2 text-xs font-semibold text-muted-foreground">
-            <span>Category</span>
-            <span className="tabular-nums">Spend</span>
-          </div>
-          <div className="mt-2 min-h-0 flex-1 overflow-auto pr-1">
-            <ChartLegendList items={categoryRankItems} onSelectCategory={onCategoryClick} />
-          </div>
+        <div className="w-full">
+          <ReactECharts
+            option={monthlyTrendOption}
+            style={{ height: 400 }}
+            className="sm:[&>div]:!h-[480px]"
+            opts={{ renderer: "canvas" }}
+          />
         </div>
-      </ChartCard>
+      </ChartSection>
 
-      <ChartCard title="Top categories (expenses) by month" className="lg:col-span-3" cornerShine icon={<Calendar className="h-4 w-4" />}>
-        <ReactECharts
-          option={categoryMonthlyOption}
-          style={{ height: 320 }}
-          className="sm:[&>div]:!h-[380px]"
-          opts={{ renderer: "canvas" }}
-          onEvents={{
-            click: (params: any) => {
-              const cid =
-                (params?.seriesId as string | undefined) ??
-                (params?.data?.categoryId as string | undefined);
-              if (cid) onCategoryClick(cid);
-            },
-          }}
-        />
-      </ChartCard>
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
+        <ChartSection title="Category ranking" icon={<BarChart3 className="h-4 w-4" />}>
+          <div className="rounded-squircle bg-card/40 p-6 shadow-surface-elevated backdrop-blur-sm flex h-[332px] sm:h-[368px] min-h-0 flex-col">
+            <div className="flex items-center justify-between border-b border-border/40 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              <span>Category</span>
+              <span className="tabular-nums">Spend</span>
+            </div>
+            <div className="mt-4 min-h-0 flex-1 overflow-auto pr-1">
+              <ChartLegendList items={categoryRankItems} onSelectCategory={onCategoryClick} />
+            </div>
+          </div>
+        </ChartSection>
+
+        <ChartSection title="Top categories by month" className="lg:col-span-2" icon={<Calendar className="h-4 w-4" />}>
+          <div className="rounded-squircle bg-card/40 p-6 shadow-surface-elevated backdrop-blur-sm">
+            <ReactECharts
+              option={categoryMonthlyOption}
+              style={{ height: 320 }}
+              className="sm:[&>div]:!h-[368px]"
+              opts={{ renderer: "canvas" }}
+              onEvents={{
+                click: (params: any) => {
+                  const cid =
+                    (params?.seriesId as string | undefined) ??
+                    (params?.data?.categoryId as string | undefined);
+                  if (cid) onCategoryClick(cid);
+                },
+              }}
+            />
+          </div>
+        </ChartSection>
+      </div>
     </div>
   );
 }

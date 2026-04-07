@@ -151,6 +151,7 @@ export function MetricCard({
   valueSubtle,
   delta,
   sparkline,
+  savingsRate,
   tone = "neutral",
   variant = "default",
   emoji,
@@ -164,6 +165,7 @@ export function MetricCard({
   valueSubtle?: React.ReactNode;
   delta?: MetricDelta;
   sparkline?: number[];
+  savingsRate?: number;
   tone?: "income" | "expense" | "neutral" | "accent" | "hero" | "warm";
   variant?: "default" | "hero";
   emoji?: string;
@@ -179,23 +181,23 @@ export function MetricCard({
       role="region"
       aria-label={`${title} metric card`}
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/85",
-        variant === "hero" ? "corner-glow-hero" : "corner-glow",
+        "group relative overflow-hidden rounded-squircle bg-card/85",
+        variant === "hero" ? "corner-glow-hero shadow-surface-elevated" : "corner-glow shadow-surface",
         tone === "income" && "tint-income",
         tone === "expense" && "tint-expense",
         tone === "accent" && "tint-accent",
         tone === "neutral" && "tint-neutral",
         tone === "hero" && "tint-hero",
         tone === "warm" && "tint-warm",
-        variant === "hero" ? "p-6 md:p-7 shadow-lift hover:-translate-y-1" : "p-5 hover:-translate-y-0.5",
-        "transition-all duration-150 ease-out",
-        "hover:bg-card/90 hover:shadow-lift",
+        variant === "hero" ? "p-6 md:p-7 hover:-translate-y-1" : "p-5 hover:-translate-y-0.5",
+        "transition-all duration-300 ease-out",
+        "hover:bg-card/90 hover:shadow-surface-elevated",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
     >
       {showDots && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.10] dark:opacity-[0.08]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.04]">
           <img src={dotsOverlayUrl} alt="" className="h-full w-full object-cover" />
         </div>
       )}
@@ -204,26 +206,26 @@ export function MetricCard({
           <div
             className={cn(
               "flex items-center gap-2",
-              "text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground",
+              "text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/80",
               variant === "hero" && "text-xs text-foreground/70",
             )}
           >
             {icon ? (
               <span
                 className={cn(
-                  "inline-flex h-6 w-6 items-center justify-center rounded-xl ring-1",
-                  "bg-background/40 ring-border/60",
-                  tone === "income" && "bg-income/10 ring-income/30 text-income",
-                  tone === "expense" && "bg-expense/10 ring-expense/30 text-expense",
-                  tone === "accent" && "bg-primary/10 ring-primary/30 text-primary",
-                  tone === "hero" && "bg-hero/10 ring-hero/30 text-hero",
-                  tone === "warm" && "bg-warm/10 ring-warm/30 text-warm",
+                  "inline-flex h-6 w-6 items-center justify-center rounded-xl",
+                  "bg-background/40 text-muted-foreground",
+                  tone === "income" && "bg-income/10 text-income",
+                  tone === "expense" && "bg-expense/10 text-expense",
+                  tone === "accent" && "bg-primary/10 text-primary",
+                  tone === "hero" && "bg-hero/10 text-hero",
+                  tone === "warm" && "bg-warm/10 text-warm",
                 )}
               >
                 {icon}
               </span>
             ) : emoji ? (
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-xl bg-background/40 text-[13px] ring-1 ring-border/60">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-xl bg-background/40 text-[13px]">
                 {emoji}
               </span>
             ) : null}
@@ -244,17 +246,22 @@ export function MetricCard({
               {value}
             </span>
           </div>
-          {valueSubtle ? (
-            <div className={cn("mt-1 text-xs text-foreground/60", variant === "hero" && "text-sm text-foreground/70")}>
-              {valueSubtle}
-            </div>
-          ) : null}
+          <div className="mt-1 flex items-center gap-2">
+            {valueSubtle ? (
+              <div className={cn("text-xs text-foreground/50", variant === "hero" && "text-sm text-foreground/60")}>
+                {valueSubtle}
+              </div>
+            ) : null}
+            {savingsRate !== undefined && (
+              <div className="rounded-lg bg-warm/10 px-1.5 py-0.5 text-[10px] font-bold text-warm uppercase tracking-wider">
+                {Math.round(savingsRate * 100)}% Saved
+              </div>
+            )}
+          </div>
         </div>
 
         <div
           className={cn(
-            // Push the sparkline into the right padding a bit so it doesn't crowd the value text
-            // on tighter card widths, but keep a small buffer so it doesn't touch the card edge.
             "-mr-3 flex shrink-0 self-center flex-col items-end gap-2",
             tone === "income" && "text-income",
             tone === "expense" && "text-expense",
@@ -262,13 +269,13 @@ export function MetricCard({
             tone === "hero" && "text-hero",
           )}
         >
-          {sparkline?.length ? <Sparkline values={sparkline} className="opacity-80" /> : null}
+          {sparkline?.length ? <Sparkline values={sparkline} className="opacity-60" /> : null}
         </div>
       </div>
 
       {delta ? (
         <div className={cn("mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs", variant === "hero" && "text-sm")}>
-          <span className="text-muted-foreground">{delta.label}</span>
+          <span className="text-muted-foreground/70">{delta.label}</span>
           <span
             className={cn(
               "inline-flex items-center gap-1 font-semibold tabular-nums",
@@ -283,11 +290,11 @@ export function MetricCard({
             {delta.valueText}
           </span>
           {delta.subText ? (
-            <span className="text-muted-foreground tabular-nums">{delta.subText}</span>
+            <span className="text-muted-foreground/60 tabular-nums">{delta.subText}</span>
           ) : null}
         </div>
       ) : (
-        <div className="mt-4 text-xs text-muted-foreground">—</div>
+        <div className="mt-4 text-xs text-muted-foreground/40">—</div>
       )}
     </div>
   );

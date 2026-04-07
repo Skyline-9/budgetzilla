@@ -56,25 +56,25 @@ export function BudgetCard(props: {
       role="region"
       aria-label="Budget tracking card"
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/60 bg-card/85",
-        "p-6 md:p-7 corner-glow-hero tint-hero",
-        "transition-all duration-150 ease-out hover:-translate-y-0.5",
-        "hover:bg-card/90 hover:shadow-lift",
+        "group relative overflow-hidden rounded-squircle bg-card/85",
+        "p-6 md:p-7 corner-glow-hero tint-hero shadow-surface-elevated",
+        "transition-all duration-300 ease-out hover:-translate-y-1",
+        "hover:bg-card/90 hover:shadow-surface-elevated",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.22] dark:opacity-[0.18]">
+      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.12] dark:opacity-[0.08]">
         <img src={dotsOverlayUrl} alt="" className="h-full w-full object-cover" />
       </div>
-      <div aria-hidden className="pointer-events-none absolute bottom-10 left-0 right-0 opacity-80 dark:opacity-70">
+      <div aria-hidden className="pointer-events-none absolute bottom-10 left-0 right-0 opacity-60 dark:opacity-50">
         <img src={dividerWaveUrl} alt="" className="w-full" />
       </div>
 
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-hero/10 ring-1 ring-hero/30 text-hero">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-hero/10 text-hero">
               <Target className="h-4 w-4" />
             </span>
             <span>Budget (Adjusted)</span>
@@ -90,10 +90,10 @@ export function BudgetCard(props: {
               }
             />
           </div>
-          <div className="mt-1 text-xs text-muted-foreground">{subtitle}</div>
+          <div className="mt-1 text-xs text-muted-foreground/60">{subtitle}</div>
         </div>
 
-        <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
+        <Button variant="secondary" size="sm" onClick={() => setOpen(true)} className="rounded-full px-4">
           {budgetCents != null ? "Edit" : "Set"}
         </Button>
       </div>
