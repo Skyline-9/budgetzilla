@@ -65,6 +65,7 @@
     --ring: var(--primary);
 
     --radius: 1rem;
+    --radius-squircle: 1.5rem;
 
     /* Semantic aliases (requested) */
     --bg: var(--background);
@@ -72,10 +73,13 @@
     --surface-2: var(--secondary);
     --text: var(--foreground);
 
-    /* Shadows (light) — subtle, Apple-like */
+    /* Shadows (light) — subtle, Premium Studio Light */
     --shadow-soft: 0 10px 26px -22px rgba(2, 6, 23, 0.16);
     --shadow-lift: 0 16px 40px -28px rgba(2, 6, 23, 0.22);
     --shadow-soft-lg: 0 12px 30px -24px rgba(2, 6, 23, 0.18);
+
+    --surface-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+    --surface-shadow-elevated: 0 20px 60px -15px rgba(0, 0, 0, 0.15);
 
     /* Tint intensity (light): keep very subtle */
     --tint-alpha-1: 0.06;

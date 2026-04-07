@@ -14,7 +14,8 @@ module.exports = {
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)"
+        sm: "calc(var(--radius) - 4px)",
+        squircle: "var(--radius-squircle)"
       },
       colors: {
         border: "hsl(var(--border))",
@@ -83,7 +84,9 @@ module.exports = {
         soft: "var(--shadow-soft)",
         lift: "var(--shadow-lift)",
         "soft-lg": "var(--shadow-soft-lg)",
-        "glow-accent": "0 0 12px 1px hsl(var(--accent) / 0.4)"
+        "glow-accent": "0 0 12px 1px hsl(var(--accent) / 0.4)",
+        surface: "var(--surface-shadow)",
+        "surface-elevated": "var(--surface-shadow-elevated)"
       },
       animation: {
         "pulse-slow": "pulse-slow 3s infinite",
@@ -99,4 +102,3 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")]
 };
-
