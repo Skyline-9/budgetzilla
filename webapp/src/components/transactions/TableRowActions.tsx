@@ -41,7 +41,7 @@ export function TableRowActions({ transaction, onEdit }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+    <div className="flex items-center gap-1 opacity-0 translate-x-2 transition-all duration-150 ease-out group-hover:opacity-100 group-hover:translate-x-0 group-focus-within:opacity-100 group-focus-within:translate-x-0">
       {onEdit && (
         <Button
           type="button"

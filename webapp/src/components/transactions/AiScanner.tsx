@@ -1,11 +1,17 @@
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import { toast } from "sonner";
-import { parseWithOllama } from "@/services/localAiParser";
+import { parseReceipt, getInferenceBackend } from "@/services/localAiParser";
+import { ensureModelLoaded, isModelLoaded, type ModelStatus } from "@/services/webgpuInference";
 import { useCategoriesQuery, useCreateTransactionMutation } from "@/api/queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileImage, FileText, Loader2, Sparkles, Trash2, CheckCircle2, Calendar, Store, DollarSign, Tag, TrendingUp, TrendingDown, CornerDownRight, X } from "lucide-react";
+import { FileImage, FileText, Loader2, Trash2, CheckCircle2, Calendar, Store, DollarSign, Tag, CornerDownRight, X } from "lucide-react";
+import { SparklesIcon } from "@/components/ui/sparkles";
+import { DownloadIcon } from "@/components/ui/download";
+import { TrendingUpIcon } from "@/components/ui/trending-up";
+import { TrendingDownIcon } from "@/components/ui/trending-down";
 import type { TransactionCreate } from "@/types";
 import { DateInput } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +24,16 @@ import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
 // Configure PDF.js worker to use the bundled worker file
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+} as const;
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" as const } },
+} as const;
 
 export function AiScanner({ onComplete }: { onComplete?: () => void }) {
   const categoriesQuery = useCategoriesQuery();
@@ -38,8 +54,11 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState({ current: 0, total: 0 });
   const [parsedItems, setParsedItems] = useState<TransactionCreate[] | null>(null);
+  const [modelStatus, setModelStatus] = useState<ModelStatus>("idle");
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   const resetState = () => {
+    previews.forEach(p => { if (p.url) URL.revokeObjectURL(p.url); });
     setFiles([]);
     setPreviews([]);
     setParsedItems(null);
@@ -99,28 +118,46 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
 
   const handleScan = async () => {
     if (files.length === 0) return;
+
+    const backend = getInferenceBackend();
+
+    if (backend === "webgpu" && !isModelLoaded()) {
+      setModelStatus("downloading");
+      try {
+        await ensureModelLoaded((pct) => setDownloadProgress(pct));
+        setModelStatus("ready");
+      } catch (e) {
+        console.error("Failed to load WebGPU model:", e);
+        toast.error("Could not load AI model. Falling back to Ollama.");
+        setModelStatus("error");
+      }
+    }
+
     setIsScanning(true);
     setScanProgress({ current: 0, total: files.length });
-    
+
     const allExtractedItems: TransactionCreate[] = [];
     const isValidDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d);
     const today = new Date().toISOString().split("T")[0];
-    const catList = categories.map(c => ({ id: c.id, name: c.name }));
+    const catList = categories.map((c) => ({ id: c.id, name: c.name }));
 
     try {
       for (let i = 0; i < files.length; i++) {
-        setScanProgress(prev => ({ ...prev, current: i + 1 }));
+        setScanProgress((prev) => ({ ...prev, current: i + 1 }));
         const file = files[i];
         let result;
 
         if (file.type.startsWith("image/")) {
           const b64 = await convertToBase64(file);
-          result = await parseWithOllama(catList, { base64Image: b64 });
+          result = await parseReceipt(catList, {
+            base64Image: b64,
+            imageBlob: file,
+          });
         } else if (file.type === "application/pdf") {
           const textContent = await extractTextFromPdf(file);
-          result = await parseWithOllama(catList, { textContent });
+          result = await parseReceipt(catList, { textContent });
         } else {
-          continue; // Skip unsupported
+          continue;
         }
 
         const validItems = result.map((item: any) => {
@@ -129,10 +166,18 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
 
           return {
             date,
-            amountCents: Math.abs(typeof item.amountCents === "number" ? item.amountCents : parseInt(item.amountCents || "0", 10)),
+            amountCents: Math.abs(
+              typeof item.amountCents === "number"
+                ? item.amountCents
+                : parseInt(item.amountCents || "0", 10),
+            ),
             merchant: item.merchant || "",
             categoryId: item.categoryId || categories[0]?.id || "",
-            notes: item.notes || (file.type === "application/pdf" ? `From ${file.name}` : `From image ${file.name}`),
+            notes:
+              item.notes ||
+              (file.type === "application/pdf"
+                ? `From ${file.name}`
+                : `From image ${file.name}`),
           };
         });
 
@@ -140,12 +185,15 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
       }
 
       setParsedItems(allExtractedItems);
-      toast.success(`Scanning complete. Found ${allExtractedItems.length} transactions across ${files.length} files.`);
+      toast.success(
+        `Scanning complete. Found ${allExtractedItems.length} transactions across ${files.length} files.`,
+      );
     } catch (error) {
       console.error(error);
-      toast.error("Scanning failed for one or more files. Check Ollama settings.");
+      toast.error("Scanning failed. Check your AI settings.");
     } finally {
       setIsScanning(false);
+      setModelStatus(isModelLoaded() ? "ready" : "idle");
     }
   };
 
@@ -230,16 +278,25 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
             </div>
           )}
 
-          <Button onClick={handleScan} disabled={files.length === 0 || isScanning} className="w-full h-11 rounded-xl shadow-soft-md">
-            {isScanning ? (
+          <Button
+            onClick={handleScan}
+            disabled={files.length === 0 || isScanning || modelStatus === "downloading"}
+            className="w-full h-11 rounded-xl shadow-soft-md"
+          >
+            {modelStatus === "downloading" ? (
+              <>
+                <DownloadIcon size={16} className="mr-2 animate-pulse" />
+                Downloading AI model... {downloadProgress}%
+              </>
+            ) : isScanning ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Processing {scanProgress.current} of {scanProgress.total}...
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Scan {files.length > 0 ? `${files.length} Document${files.length > 1 ? 's' : ''}` : "Documents"}
+                <SparklesIcon size={16} className="mr-2" />
+                Scan {files.length > 0 ? `${files.length} Document${files.length > 1 ? "s" : ""}` : "Documents"}
               </>
             )}
           </Button>
@@ -253,9 +310,14 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
             <Button variant="ghost" size="sm" onClick={() => setParsedItems(null)}>Start Over</Button>
           </div>
           
-          <div className="space-y-4 max-h-[440px] overflow-y-auto pr-2 custom-scrollbar">
+          <motion.div
+            className="space-y-4 max-h-[440px] overflow-y-auto pr-2 custom-scrollbar"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+          >
             {parsedItems.map((item, index) => (
-              <div key={index} className="flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/40 p-4 shadow-soft-sm relative group">
+              <motion.div key={index} variants={staggerItem} className="flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/40 p-4 shadow-soft-sm relative group">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -320,9 +382,9 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
                             <div className="flex min-w-0 items-center gap-2">
                               <span className="shrink-0 text-muted-foreground">
                                 {c.kind === "income" ? (
-                                  <TrendingUp className="h-3.5 w-3.5 text-income" />
+                                  <TrendingUpIcon size={14} className="text-income" />
                                 ) : (
-                                  <TrendingDown className="h-3.5 w-3.5 text-expense" />
+                                  <TrendingDownIcon size={14} className="text-expense" />
                                 )}
                               </span>
                               {isChild ? (
@@ -349,9 +411,9 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
                     className="h-9 text-sm rounded-xl"
                   />
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           <div className="pt-2">
             <Button onClick={handleSaveAll} disabled={createTxn.isPending} className="w-full h-11 rounded-xl shadow-soft-lg">

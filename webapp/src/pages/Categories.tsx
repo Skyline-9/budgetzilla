@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, Plus, FolderOpen } from "lucide-react";
+import { ChevronRight, GripVertical, MoreHorizontal, Pencil, Plus, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -218,7 +218,7 @@ function CategoryTreeRow(props: {
         isSelected && "bg-primary/10 text-primary font-semibold",
         isActive && "bg-primary/15 text-primary font-bold shadow-sm",
         isFocused && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-        isDragging && "opacity-40 scale-95",
+        isDragging && "scale-[1.02] shadow-lg bg-muted/80 ring-1 ring-border/50 z-50",
         isDropTarget && (dropValid ? "bg-income/10 ring-2 ring-income/40" : "bg-destructive/10 ring-2 ring-destructive/40"),
         !c.active && "opacity-40 grayscale",
       )}
@@ -254,7 +254,7 @@ function CategoryTreeRow(props: {
               }}
               aria-label={row.isExpanded ? `Collapse ${c.name}` : `Expand ${c.name}`}
             >
-              {row.isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              <ChevronRight className={cn("h-4 w-4 transition-transform duration-200 ease-in-out", row.isExpanded && "rotate-90")} />
             </button>
           ) : (
             <div className="mt-0.5 h-6 w-6" aria-hidden="true" />

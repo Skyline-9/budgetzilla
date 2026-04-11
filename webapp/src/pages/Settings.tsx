@@ -2,6 +2,7 @@ import React from "react";
 import { 
   Cloud, 
   CloudOff, 
+  Cpu,
   Database, 
   Download, 
   FileSpreadsheet, 
@@ -25,6 +26,8 @@ import {
   Smartphone,
   Info
 } from "lucide-react";
+import { isWebGpuAvailable, ensureModelLoaded, isModelLoaded, type ModelStatus } from "@/services/webgpuInference";
+import type { InferenceBackend } from "@/services/localAiParser";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { API_MODE, GOOGLE_CLIENT_ID } from "@/api/config";
@@ -226,6 +229,36 @@ export function SettingsPage() {
   const xlsxInputRef = React.useRef<HTMLInputElement>(null);
   const spreadsheetInputRef = React.useRef<HTMLInputElement>(null);
 
+  const [inferenceBackend, setInferenceBackendState] = React.useState<InferenceBackend>(() => {
+    if (!isWebGpuAvailable()) return "ollama";
+    return (localStorage.getItem("inferenceBackend") as InferenceBackend) || "webgpu";
+  });
+  const [modelStatus, setModelStatus] = React.useState<ModelStatus>(() =>
+    isModelLoaded() ? "ready" : "idle",
+  );
+  const [downloadProgress, setDownloadProgress] = React.useState(0);
+  const webGpuSupported = React.useMemo(() => isWebGpuAvailable(), []);
+
+  const handleBackendChange = (value: string) => {
+    const backend = value as InferenceBackend;
+    setInferenceBackendState(backend);
+    localStorage.setItem("inferenceBackend", backend);
+    toast.success(`AI backend set to ${backend === "webgpu" ? "In-Browser (WebGPU)" : "Ollama"}`);
+  };
+
+  const handlePreDownload = async () => {
+    setModelStatus("downloading");
+    try {
+      await ensureModelLoaded((pct) => setDownloadProgress(pct));
+      setModelStatus("ready");
+      toast.success("AI model downloaded and ready");
+    } catch (e) {
+      setModelStatus("error");
+      toast.error("Failed to download AI model");
+      console.error(e);
+    }
+  };
+
   const handleExportXLSX = async () => {
     setIsExporting(true);
     try {
@@ -377,10 +410,10 @@ export function SettingsPage() {
       </header>
 
       <Tabs defaultValue="data" className="space-y-10">
-        <TabsList className="bg-background/40 p-1.5 rounded-full border border-border/40 h-14">
-          <TabsTrigger value="data" className="rounded-full px-8 h-full text-sm font-bold tracking-tight">Data & Sync</TabsTrigger>
-          <TabsTrigger value="preferences" className="rounded-full px-8 h-full text-sm font-bold tracking-tight">Preferences</TabsTrigger>
-          <TabsTrigger value="help" className="rounded-full px-8 h-full text-sm font-bold tracking-tight">Help & Support</TabsTrigger>
+        <TabsList className="bg-background/40 p-1.5 rounded-full border border-border/40 h-14 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-nowrap w-full">
+          <TabsTrigger value="data" className="rounded-full px-4 sm:px-8 h-full text-sm font-bold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Data & Sync</TabsTrigger>
+          <TabsTrigger value="preferences" className="rounded-full px-4 sm:px-8 h-full text-sm font-bold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Preferences</TabsTrigger>
+          <TabsTrigger value="help" className="rounded-full px-4 sm:px-8 h-full text-sm font-bold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Help & Support</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preferences" className="space-y-10 outline-none">
@@ -395,7 +428,7 @@ export function SettingsPage() {
                     </div>
                     <div>
                       <div className="text-sm font-semibold">{theme === "dark" ? "Dark mode" : "Light mode"}</div>
-                      <div className="text-xs text-muted-foreground">OLED-ready deep blacks</div>
+                      <div className="text-xs text-muted-foreground">{theme === "dark" ? "OLED-ready deep blacks" : "Clean, bright interface"}</div>
                     </div>
                   </div>
                   <Switch checked={theme === "dark"} onCheckedChange={() => toggleTheme()} />
@@ -435,36 +468,87 @@ export function SettingsPage() {
           </section>
 
           <section className="space-y-6">
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Local AI (Ollama)</h2>
-            <Card title="Vision Model" icon={<Database className="h-4 w-4" />} tint="accent">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">AI Engine</h2>
+            <Card title="Inference Backend" icon={<Cpu className="h-4 w-4" />} tint="accent">
               <div className="space-y-6">
                 <div className="text-xs text-muted-foreground">
-                  Configure your local Ollama instance for Analyzing receipts completely offline.
+                  Choose how AI features like receipt scanning are powered.
                 </div>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold">Ollama URL</Label>
-                    <Input 
-                      className="rounded-xl bg-background/20 border-border/40"
-                      defaultValue={localStorage.getItem("ollamaUrl") || "http://localhost:11434"} 
-                      onBlur={(e) => {
-                        localStorage.setItem("ollamaUrl", e.target.value);
-                        toast.success("Ollama URL saved");
-                      }} 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold">Model Name</Label>
-                    <Input 
-                      className="rounded-xl bg-background/20 border-border/40"
-                      defaultValue={localStorage.getItem("ollamaModel") || "gemma4"} 
-                      onBlur={(e) => {
-                        localStorage.setItem("ollamaModel", e.target.value);
-                        toast.success("Model saved");
-                      }} 
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold">Backend</Label>
+                  <Select value={inferenceBackend} onValueChange={handleBackendChange}>
+                    <SelectTrigger className="max-w-xs rounded-xl bg-background/20 border-border/40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="webgpu" disabled={!webGpuSupported}>
+                        In-Browser (WebGPU) {!webGpuSupported && "— not supported"}
+                      </SelectItem>
+                      <SelectItem value="ollama">Ollama (External)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {inferenceBackend === "webgpu" && (
+                  <div className="space-y-4 rounded-2xl border border-border/40 bg-background/20 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold">Gemma 4 E2B</div>
+                        <div className="text-xs text-muted-foreground">~1.2 GB, cached after first download</div>
+                      </div>
+                      {modelStatus === "ready" ? (
+                        <div className="text-xs font-semibold text-income">Ready</div>
+                      ) : modelStatus === "downloading" ? (
+                        <div className="text-xs font-semibold text-accent">{downloadProgress}%</div>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="rounded-full px-4"
+                          onClick={handlePreDownload}
+                        >
+                          <Download className="mr-1.5 h-4 w-4" />
+                          Pre-download
+                        </Button>
+                      )}
+                    </div>
+                    {modelStatus === "downloading" && (
+                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-border" role="progressbar" aria-valuenow={downloadProgress} aria-valuemin={0} aria-valuemax={100} aria-label={`Model download ${downloadProgress}%`}>
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-300"
+                          style={{ width: `${downloadProgress}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {inferenceBackend === "ollama" && (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Ollama URL</Label>
+                      <Input
+                        className="rounded-xl bg-background/20 border-border/40"
+                        defaultValue={localStorage.getItem("ollamaUrl") || "http://localhost:11434"}
+                        onBlur={(e) => {
+                          localStorage.setItem("ollamaUrl", e.target.value);
+                          toast.success("Ollama URL saved");
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Model Name</Label>
+                      <Input
+                        className="rounded-xl bg-background/20 border-border/40"
+                        defaultValue={localStorage.getItem("ollamaModel") || "gemma4"}
+                        onBlur={(e) => {
+                          localStorage.setItem("ollamaModel", e.target.value);
+                          toast.success("Model saved");
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           </section>

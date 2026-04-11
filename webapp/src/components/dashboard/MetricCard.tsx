@@ -1,5 +1,7 @@
 import React from "react";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Minus } from "lucide-react";
+import { TrendingUpIcon } from "@/components/ui/trending-up";
+import { TrendingDownIcon } from "@/components/ui/trending-down";
 import { cn } from "@/lib/cn";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
 import dotsOverlayUrl from "@/assets/dashboard/dots-overlay.svg";
@@ -181,7 +183,7 @@ export function MetricCard({
       role="region"
       aria-label={`${title} metric card`}
       className={cn(
-        "group relative overflow-hidden rounded-squircle bg-card/85",
+        "group relative overflow-hidden rounded-xl sm:rounded-squircle bg-card/85",
         variant === "hero" ? "corner-glow-hero shadow-surface-elevated" : "corner-glow shadow-surface",
         tone === "income" && "tint-income",
         tone === "expense" && "tint-expense",
@@ -190,8 +192,8 @@ export function MetricCard({
         tone === "hero" && "tint-hero",
         tone === "warm" && "tint-warm",
         variant === "hero" ? "p-6 md:p-7 hover:-translate-y-1" : "p-5 hover:-translate-y-0.5",
-        "transition-all duration-300 ease-out",
-        "hover:bg-card/90 hover:shadow-surface-elevated",
+        "transition-all duration-200 ease-out",
+        "hover:bg-card/90 hover:shadow-lg",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
@@ -284,8 +286,8 @@ export function MetricCard({
               delta.intent === "neutral" && "text-muted-foreground",
             )}
           >
-            {delta.intent === "positive" && <TrendingUp className="h-3 w-3" aria-hidden />}
-            {delta.intent === "negative" && <TrendingDown className="h-3 w-3" aria-hidden />}
+            {delta.intent === "positive" && <TrendingUpIcon size={12} aria-hidden />}
+            {delta.intent === "negative" && <TrendingDownIcon size={12} aria-hidden />}
             {delta.intent === "neutral" && <Minus className="h-3 w-3" aria-hidden />}
             {delta.valueText}
           </span>

@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useSearchParams } from "react-router-
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
 import { Sidebar, MobileSidebarProvider } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 export function AppShell() {
   const navigate = useNavigate();
@@ -110,6 +111,7 @@ export function AppShell() {
                 addButtonVariant={isCategories ? "secondary" : "default"}
                 showDateRange
                 showAddButton
+                liveFilter={isCategories}
               />
             )}
             <main className="min-w-0 flex-1 px-3 pb-8 pt-4 md:px-5">
@@ -118,6 +120,7 @@ export function AppShell() {
           </div>
         </div>
 
+        <ScrollToTop />
         <TransactionDialog open={addOpen} onOpenChange={setAddOpen} mode="create" />
       </div>
     </MobileSidebarProvider>

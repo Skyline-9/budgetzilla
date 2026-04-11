@@ -75,14 +75,15 @@ export async function getTransactions(params: GetTransactionsParams = {}): Promi
     values.push(...params.categoryId);
   }
 
-  // Amount range
+  // Amount range — compare absolute values so the filter matches both
+  // income (positive) and expense (negative) transactions.
   if (params.minAmountCents !== undefined) {
-    conditions.push("amount_cents >= ?");
-    values.push(params.minAmountCents);
+    conditions.push("ABS(amount_cents) >= ?");
+    values.push(Math.abs(params.minAmountCents));
   }
   if (params.maxAmountCents !== undefined) {
-    conditions.push("amount_cents <= ?");
-    values.push(params.maxAmountCents);
+    conditions.push("ABS(amount_cents) <= ?");
+    values.push(Math.abs(params.maxAmountCents));
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -244,4 +245,27 @@ export async function reassignTransactions(fromCategoryId: string, toCategoryId:
   );
   await persistDatabase();
   return count;
+}
+
+/**
+ * Look up the most frequently used category for a given merchant name.
+ * Returns the categoryId if there's a clear winner (>= 2 uses), otherwise null.
+ */
+export async function suggestCategoryForMerchant(merchant: string): Promise<string | null> {
+  const trimmed = merchant.trim();
+  if (!trimmed) return null;
+
+  const rows = await execSQL(
+    `SELECT category_id, COUNT(*) as cnt
+     FROM transactions
+     WHERE merchant LIKE ? AND deleted = 0
+     GROUP BY category_id
+     ORDER BY cnt DESC
+     LIMIT 1`,
+    [`%${trimmed}%`],
+  );
+
+  if (!rows.length) return null;
+  const [categoryId, count] = rows[0] as [string, number];
+  return count >= 2 ? categoryId : null;
 }

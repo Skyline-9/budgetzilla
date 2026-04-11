@@ -18,6 +18,7 @@ export const DialogOverlay = React.forwardRef<
       "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm",
       "data-[state=open]:animate-in data-[state=closed]:animate-out",
       "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "data-[state=open]:duration-200 data-[state=closed]:duration-150",
       className,
     )}
     {...props}
@@ -32,6 +33,7 @@ export const DialogContent = React.forwardRef<
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
+      aria-describedby={undefined}
       ref={ref}
       className={cn(
         "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
@@ -39,7 +41,8 @@ export const DialogContent = React.forwardRef<
         "p-6 outline-none",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "data-[state=closed]:zoom-out-[0.97] data-[state=open]:zoom-in-[0.97]",
+        "data-[state=open]:duration-200 data-[state=closed]:duration-150",
         className,
       )}
       {...props}

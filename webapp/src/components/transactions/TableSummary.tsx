@@ -17,18 +17,18 @@ export function TableSummary({ transactions }: { transactions: Transaction[] }) 
   }, [transactions]);
 
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-label={`Summary: Expenses ${(totals.expense / 100).toFixed(2)}, Income ${(totals.income / 100).toFixed(2)}, Net ${(totals.net / 100).toFixed(2)}`}>
-      <span className="flex items-center gap-1.5">
+    <div className="grid grid-cols-3 gap-1 text-xs text-muted-foreground sm:flex sm:gap-3" aria-label={`Summary: Expenses ${(totals.expense / 100).toFixed(2)}, Income ${(totals.income / 100).toFixed(2)}, Net ${(totals.net / 100).toFixed(2)}`}>
+      <span className="flex items-center gap-1.5 whitespace-nowrap">
         <ArrowDownRight className="h-3.5 w-3.5 text-expense" />
         Expenses: <AnimatedMoneyCents cents={totals.expense} />
       </span>
-      <span className="text-muted-foreground/60">•</span>
-      <span className="flex items-center gap-1.5">
+      <span className="text-muted-foreground/60 hidden sm:inline">•</span>
+      <span className="flex items-center gap-1.5 whitespace-nowrap">
         <ArrowUpRight className="h-3.5 w-3.5 text-income" />
         Income: <AnimatedMoneyCents cents={totals.income} />
       </span>
-      <span className="text-muted-foreground/60">•</span>
-      <span className="flex items-center gap-1.5 text-foreground/90">
+      <span className="text-muted-foreground/60 hidden sm:inline">•</span>
+      <span className="flex items-center gap-1.5 text-foreground/90 whitespace-nowrap">
         <Minus className="h-3.5 w-3.5" />
         Net: <AnimatedMoneyCents cents={totals.net} />
       </span>

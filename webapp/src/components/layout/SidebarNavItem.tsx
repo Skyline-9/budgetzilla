@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { motion } from "motion/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
 
@@ -11,6 +12,7 @@ export function SidebarNavItem({
   collapsed,
   search,
   onClick,
+  mdUp = true,
 }: {
   to: string;
   label: string;
@@ -19,6 +21,7 @@ export function SidebarNavItem({
   collapsed: boolean;
   search: string;
   onClick?: () => void;
+  mdUp?: boolean;
 }) {
   const location = useLocation();
   const isCurrentlyActive = location.pathname === to;
@@ -35,10 +38,13 @@ export function SidebarNavItem({
             ? "grid h-14 w-14 place-items-center self-center leading-none"
             : "flex items-center gap-4 px-4 py-3",
           "text-muted-foreground/70 hover:bg-primary/5 hover:text-foreground",
-          isActive && "bg-muted text-foreground font-bold shadow-sm",
-          // Active indicator: subtle left bar in expanded mode, dot below icon in collapsed mode
+          // Use static bg-muted only when not on desktop (mobile) or collapsed — desktop expanded uses animated indicator
+          isActive && (!mdUp || collapsed) && "bg-muted text-foreground font-bold shadow-sm",
+          isActive && mdUp && !collapsed && "text-foreground font-bold",
+          // Active indicator: subtle left bar in expanded mode (only on mobile), dot below icon in collapsed mode
           isActive &&
             !collapsed &&
+            !mdUp &&
             "before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:rounded-r-full before:bg-primary",
           isActive &&
             collapsed &&
@@ -47,6 +53,15 @@ export function SidebarNavItem({
         )
       }
     >
+      {/* Animated sliding active indicator — desktop expanded only */}
+      {isCurrentlyActive && mdUp && !collapsed && (
+        <motion.div
+          layoutId="sidebar-active-indicator"
+          className="absolute inset-0 rounded-squircle bg-muted shadow-sm"
+          style={{ zIndex: -1 }}
+          transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+        />
+      )}
       <span
         className={cn(
           "opacity-70 group-hover:opacity-100 [&>svg]:h-5 [&>svg]:w-5 transition-opacity",

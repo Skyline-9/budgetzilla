@@ -581,7 +581,47 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
         ) : null}
       </div>
 
-      <div className="border-t border-border/60">
+      {/* Mobile card list */}
+      <div className="border-t border-border/60 sm:hidden">
+        <div className="divide-y divide-border/40">
+          {rows.length ? (
+            rows.map((row) => {
+              const txn = row.original;
+              const cat = categoriesById.get(txn.categoryId);
+              const cents = txn.amountCents;
+              return (
+                <div
+                  key={row.id}
+                  className="flex items-center gap-3 px-4 py-3 active:bg-background/10"
+                  onClick={() => onRowClick?.(txn)}
+                  role={onRowClick ? "button" : undefined}
+                >
+                  <MerchantAvatar merchant={txn.merchant} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-medium">{txn.merchant ?? "Unknown"}</span>
+                      <span className={cn("text-sm font-semibold tabular-nums whitespace-nowrap", cents >= 0 ? "text-income" : "text-expense")}>
+                        {cents >= 0 ? "+" : ""}{(cents / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                      <span>{formatDateDisplay(txn.date)}</span>
+                      {cat && <><span>·</span><span className="truncate">{cat.name}</span></>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="py-16 text-center text-sm text-muted-foreground">
+              {isFiltered ? "No transactions match your filters." : "No transactions yet"}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="border-t border-border/60 hidden sm:block">
+        <div className="relative">
         <div className="overflow-auto bg-background/5">
           <Table className="w-full min-w-[800px]">
             <TableHeader>
@@ -776,6 +816,8 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
               </AnimatePresence>
             </TableBody>
           </Table>
+        </div>
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-card/90 to-transparent hidden sm:block" />
         </div>
       </div>
 

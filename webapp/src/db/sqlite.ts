@@ -237,16 +237,22 @@ export async function closeDatabase(): Promise<void> {
  * Designed for safe AI/User-generated query execution.
  */
 export async function execReadOnlySQL(sql: string, params?: unknown[]): Promise<unknown[][]> {
+  if (sql.includes(";")) {
+    const parts = sql.split(";").filter(s => s.trim().length > 0);
+    if (parts.length > 1) {
+      throw new Error("Multiple statements are not allowed in read-only queries.");
+    }
+  }
+
   const normalized = sql.trim().toUpperCase();
-  if (!normalized.startsWith("SELECT ")) {
-    throw new Error("Only SELECT queries are allowed for safety.");
+  if (!normalized.startsWith("SELECT ") && !normalized.startsWith("WITH ")) {
+    throw new Error("Only SELECT/WITH queries are allowed for safety.");
   }
   
-  // Basic safety check against multiple statements or prohibited keywords
-  const prohibited = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "REPLACE", "TRUNCATE", "PRAGMA"];
+  const prohibited = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "REPLACE", "TRUNCATE", "PRAGMA", "ATTACH", "DETACH"];
+  const strippedSql = sql.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""');
   for (const word of prohibited) {
-    // Regex matches the word as a distinct token, avoiding partial matches inside string literals
-    if (new RegExp(`\\b${word}\\b`, 'i').test(sql)) {
+    if (new RegExp(`\\b${word}\\b`, 'i').test(strippedSql)) {
       throw new Error(`Prohibited keyword found in read-only query: ${word}`);
     }
   }

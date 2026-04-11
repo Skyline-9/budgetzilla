@@ -1,4 +1,8 @@
 import { execReadOnlySQL } from "@/db/sqlite";
+import { generateFromText, ensureModelLoaded } from "./webgpuInference";
+import { getInferenceBackend } from "./localAiParser";
+
+const OLLAMA_TIMEOUT_MS = 120_000;
 
 export async function pingOllama(): Promise<boolean> {
   const url = localStorage.getItem("ollamaUrl") || "http://localhost:11434";
@@ -31,15 +35,9 @@ export type AiUpdate = {
   content: string;
 };
 
-export async function askLocalAi(userQuestion: string, onUpdate: (update: AiUpdate) => void): Promise<void> {
-  const url = localStorage.getItem("ollamaUrl") || "http://localhost:11434";
-  const model = localStorage.getItem("ollamaModel") || "gemma4";
+function buildSqlPrompt(userQuestion: string): string {
   const today = new Date().toISOString().split("T")[0];
-
-  onUpdate({ type: "progress", content: "Generating SQL..." });
-
-  // Step 1: Text-to-SQL
-  const sqlPrompt = `You are an expert SQLite developer for a budgeting app.
+  return `You are an expert SQLite developer for a budgeting app.
 Today's date is ${today}.
 
 Here is the database schema:
@@ -65,55 +63,10 @@ The user asks: "${userQuestion}"
 Write a valid, read-only SQLite SELECT statement to answer the user's question. 
 Return ONLY a JSON object exactly like this: {"sql": "SELECT ..."}
 Do not return any other text, markdown, or explanations.`;
+}
 
-  let sqlQuery = "";
-  try {
-    const res = await fetch(`${url}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        prompt: sqlPrompt,
-        stream: false,
-        format: "json",
-      }),
-    });
-    
-    if (!res.ok) throw new Error("Failed to reach Ollama for SQL generation");
-    
-    const data = await res.json();
-    let rawJson = data.response.trim();
-    if (rawJson.startsWith("\`\`\`json")) {
-      rawJson = rawJson.replace(/^\`\`\`json\n?/, "").replace(/\n?\`\`\`$/, "");
-    } else if (rawJson.startsWith("\`\`\`")) {
-      rawJson = rawJson.replace(/^\`\`\`\n?/, "").replace(/\n?\`\`\`$/, "");
-    }
-    
-    const parsed = JSON.parse(rawJson);
-    if (!parsed.sql) throw new Error("AI did not return a valid SQL string");
-    sqlQuery = parsed.sql;
-  } catch (e) {
-    console.error("SQL Generation Error:", e);
-    onUpdate({ type: "error", content: "I'm sorry, I couldn't figure out how to query the database for that question." });
-    return;
-  }
-
-  // Step 2: Execute SQL locally
-  onUpdate({ type: "progress", content: "Consulting database..." });
-  let sqlResultStr = "";
-  let queryFailed = false;
-  try {
-    const resultRows = await execReadOnlySQL(sqlQuery);
-    sqlResultStr = JSON.stringify(resultRows, null, 2);
-  } catch (e: any) {
-    console.error("Safe Execution Error on query:", sqlQuery, e);
-    queryFailed = true;
-    sqlResultStr = `ERROR EXECUTING QUERY: ${e.message}. The generated query was: ${sqlQuery}`;
-  }
-
-  // Step 3: Interpret Results
-  onUpdate({ type: "progress", content: "Analyzing results..." });
-  const interpretationPrompt = [
+function buildInterpretationPrompt(userQuestion: string, sqlResultStr: string, queryFailed: boolean): string {
+  return [
     "You are a helpful financial assistant inside a budgeting app.",
     `The user asked: "${userQuestion}"`,
     "",
@@ -133,23 +86,120 @@ Do not return any other text, markdown, or explanations.`;
     "",
     "Provide only the final response text without greetings or sign-offs."
   ].join("\n");
+}
 
+async function askWithWebGpu(userQuestion: string, onUpdate: (update: AiUpdate) => void): Promise<void> {
+  onUpdate({ type: "progress", content: "Loading model..." });
   try {
+    await ensureModelLoaded();
+  } catch (e: any) {
+    console.error("WebGPU model load failed:", e);
+    onUpdate({ type: "error", content: "Failed to load the AI model. WebGPU may not be available in this browser." });
+    return;
+  }
+
+  onUpdate({ type: "progress", content: "Generating SQL..." });
+
+  let sqlQuery = "";
+  try {
+    const sqlPrompt = buildSqlPrompt(userQuestion);
+    const rawResponse = await generateFromText(sqlPrompt, () => {});
+    let rawJson = rawResponse.trim();
+    if (rawJson.startsWith("```json")) {
+      rawJson = rawJson.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    } else if (rawJson.startsWith("```")) {
+      rawJson = rawJson.replace(/^```\n?/, "").replace(/\n?```$/, "");
+    }
+    const parsed = JSON.parse(rawJson);
+    if (!parsed.sql) throw new Error("AI did not return a valid SQL string");
+    sqlQuery = parsed.sql;
+  } catch (e) {
+    console.error("WebGPU SQL Generation Error:", e);
+    onUpdate({ type: "error", content: "I'm sorry, I couldn't figure out how to query the database for that question." });
+    return;
+  }
+
+  onUpdate({ type: "progress", content: "Consulting database..." });
+  let sqlResultStr = "";
+  let queryFailed = false;
+  try {
+    const resultRows = await execReadOnlySQL(sqlQuery);
+    sqlResultStr = JSON.stringify(resultRows, null, 2);
+  } catch (e: any) {
+    console.error("Safe Execution Error on query:", sqlQuery, e);
+    queryFailed = true;
+    sqlResultStr = `ERROR EXECUTING QUERY: ${e.message}. The generated query was: ${sqlQuery}`;
+  }
+
+  onUpdate({ type: "progress", content: "Analyzing results..." });
+  try {
+    const interpretationPrompt = buildInterpretationPrompt(userQuestion, sqlResultStr, queryFailed);
+    await generateFromText(interpretationPrompt, (chunk: string) => {
+      onUpdate({ type: "chunk", content: chunk });
+    });
+  } catch (e) {
+    console.error("WebGPU Interpretation Error:", e);
+    onUpdate({ type: "error", content: "I'm sorry, I couldn't interpret the results from the database." });
+  }
+}
+
+async function askWithOllama(userQuestion: string, onUpdate: (update: AiUpdate) => void): Promise<void> {
+  const url = localStorage.getItem("ollamaUrl") || "http://localhost:11434";
+  const model = localStorage.getItem("ollamaModel") || "gemma4";
+  const signal = AbortSignal.timeout(OLLAMA_TIMEOUT_MS);
+
+  onUpdate({ type: "progress", content: "Generating SQL..." });
+
+  let sqlQuery = "";
+  try {
+    const sqlPrompt = buildSqlPrompt(userQuestion);
     const res = await fetch(`${url}/api/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        prompt: interpretationPrompt,
-        stream: true,
-      }),
+      body: JSON.stringify({ model, prompt: sqlPrompt, stream: false, format: "json" }),
+      signal,
     });
+    if (!res.ok) throw new Error("Failed to reach Ollama for SQL generation");
+    const data = await res.json();
+    let rawJson = data.response.trim();
+    if (rawJson.startsWith("```json")) {
+      rawJson = rawJson.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    } else if (rawJson.startsWith("```")) {
+      rawJson = rawJson.replace(/^```\n?/, "").replace(/\n?```$/, "");
+    }
+    const parsed = JSON.parse(rawJson);
+    if (!parsed.sql) throw new Error("AI did not return a valid SQL string");
+    sqlQuery = parsed.sql;
+  } catch (e) {
+    console.error("SQL Generation Error:", e);
+    onUpdate({ type: "error", content: "I'm sorry, I couldn't figure out how to query the database for that question." });
+    return;
+  }
 
+  onUpdate({ type: "progress", content: "Consulting database..." });
+  let sqlResultStr = "";
+  let queryFailed = false;
+  try {
+    const resultRows = await execReadOnlySQL(sqlQuery);
+    sqlResultStr = JSON.stringify(resultRows, null, 2);
+  } catch (e: any) {
+    console.error("Safe Execution Error on query:", sqlQuery, e);
+    queryFailed = true;
+    sqlResultStr = `ERROR EXECUTING QUERY: ${e.message}. The generated query was: ${sqlQuery}`;
+  }
+
+  onUpdate({ type: "progress", content: "Analyzing results..." });
+  try {
+    const interpretationPrompt = buildInterpretationPrompt(userQuestion, sqlResultStr, queryFailed);
+    const res = await fetch(`${url}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model, prompt: interpretationPrompt, stream: true }),
+      signal,
+    });
     if (!res.ok || !res.body) throw new Error("Failed to reach Ollama for interpretation");
-    
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -161,13 +211,19 @@ Do not return any other text, markdown, or explanations.`;
           if (parsed.response) {
             onUpdate({ type: "chunk", content: parsed.response });
           }
-        } catch(e) {
-          // ignore parse errors on fragmented JSON chunks
-        }
+        } catch(e) { /* ignore */ }
       }
     }
   } catch (e) {
     console.error("Interpretation Error:", e);
     onUpdate({ type: "error", content: "I'm sorry, I couldn't interpret the results from the database." });
   }
+}
+
+export async function askLocalAi(userQuestion: string, onUpdate: (update: AiUpdate) => void): Promise<void> {
+  const backend = getInferenceBackend();
+  if (backend === "webgpu") {
+    return askWithWebGpu(userQuestion, onUpdate);
+  }
+  return askWithOllama(userQuestion, onUpdate);
 }

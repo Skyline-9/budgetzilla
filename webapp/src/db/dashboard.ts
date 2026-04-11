@@ -48,13 +48,14 @@ function buildWhereClause(params: DashboardParams): { clause: string; values: (s
     conditions.push(`category_id IN (${placeholders})`);
     values.push(...params.categoryId);
   }
+  // Compare absolute values so the filter matches both income and expense transactions.
   if (params.minAmountCents !== undefined) {
-    conditions.push("amount_cents >= ?");
-    values.push(params.minAmountCents);
+    conditions.push("ABS(amount_cents) >= ?");
+    values.push(Math.abs(params.minAmountCents));
   }
   if (params.maxAmountCents !== undefined) {
-    conditions.push("amount_cents <= ?");
-    values.push(params.maxAmountCents);
+    conditions.push("ABS(amount_cents) <= ?");
+    values.push(Math.abs(params.maxAmountCents));
   }
 
   return {

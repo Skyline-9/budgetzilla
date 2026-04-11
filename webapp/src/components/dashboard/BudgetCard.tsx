@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "motion/react";
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,15 +53,18 @@ export function BudgetCard(props: {
   const overspent = budgetCents != null && expenseCents > budgetCents;
 
   return (
-    <div
+    <motion.div
       role="region"
       aria-label="Budget tracking card"
+      animate={overspent ? { scale: [1, 1.01, 1] } : {}}
+      transition={overspent ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
       className={cn(
-        "group relative overflow-hidden rounded-squircle bg-card/85",
+        "group relative overflow-hidden rounded-xl sm:rounded-squircle bg-card/85",
         "p-6 md:p-7 corner-glow-hero tint-hero shadow-surface-elevated",
         "transition-all duration-300 ease-out hover:-translate-y-1",
         "hover:bg-card/90 hover:shadow-surface-elevated",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        overspent && "ring-2 ring-danger/20",
         className,
       )}
     >
@@ -168,6 +172,6 @@ export function BudgetCard(props: {
         month={editMonth}
         initialBudgetCents={editMonthBudgetCents ?? null}
       />
-    </div>
+    </motion.div>
   );
 }

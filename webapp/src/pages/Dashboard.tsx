@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "motion/react";
 import {
   addDays,
   addMonths,
@@ -10,7 +11,6 @@ import {
   parseISO,
   startOfMonth,
   subMonths,
-  getDaysInMonth,
 } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -36,20 +36,19 @@ import {
   writeListOrDelete,
   writeOrDelete,
 } from "@/lib/urlState";
-import {
-  analyzeWeekendSpending,
-  calculateTrend,
-  findRecurringTransactions,
-  forecastMonthEnd,
-  generateBudgetTips,
-} from "@/lib/analysis";
-
 import { AiChatWidget } from "@/components/dashboard/AiChatWidget";
-import { AnomalyTable } from "@/components/insights/AnomalyTable";
-import { BudgetTips } from "@/components/insights/BudgetTips";
-import { RecurringList } from "@/components/insights/RecurringList";
 
 const DashboardChartsLazy = React.lazy(() => import("@/components/dashboard/DashboardCharts"));
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: "easeOut" as const } },
+};
 
 function thisMonthRange() {
   const now = new Date();
@@ -314,44 +313,10 @@ export function DashboardPage() {
 
   const editMonthBudgetCents = adjusted.editMonth ? budgetByMonth.get(adjusted.editMonth) ?? null : null;
 
-  // Detailed Insights Logic
-  const detailedInsights = React.useMemo(() => {
-    if (!summaryQuery.data || !chartsQuery.data) return null;
-
-    const now = new Date();
-    const daysInMonth = getDaysInMonth(now);
-    const isThisMonth = from === format(startOfMonth(now), "yyyy-MM-dd") && to === format(endOfMonth(now), "yyyy-MM-dd");
-
-    const forecast = isThisMonth ? forecastMonthEnd(summaryQuery.data.expenseCents, now.getDate(), { daysInMonth }) : null;
-
-    const transactions = transactionsQuery.data ?? [];
-    const weekendAnalysis = transactions.length > 0 ? analyzeWeekendSpending(transactions) : null;
-    const recurring = transactions.length > 0 ? findRecurringTransactions(transactions) : [];
-    const recurringTotalCents = recurring.reduce((sum, r) => sum + r.avgAmountCents, 0);
-
-    const interval = chartsQuery.data.trendInterval;
-    const expenseSeries = chartsQuery.data.monthlyTrend.map((p) => p.expenseCents);
-    const window = interval === "day" ? 14 : 3;
-    const recent = expenseSeries.slice(-window);
-    const prior = expenseSeries.slice(-(window * 2), -window);
-    const trend = recent.length && prior.length ? calculateTrend(recent, prior) : null;
-
-    const tips = generateBudgetTips({
-      summary: summaryQuery.data,
-      trend,
-      forecast,
-      budgetCents: adjusted.adjustedBudgetCents ?? null,
-      topCategory: null, // Simple for now
-      recurringTotalCents,
-      weekendAnalysis,
-    });
-
-    return { tips, transactions, forecast };
-  }, [summaryQuery.data, chartsQuery.data, transactionsQuery.data, adjusted.adjustedBudgetCents, from, to]);
-
   return (
-    <div className="space-y-10 pb-20">
+    <motion.div className="space-y-10 pb-20" initial="hidden" animate="show" variants={containerVariants}>
       {/* Header */}
+      <motion.div variants={itemVariants}>
       <section className="space-y-3">
         <div>
           <div className="text-2xl font-semibold tracking-tight">Dashboard</div>
@@ -362,7 +327,9 @@ export function DashboardPage() {
 
         <ActiveFilterChips filters={filters} categoriesById={categoriesById} onChange={setFilters} />
       </section>
+      </motion.div>
 
+      <motion.div variants={itemVariants}>
       {summaryQuery.isLoading ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Skeleton className="h-[260px]" />
@@ -398,8 +365,10 @@ export function DashboardPage() {
           />
         </section>
       )}
+      </motion.div>
 
       {/* Charts Section */}
+      <motion.div variants={itemVariants}>
       <section className="space-y-6">
         {chartsQuery.isLoading ? (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -428,26 +397,10 @@ export function DashboardPage() {
           </React.Suspense>
         )}
       </section>
-
-      {/* Detailed Insights Section (Bottom of Scroll) */}
-      {detailedInsights && (
-        <section className="space-y-8 border-t border-border/40 pt-10">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground/90">Deep Analysis</h2>
-            <p className="text-sm text-muted-foreground">Patterns and trends identified in your transaction history.</p>
-          </div>
-
-          {detailedInsights.tips.length > 0 && <BudgetTips tips={detailedInsights.tips} />}
-
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <RecurringList transactions={detailedInsights.transactions} />
-            <AnomalyTable transactions={detailedInsights.transactions} />
-          </div>
-        </section>
-      )}
+      </motion.div>
 
       <AiChatWidget />
-    </div>
+    </motion.div>
   );
 }
 

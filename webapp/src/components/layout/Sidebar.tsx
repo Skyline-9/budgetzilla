@@ -138,28 +138,28 @@ function SidebarContent({
     <div className="flex h-full min-h-0 flex-col">
       <div
         className={cn(
-          "flex h-[80px] items-center justify-between gap-2 border-b border-border/70",
-          collapsed ? "px-3" : "px-6",
+          "flex h-[60px] items-center gap-2 border-b border-border/70",
+          collapsed ? "justify-center px-3" : "justify-between px-6",
         )}
       >
-        <Link
-          to={{ pathname: "/dashboard", search }}
-          className={cn(
-            "group inline-flex min-w-0 items-center gap-4 rounded-squircle",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-          )}
-          aria-label="Go to Dashboard"
-          title="Dashboard"
-          onClick={onNavClick}
-        >
-          <LogoMark size={44} className="shrink-0 shadow-lg shadow-primary/10 transition-transform group-hover:scale-105" />
-          {!collapsed ? (
+        {!collapsed ? (
+          <Link
+            to={{ pathname: "/dashboard", search }}
+            className={cn(
+              "group inline-flex min-w-0 items-center gap-4 rounded-squircle",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            )}
+            aria-label="Go to Dashboard"
+            title="Dashboard"
+            onClick={onNavClick}
+          >
+            <LogoMark size={44} className="shrink-0 shadow-lg shadow-primary/10 transition-transform group-hover:scale-105" />
             <div className="min-w-0">
               <div className="truncate text-base font-bold tracking-tight">Budgetzilla</div>
               <div className="truncate text-[10px] uppercase tracking-widest text-muted-foreground/60 font-bold">Personal Finance</div>
             </div>
-          ) : null}
-        </Link>
+          </Link>
+        ) : null}
 
         {mdUp ? (
           <Button
@@ -190,6 +190,7 @@ function SidebarContent({
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
+          mdUp={mdUp}
         />
         <SidebarNavItem
           to="/transactions"
@@ -199,6 +200,7 @@ function SidebarContent({
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
+          mdUp={mdUp}
         />
         <SidebarNavItem
           to="/categories"
@@ -208,6 +210,7 @@ function SidebarContent({
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
+          mdUp={mdUp}
         />
         <SidebarNavItem
           to="/settings"
@@ -217,6 +220,7 @@ function SidebarContent({
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
+          mdUp={mdUp}
         />
       </nav>
 
@@ -296,10 +300,10 @@ export function Sidebar() {
       <aside
         className={cn(
           "sticky top-0 z-20 h-[100dvh] shrink-0",
-          "border-r border-border/70 bg-background/40 backdrop-blur-xl",
+          "border-r border-border/70 bg-background/80 backdrop-blur-xl dark:bg-background/40",
           "transition-[width] duration-200",
           "hidden md:block",
-          collapsed ? "w-[100px]" : "w-[280px]",
+          collapsed ? "w-[60px]" : "w-[280px]",
         )}
         aria-label="Sidebar"
       >

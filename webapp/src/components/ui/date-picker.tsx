@@ -67,7 +67,7 @@ function MonthYearNav({ displayMonth, onMonthChange, onPrevMonth, onNextMonth }:
       <button
         type="button"
         onClick={onPrevMonth}
-        className="h-9 w-9 inline-flex items-center justify-center rounded-md opacity-70 hover:opacity-100 hover:bg-accent"
+        className="h-11 w-11 inline-flex items-center justify-center rounded-md opacity-70 hover:opacity-100 hover:bg-accent"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
@@ -100,7 +100,7 @@ function MonthYearNav({ displayMonth, onMonthChange, onPrevMonth, onNextMonth }:
       <button
         type="button"
         onClick={onNextMonth}
-        className="h-9 w-9 inline-flex items-center justify-center rounded-md opacity-70 hover:opacity-100 hover:bg-accent"
+        className="h-11 w-11 inline-flex items-center justify-center rounded-md opacity-70 hover:opacity-100 hover:bg-accent"
       >
         <ChevronRight className="h-5 w-5" />
       </button>
@@ -118,10 +118,10 @@ const calendarClassNames = {
   button_next: "hidden",
   month_grid: "w-full border-collapse",
   weekdays: "flex",
-  weekday: "text-muted-foreground rounded-md w-10 h-10 font-normal text-[0.8rem] flex items-center justify-center",
+  weekday: "text-muted-foreground rounded-md w-11 h-11 font-normal text-[0.8rem] flex items-center justify-center",
   week: "flex w-full mt-1",
-  day: "h-10 w-10 text-center text-sm p-0 relative flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent",
-  day_button: "h-10 w-10 p-0 font-normal rounded-md hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+  day: "h-11 w-11 text-center text-sm p-0 relative flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent",
+  day_button: "h-11 w-11 p-0 font-normal rounded-md hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
   selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
   today: "bg-accent text-accent-foreground font-semibold",
   outside: "text-muted-foreground opacity-50",
@@ -231,13 +231,16 @@ export function DateInput({
     if (isFocused) return; // Don't update while user is typing
 
     // Convert yyyy-MM-dd to MM/dd/yyyy for display
-    if (value && selected) {
-      setInputValue(format(selected, "MM/dd/yyyy"));
-      setMonth(selected);
+    // Compute parsed date inside the effect to avoid infinite re-render loops
+    // (Date objects fail Object.is comparison, destabilising the dependency array)
+    const parsed = parseDate(value);
+    if (value && parsed) {
+      setInputValue(format(parsed, "MM/dd/yyyy"));
+      setMonth(parsed);
     } else {
       setInputValue("");
     }
-  }, [value, selected, isFocused]);
+  }, [value, isFocused]);
 
   const handlePrevMonth = () => {
     setMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));

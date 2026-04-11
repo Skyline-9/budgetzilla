@@ -6,6 +6,7 @@ import { Calendar, Check, CornerDownRight, DollarSign, StickyNote, Store, Tag, T
 import { toast } from "sonner";
 import type { Transaction } from "@/types";
 import { useCategoriesQuery, useCreateTransactionMutation, useDeleteTransactionMutation, useUpdateTransactionMutation } from "@/api/queries";
+import { suggestCategoryForMerchant } from "@/db/transactions";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { DateInput } from "@/components/ui/date-picker";
@@ -59,6 +60,7 @@ export function TransactionDialog(props: {
   const { confirm } = useConfirmDialog();
 
   const [activeTab, setActiveTab] = React.useState<string>("manual");
+  const [userPickedCategory, setUserPickedCategory] = React.useState(false);
 
   const categories = categoriesQuery.data ?? [];
   const categoriesById = React.useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
@@ -86,6 +88,7 @@ export function TransactionDialog(props: {
   React.useEffect(() => {
     if (!open) return;
     setActiveTab("manual");
+    setUserPickedCategory(mode === "edit");
     form.reset({
       date: initial?.date ?? (mode === "create" ? todayYmd() : ""),
       categoryId: initial?.categoryId ?? "",
@@ -95,6 +98,16 @@ export function TransactionDialog(props: {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial?.id]);
+
+  const handleMerchantBlur = React.useCallback(async () => {
+    if (userPickedCategory) return;
+    const merchant = form.getValues("merchant");
+    if (!merchant?.trim()) return;
+    const suggested = await suggestCategoryForMerchant(merchant);
+    if (suggested && !form.getValues("categoryId")) {
+      form.setValue("categoryId", suggested, { shouldValidate: true });
+    }
+  }, [form, userPickedCategory]);
 
   const submitting = createTxn.isPending || updateTxn.isPending || deleteTxn.isPending;
 
@@ -216,7 +229,7 @@ export function TransactionDialog(props: {
                   </Label>
                   <Select
                     value={form.watch("categoryId")}
-                    onValueChange={(v) => form.setValue("categoryId", v, { shouldValidate: true })}
+                    onValueChange={(v) => { setUserPickedCategory(true); form.setValue("categoryId", v, { shouldValidate: true }); }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={categoriesQuery.isLoading ? "Loading…" : "Select a category"} />
@@ -260,7 +273,7 @@ export function TransactionDialog(props: {
                     <Store className="h-3.5 w-3.5 text-muted-foreground" />
                     Merchant
                   </Label>
-                  <Input id="txn-merchant" placeholder="e.g. Trader Joe's" {...form.register("merchant")} />
+                  <Input id="txn-merchant" placeholder="e.g. Trader Joe's" {...form.register("merchant", { onBlur: handleMerchantBlur })} />
                 </div>
 
                 <div className="space-y-1.5">

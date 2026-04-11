@@ -21,7 +21,7 @@ function AppInner() {
       <ConfirmDialogProvider>
         <ScreenReaderAnnouncerProvider>
           <TooltipProvider delayDuration={120}>
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
               <Route element={<AppShell />}>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />

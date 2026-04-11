@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, X, Send, Loader2, Bot, User, Sparkles } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { MessageSquare, X, Loader2, Bot, User } from "lucide-react";
+import { SparklesIcon } from "@/components/ui/sparkles";
+import { SendIcon } from "@/components/ui/send";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 import { pingOllama, askLocalAi } from "@/services/localAiChat";
+import { isWebGpuAvailable } from "@/services/webgpuInference";
 import { AiThinkingIndicator } from "./AiThinkingIndicator";
 
 interface ChatMessage {
@@ -23,7 +27,10 @@ export function AiChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if Ollama is running on mount
+    if (isWebGpuAvailable()) {
+      setIsAvailable(true);
+      return;
+    }
     pingOllama().then(available => setIsAvailable(available));
   }, []);
 
@@ -52,64 +59,67 @@ export function AiChatWidget() {
     setIsLoading(true);
     setThinkingText("Preparing to think...");
 
-    await askLocalAi(userText, (update) => {
-      if (update.type === "progress") {
-        setThinkingText(update.content);
-      } else if (update.type === "chunk") {
-        setThinkingText(""); // Hide thinking indicator once chunks start arriving
-        setMessages(prev => {
-          const existing = prev.find(m => m.id === tempAiId);
-          if (existing) {
-            return prev.map(m => m.id === tempAiId ? { ...m, content: existing.content + update.content } : m);
-          }
-          // First chunk, create the message
-          return [...prev, { id: tempAiId, role: "ai", content: update.content }];
-        });
-      } else if (update.type === "error") {
-        setMessages(prev => [
-          ...prev,
-          { id: `err-${Date.now()}`, role: "ai", content: update.content }
-        ]);
-      }
-    });
-    
-    setIsLoading(false);
-    setThinkingText("");
+    try {
+      await askLocalAi(userText, (update) => {
+        if (update.type === "progress") {
+          setThinkingText(update.content);
+        } else if (update.type === "chunk") {
+          setThinkingText("");
+          setMessages(prev => {
+            const existing = prev.find(m => m.id === tempAiId);
+            if (existing) {
+              return prev.map(m => m.id === tempAiId ? { ...m, content: existing.content + update.content } : m);
+            }
+            return [...prev, { id: tempAiId, role: "ai", content: update.content }];
+          });
+        } else if (update.type === "error") {
+          setMessages(prev => [
+            ...prev,
+            { id: `err-${Date.now()}`, role: "ai", content: update.content }
+          ]);
+        }
+      });
+    } catch (e) {
+      console.error("Chat error:", e);
+      setMessages(prev => [
+        ...prev,
+        { id: `err-${Date.now()}`, role: "ai", content: "Something went wrong. Please try again." }
+      ]);
+    } finally {
+      setIsLoading(false);
+      setThinkingText("");
+    }
   };
 
   return (
     <>
-      <svg width="0" height="0" className="absolute">
-        <defs>
-          <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" /> {/* blue-500 */}
-            <stop offset="50%" stopColor="#6366f1" /> {/* indigo-500 */}
-            <stop offset="100%" stopColor="#a855f7" /> {/* purple-500 */}
-          </linearGradient>
-        </defs>
-      </svg>
       {/* Floating Button */}
       <div className={cn("fixed bottom-6 right-6 z-50 transition-all duration-300", isOpen && "opacity-0 scale-95 pointer-events-none")}>
         <Button 
           size="icon" 
+          aria-label="Open AI chat"
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-glow-accent hover:-translate-y-1 transition-all bg-card/80 backdrop-blur-lg border border-border/60 text-accent-foreground animate-pulse-slow"
           onClick={() => setIsOpen(true)}
         >
-          <Sparkles className="h-7 w-7" color="url(#ai-gradient)" />
+          <SparklesIcon size={28} className="text-violet-400" />
         </Button>
       </div>
 
       {/* Chat Window */}
-      <div 
-        className={cn(
-          "fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[550px] max-h-[calc(100vh-6rem)] bg-card/95 backdrop-blur-xl border border-border/60 shadow-2xl rounded-2xl flex flex-col transition-all duration-300 origin-bottom-right",
-          isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-        )}
+      <AnimatePresence>
+      {isOpen && (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.85, y: 20 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        style={{ transformOrigin: "bottom right" }}
+        className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[550px] max-h-[calc(100vh-6rem)] bg-card/95 backdrop-blur-xl border border-border/60 shadow-2xl rounded-2xl flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-background/40 rounded-t-2xl">
           <div className="flex items-center gap-2 font-semibold">
-            <Sparkles className="h-5 w-5" color="url(#ai-gradient)" />
+            <SparklesIcon size={20} className="text-violet-400" />
             Financial Assistant
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
@@ -166,11 +176,13 @@ export function AiChatWidget() {
               disabled={!input.trim() || isLoading}
               className="absolute right-1 h-8 w-8 text-accent hover:text-accent/80 hover:bg-accent/10"
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendIcon size={16} />}
             </Button>
           </div>
         </form>
-      </div>
+      </motion.div>
+      )}
+      </AnimatePresence>
     </>
   );
 }
