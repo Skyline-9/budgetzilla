@@ -21,20 +21,25 @@ subgraph "API Layer"
 Unified[Unified API Interface]
 Local[Local SQLite Implementation]
 Mock[Mock In-Memory Mode]
+AI[Local AI Parser: Gemma 4]
 Unified --> Local
 Unified --> Mock
+Unified --> AI
 end
 
 subgraph "Storage Layer"
 WASM[SQLite WASM]
 OPFS[OPFS / Native FS]
+GPU[WebGPU / GPU Cache]
 WASM --> OPFS
+AI --> GPU
 end
 
 Hooks --> Unified
 Local --> WASM
+AI --> Unified
 
-Services[Services: Drive Sync, Export]
+Services[Services: Drive Sync, Export, AI Inference]
 Services --> Unified
 ```
 
@@ -46,10 +51,15 @@ budget/
 │   ├── src/
 │   │   ├── api/           # API client layer
 │   │   │   ├── index.ts   # Unified API exports
-│   │   │   ├── config.ts  # API configuration
+│   │   │   ├── config.ts  # API configuration (local/mock)
 │   │   │   └── local/     # SQLite implementation
 │   │   ├── db/            # Database operations
-│   │   ├── services/      # External services
+│   │   │   ├── sqlite.ts  # SQLite WASM + OPFS persistence
+│   │   │   └── schema.ts  # Database schema definitions
+│   │   ├── services/      # Core logic
+│   │   │   ├── webgpuInference.ts # Gemma 4 via WebGPU
+│   │   │   ├── localAiParser.ts   # AI transaction extraction
+│   │   │   └── driveSync.ts       # Google Drive sync
 │   │   ├── components/    # React components
 │   │   ├── pages/         # Page components
 │   │   ├── hooks/         # Custom React hooks
@@ -75,13 +85,17 @@ budget/
 | Radix UI | Accessible UI primitives |
 | TanStack Query | Data fetching and caching |
 | ECharts | Charts and visualizations |
+| Transformers.js | Browser-side AI inference |
 
-### Database
+### Database & AI
 
 | Technology | Purpose |
 |------------|---------|
 | sql.js | SQLite compiled to WebAssembly |
 | OPFS | Browser file system for persistence |
+| Gemma 4 | Local LLM for transaction parsing |
+| WebGPU | Hardware acceleration for AI |
+| Ollama | Fallback local AI server |
 
 ### Desktop App (Tauri)
 
@@ -90,6 +104,18 @@ budget/
 | Rust | Native backend and system integration |
 | Tauri | Desktop application framework |
 | WebView2 / WKWebView | Native web views (Windows / macOS) |
+
+## AI Engine Architecture
+
+Budgetzilla uses a local-first AI stack to process receipts and statements:
+
+1. **Inference Pipeline**: 
+   - **WebGPU (Primary)**: Runs the `onnx-community/gemma-4-E2B-it-ONNX` model directly in the browser using Transformers.js.
+   - **Ollama (Fallback)**: Connects to a local Ollama instance if WebGPU is unavailable or disabled.
+2. **Data Flow**:
+   - File (Image/PDF) -> Text Extraction -> Structured Prompt -> LLM Inference -> JSON Transaction Array -> Database.
+3. **Persistence**:
+   - Model weights are cached in IndexedDB via `idbModelCache.ts` to prevent re-downloading (~1.2GB).
 
 ## Data Flow
 
