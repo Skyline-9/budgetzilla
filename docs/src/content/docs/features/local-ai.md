@@ -56,11 +56,23 @@ Budgetzilla is **local-first**, which means your financial data never leaves you
 - Check `chrome://gpu` to verify WebGPU is enabled.
 - If it fails, try the **Ollama** fallback.
 
-### Ollama Connection Issues
+### Ollama Connection Issues (CORS)
 - Verify Ollama is running (`ollama list`).
-- Check your CORS settings! Browsers block requests to `localhost` from web apps unless configured otherwise. See the [CORS Setup Guide](/getting-started/quick-start/#-deployment-note-cors-setup).
+- **CORS Setup:** Browsers block requests to `localhost` from web apps (like the hosted Vercel version) unless configured otherwise.
 
-### Slow Extraction
-- First run is always slower due to model loading/caching.
-- Subsequent scans should be much faster.
+**macOS:**
+```bash
+# Set the environment variable
+launchctl setenv OLLAMA_ORIGINS "https://budgetzilla-app.vercel.app,http://localhost:5173"
+# Restart the Ollama application
+```
+
+**Windows:**
+1. Search for "Edit the system environment variables" in the Start menu.
+2. Click "Environment Variables".
+3. Add a **New User variable**:
+   - Variable name: `OLLAMA_ORIGINS`
+   - Variable value: `https://budgetzilla-app.vercel.app,http://localhost:5173`
+4. Restart the Ollama application.
+
 - Performance depends on your GPU's VRAM and compute power.
