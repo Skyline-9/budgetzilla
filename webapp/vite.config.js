@@ -8,7 +8,30 @@ export default defineConfig({
                 plugins: [
                     // React Compiler (https://react.dev/learn/react-compiler)
                     // Target React 18 so compiled output uses `react-compiler-runtime`.
-                    ["babel-plugin-react-compiler", { target: "18" }],
+                    [
+                        "babel-plugin-react-compiler",
+                        {
+                            target: "18",
+                            sources: function (filename) {
+                                // Exclude animated icon components -- forwardRef + motion breaks under the compiler
+                                if (filename.includes("components/ui/sparkles.tsx"))
+                                    return false;
+                                if (filename.includes("components/ui/send.tsx"))
+                                    return false;
+                                if (filename.includes("components/ui/check.tsx"))
+                                    return false;
+                                if (filename.includes("components/ui/trending-up.tsx"))
+                                    return false;
+                                if (filename.includes("components/ui/trending-down.tsx"))
+                                    return false;
+                                if (filename.includes("components/ui/download.tsx"))
+                                    return false;
+                                if (filename.includes("components/ui/plus.tsx"))
+                                    return false;
+                                return true;
+                            },
+                        },
+                    ],
                 ],
             },
         }),
@@ -39,8 +62,8 @@ export default defineConfig({
                     if (id.includes("echarts") || id.includes("echarts-for-react")) {
                         return "echarts";
                     }
-                    // Framer Motion chunk
-                    if (id.includes("framer-motion")) {
+                    // Motion (framer-motion) chunk
+                    if (id.includes("framer-motion") || id.includes("node_modules/motion")) {
                         return "framer-motion";
                     }
                     // TanStack packages chunk

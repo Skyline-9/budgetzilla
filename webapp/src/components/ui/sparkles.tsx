@@ -31,11 +31,7 @@ const SPARKLE_VARIANTS: Variants = {
 };
 
 const STAR_VARIANTS: Variants = {
-  initial: {
-    opacity: 1,
-    x: 0,
-    y: 0,
-  },
+  initial: { opacity: 1, x: 0, y: 0 },
   blink: () => ({
     opacity: [0, 1, 0, 0, 0, 0, 1],
     transition: {

@@ -33,7 +33,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
-      "framer-motion": "motion/react",
     },
   },
   server: {
