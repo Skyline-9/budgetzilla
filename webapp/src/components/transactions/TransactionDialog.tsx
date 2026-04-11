@@ -20,7 +20,7 @@ import { buildCategoryTreeRows } from "@/lib/categoryHierarchy";
 import { AiScanner } from "./AiScanner";
 
 const transactionSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use MM/DD/YYYY"),
   categoryId: z.string().min(1, "Pick a category"),
   amount: z
     .string()
@@ -82,7 +82,7 @@ export function TransactionDialog(props: {
       merchant: initial?.merchant ?? "",
       notes: initial?.notes ?? "",
     },
-    mode: "onChange",
+    mode: "onTouched",
   });
 
   React.useEffect(() => {

@@ -226,21 +226,16 @@ export function DateInput({
   const [isFocused, setIsFocused] = React.useState(false);
   const selected = parseDate(value);
 
-  // Only sync from parent value when not focused (to avoid interfering with typing)
+  // Sync from parent value when it changes externally
   React.useEffect(() => {
-    if (isFocused) return; // Don't update while user is typing
-
-    // Convert yyyy-MM-dd to MM/dd/yyyy for display
-    // Compute parsed date inside the effect to avoid infinite re-render loops
-    // (Date objects fail Object.is comparison, destabilising the dependency array)
     const parsed = parseDate(value);
     if (value && parsed) {
       setInputValue(format(parsed, "MM/dd/yyyy"));
       setMonth(parsed);
-    } else {
+    } else if (!value) {
       setInputValue("");
     }
-  }, [value, isFocused]);
+  }, [value]);
 
   const handlePrevMonth = () => {
     setMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -251,9 +246,7 @@ export function DateInput({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setInputValue(val);
-    // Don't parse on every keystroke - wait for blur
+    setInputValue(e.target.value);
   };
 
   const handleInputFocus = () => {
@@ -263,20 +256,38 @@ export function DateInput({
   const handleInputBlur = () => {
     setIsFocused(false);
 
-    // On blur, try to parse various formats
-    if (!inputValue) {
+    if (!inputValue.trim()) {
       onChange(undefined);
       return;
     }
 
-    const formats = ["MM/dd/yyyy", "M/d/yyyy", "yyyy-MM-dd"];
+    // Try various parsing strategies
+    const formats = ["MM/dd/yyyy", "M/d/yyyy", "MM-dd-yyyy", "M-d-yyyy", "yyyy-MM-dd", "MMM d, yyyy"];
+    
+    let parsed: Date | undefined;
     for (const fmt of formats) {
-      const parsed = parse(inputValue, fmt, new Date());
-      if (!isNaN(parsed.getTime())) {
-        onChange(formatToYmd(parsed));
-        setInputValue(format(parsed, "MM/dd/yyyy"));
-        return;
+      const d = parse(inputValue, fmt, new Date());
+      if (!isNaN(d.getTime())) {
+        parsed = d;
+        break;
       }
+    }
+
+    // Fallback to native Date parser if formats fail
+    if (!parsed || isNaN(parsed.getTime())) {
+      const native = new Date(inputValue.replace(/-/g, "/"));
+      if (!isNaN(native.getTime())) {
+        parsed = native;
+      }
+    }
+
+    if (parsed && !isNaN(parsed.getTime())) {
+      const ymd = formatToYmd(parsed);
+      onChange(ymd);
+      setInputValue(format(parsed, "MM/dd/yyyy"));
+    } else {
+      // If we couldn't parse it, keep the inputValue but the form will remain invalid
+      // This allows the user to see what they typed and fix it.
     }
   };
 
