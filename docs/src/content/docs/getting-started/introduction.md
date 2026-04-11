@@ -1,54 +1,36 @@
 ---
 title: Introduction
-description: What is Budgetzilla and why use it?
+description: What is Budgetzilla?
 ---
 
-Budgetzilla is a **local-first** personal finance application that helps you track spending, manage budgets, and understand your financial habits — all while keeping your data completely private.
+Budgetzilla is a **local-first** finance tool built for people who want to track money without being the product. It's built for speed, privacy, and full control over financial data.
 
 ## Why Budgetzilla?
 
-### Local-First Philosophy
+### 🛡️ Privacy by Design
 
-Unlike traditional budgeting apps that store your sensitive financial data on remote servers, Budgetzilla keeps everything on your device:
+Most budgeting apps require data to be stored on remote servers. Budgetzilla does not. Financial data stays on the device.
 
-- **Privacy**: Your financial data never leaves your browser
-- **Speed**: No network latency — everything is instant
-- **Offline**: Works without internet connection
-- **Control**: Export your data anytime in standard formats
+- **Total Control**: Data is stored in the browser's private storage (OPFS) via SQLite.
+- **Offline First**: Works without an internet connection.
+- **Private AI**: Uses **Gemma 4** to scan receipts directly on the GPU. No cloud APIs, no data harvesting.
 
-### Modern Technology
+### ⚡ Modern Speed
 
-Budgetzilla is built with modern web technologies:
+- **React 18** + **SQLite WASM** = Instant responsiveness.
+- **Tauri** = Native performance with a sleek web UI.
 
-- **React 18** with TypeScript for a responsive UI
-- **SQLite WASM** for robust local database storage
-- **OPFS** (Origin Private File System) for persistent browser storage
-- **Optional Google Drive sync** for backup when you want it
+## 💎 Main Features
 
-### Native macOS App
+- **Receipt Scanner** — Snap a photo and let the AI extract amount, merchant, and date.
+- **Transactions** — Full control over categorization and powerful search. 
+- **Dashboard** — Detailed insights with clean, Apple-inspired charts.
+- **Drive Sync** — Securely backup to a personal Google Drive. 
 
-While Budgetzilla runs great in any modern browser, we also provide a native macOS app that:
+## 🏗️ Who is this for?
 
-- Runs as a standalone application
-- Has native menus and keyboard shortcuts
-- Stores data in the app's container for better persistence
+- **Privacy Advocates**: People who prefer not to share bank statements with third-party servers.
+- **Developers**: Anyone who appreciates a well-built, local-first architecture. 
+- **Efficiency Ninjas**: Users who want keyboard-driven navigation (`Cmd+K`, `N`) and instant load times.
 
-## Key Features
-
-- **Transaction tracking** with categories and tags
-- **Budgetzilla management** with monthly allocations
-- **Visual dashboard** with charts and trends
-- **Fast search** (Cmd+K) across all transactions
-- **Import/Export** for data portability
-- **Dark mode** support
-
-## Who Is This For?
-
-Budgetzilla is ideal for:
-
-- Privacy-conscious individuals who want control over their financial data
-- Users who prefer local applications over cloud services
-- Developers interested in local-first architecture
-- Anyone looking for a simple, focused budgeting tool
-
-Ready to get started? Head to the [Quick Start](/getting-started/quick-start/) guide.
+Ready? [Get started here](/getting-started/quick-start/).

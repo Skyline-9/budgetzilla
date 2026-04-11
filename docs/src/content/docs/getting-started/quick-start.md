@@ -54,9 +54,18 @@ Once Budgetzilla is running:
 | `N` | Add new transaction |
 | `Esc` | Close dialogs |
 
-## Next Steps
+## 🌐 Optional: Ollama CORS Setup
 
-- [Full installation guide](/getting-started/installation/)
-- [Building the desktop app](/development/desktop-build/)
-- [Understanding transactions](/features/transactions/)
-- [Setting up Google Drive sync](/features/google-drive-sync/)
+If you use the hosted version of Budgetzilla (or any non-localhost URL) and want to use **Ollama** for AI scanning, you must configure CORS:
+
+**macOS:**
+```bash
+launchctl setenv OLLAMA_ORIGINS "https://budgetzilla-app.vercel.app,http://localhost:5173"
+# Restart Ollama app
+```
+
+**Windows:**
+1. Set User Environment Variable `OLLAMA_ORIGINS` to `https://budgetzilla-app.vercel.app,http://localhost:5173`.
+2. Restart Ollama app.
+
+For more details, see the [Local AI Guide](/features/local-ai/).

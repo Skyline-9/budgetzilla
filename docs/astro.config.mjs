@@ -32,6 +32,7 @@ export default defineConfig({
 						{ label: 'Categories', slug: 'features/categories' },
 						{ label: 'Budgets', slug: 'features/budgets' },
 						{ label: 'Dashboard', slug: 'features/dashboard' },
+						{ label: 'Local AI Scanner', slug: 'features/local-ai' },
 						{ label: 'Import & Export', slug: 'features/import-export' },
 						{ label: 'Google Drive Sync', slug: 'features/google-drive-sync' },
 					],

@@ -58,10 +58,21 @@ WebView-based frontend across macOS, Windows, and Linux.
 ## Key modules (webapp)
 
 - `src/api/`: API client selection and request helpers.
-- `src/db/`: SQLite schema and data access helpers.
-- `src/components/`: reusable UI building blocks.
-- `src/pages/`: page-level composition and data queries.
-- `src/services/`: Drive sync, import/export, migrations.
+- `src/db/`: SQLite schema and data access helpers. Uses Tauri SQL plugin (native) or sql.js + OPFS (browser).
+- `src/services/`: Core logic for AI inference, Drive sync, import/export, and migrations.
+  - `webgpuInference.ts`: Gemma 4 via Hugging Face Transformers (WebGPU).
+  - `localAiParser.ts`: Orchestrates between WebGPU and Ollama for transaction extraction.
+  - `driveSync.ts`: Google Drive persistence layer.
+- `src/components/`: Reusable UI building blocks.
+- `src/pages/`: Page-level composition and data queries.
+
+## AI Engine
+
+Budgetzilla uses a local-first AI stack for parsing documents:
+
+1. **WebGPU (Default):** Runs `onnx-community/gemma-4-E2B-it-ONNX` directly in the browser.
+2. **Ollama (Fallback):** Connects to a local Ollama instance running the `gemma4` model.
+3. **Prompting:** The system uses a structured prompt to convert OCR text or image pixels into a valid JSON array of transaction objects.
 
 ## Non-goals
 
