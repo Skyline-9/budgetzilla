@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AppShell } from "@/components/layout/AppShell";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider, useTheme } from "@/providers/ThemeProvider";
@@ -56,6 +57,7 @@ export function App() {
   return (
     <ThemeProvider>
       <AppInner />
+      <SpeedInsights />
     </ThemeProvider>
   );
 }
