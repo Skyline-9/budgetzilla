@@ -60,8 +60,7 @@ If you use the hosted version of Budgetzilla (or any non-localhost URL) and want
 
 **macOS:**
 ```bash
-launchctl setenv OLLAMA_ORIGINS "https://budgetzilla-app.vercel.app,http://localhost:5173"
-# Restart Ollama app
+OLLAMA_ORIGINS="https://budgetzilla-app.vercel.app,http://localhost:5173" ollama serve
 ```
 
 **Windows:**

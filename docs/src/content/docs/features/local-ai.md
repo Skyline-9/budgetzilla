@@ -62,9 +62,8 @@ Budgetzilla is **local-first**, which means your financial data never leaves you
 
 **macOS:**
 ```bash
-# Set the environment variable
-launchctl setenv OLLAMA_ORIGINS "https://budgetzilla-app.vercel.app,http://localhost:5173"
-# Restart the Ollama application
+# Run Ollama with CORS origins allowed
+OLLAMA_ORIGINS="https://budgetzilla-app.vercel.app,http://localhost:5173" ollama serve
 ```
 
 **Windows:**
