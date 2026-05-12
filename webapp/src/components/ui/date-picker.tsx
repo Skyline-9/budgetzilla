@@ -312,7 +312,10 @@ export function DateInput({
             type="text"
             value={inputValue}
             onChange={handleInputChange}
-            onFocus={handleInputFocus}
+            onFocus={() => {
+              handleInputFocus();
+              setOpen(true);
+            }}
             onBlur={handleInputBlur}
             placeholder={placeholder}
             disabled={disabled}
@@ -334,7 +337,7 @@ export function DateInput({
           </button>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-3" align="start">
+      <PopoverContent className="w-auto p-3" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
         <MonthYearNav
           displayMonth={month}
           onMonthChange={setMonth}
