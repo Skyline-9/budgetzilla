@@ -37,7 +37,9 @@ vi.mock("@/components/ui/select", () => ({
 
 // Mock DayPicker
 vi.mock("react-day-picker", () => ({
-  DayPicker: () => <div data-testid="day-picker" />,
+  DayPicker: ({ month }: any) => (
+    <div data-testid="day-picker" data-month={month?.toISOString()} />
+  ),
 }));
 
 describe("DateInput", () => {
@@ -64,5 +66,23 @@ describe("DateInput", () => {
     
     const popoverContent = screen.getByTestId("popover-content");
     expect(popoverContent.getAttribute("data-has-on-open-auto-focus")).toBe("true");
+  });
+
+  it("syncs the calendar view in real-time while typing a valid date", () => {
+    const onChange = vi.fn();
+    render(<DateInput onChange={onChange} />);
+    
+    const input = screen.getByPlaceholderText("mm/dd/yyyy");
+    const dayPicker = screen.getByTestId("day-picker");
+    
+    // Initial month should be current month (approximately)
+    const initialMonth = new Date(dayPicker.getAttribute("data-month")!);
+    
+    // Type a date in a different month/year
+    fireEvent.change(input, { target: { value: "01/15/2020" } });
+    
+    const updatedMonth = new Date(dayPicker.getAttribute("data-month")!);
+    expect(updatedMonth.getFullYear()).toBe(2020);
+    expect(updatedMonth.getMonth()).toBe(0); // January
   });
 });

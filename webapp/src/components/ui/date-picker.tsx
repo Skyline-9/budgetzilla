@@ -246,7 +246,20 @@ export function DateInput({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+    const val = e.target.value;
+    setInputValue(val);
+
+    // Try to parse partial date to update calendar view
+    const formats = ["MM/dd/yyyy", "M/d/yyyy", "MM-dd-yyyy", "M-d-yyyy", "yyyy-MM-dd"];
+    for (const fmt of formats) {
+      const d = parse(val, fmt, new Date());
+      if (!isNaN(d.getTime())) {
+        setMonth(d);
+        // We don't call onChange here to avoid premature validation/updates
+        // but we update the calendar view
+        break;
+      }
+    }
   };
 
   const handleInputFocus = () => {
