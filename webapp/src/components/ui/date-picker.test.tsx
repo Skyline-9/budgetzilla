@@ -10,12 +10,13 @@ afterEach(cleanup);
 
 // Mock Radix UI Popover since it can be tricky in tests
 vi.mock("@/components/ui/popover", () => ({
-  Popover: ({ children, open }: any) => (
-    <div data-testid="popover" data-open={open}>
+  Popover: ({ children, open, onOpenChange }: any) => (
+    <div data-testid="popover" data-open={open} onClick={() => onOpenChange?.(!open)}>
       {children}
     </div>
   ),
-  PopoverTrigger: ({ children }: any) => <div>{children}</div>,
+  PopoverTrigger: ({ children }: any) => <div data-testid="popover-trigger">{children}</div>,
+  PopoverAnchor: ({ children }: any) => <div data-testid="popover-anchor">{children}</div>,
   PopoverContent: ({ children, onOpenAutoFocus }: any) => (
     <div 
       data-testid="popover-content" 

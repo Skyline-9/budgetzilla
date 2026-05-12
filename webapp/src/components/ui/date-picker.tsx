@@ -3,7 +3,7 @@ import { format, parse, setMonth, setYear } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 
@@ -323,7 +323,7 @@ export function DateInput({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverAnchor asChild>
         <div className="relative">
           <input
             id={id}
@@ -345,16 +345,17 @@ export function DateInput({
               className
             )}
           />
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-            tabIndex={-1}
-          >
-            <CalendarIcon className="h-4 w-4" />
-          </button>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+              tabIndex={-1}
+            >
+              <CalendarIcon className="h-4 w-4" />
+            </button>
+          </PopoverTrigger>
         </div>
-      </PopoverTrigger>
+      </PopoverAnchor>
       <PopoverContent className="w-auto p-3" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
         <MonthYearNav
           displayMonth={month}
