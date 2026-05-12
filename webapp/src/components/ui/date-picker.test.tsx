@@ -10,12 +10,27 @@ afterEach(cleanup);
 
 // Mock Radix UI Popover since it can be tricky in tests
 vi.mock("@/components/ui/popover", () => ({
-  Popover: ({ children, open, onOpenChange }: any) => (
-    <div data-testid="popover" data-open={open} onClick={() => onOpenChange?.(!open)}>
+  Popover: ({ children, open, onOpenChange }: any) => {
+    // We need to capture the open state change but not toggle it automatically on click 
+    // because that's not how the real component works with the anchor.
+    return (
+      <div data-testid="popover" data-open={open}>
+        {React.Children.map(children, (child: any) => {
+          if (child.type?.name === "PopoverTrigger" || child.props?.asChild) {
+            return React.cloneElement(child, {
+              onClick: () => onOpenChange?.(!open)
+            });
+          }
+          return child;
+        })}
+      </div>
+    );
+  },
+  PopoverTrigger: ({ children, onClick }: any) => (
+    <div data-testid="popover-trigger" onClick={onClick}>
       {children}
     </div>
   ),
-  PopoverTrigger: ({ children }: any) => <div data-testid="popover-trigger">{children}</div>,
   PopoverAnchor: ({ children }: any) => <div data-testid="popover-anchor">{children}</div>,
   PopoverContent: ({ children, onOpenAutoFocus }: any) => (
     <div 
@@ -71,6 +86,57 @@ describe("DateInput", () => {
     
     const popoverContent = screen.getByTestId("popover-content");
     expect(popoverContent.getAttribute("data-has-on-open-auto-focus")).toBe("true");
+  });
+
+  it("stays open after a full click sequence (mousedown -> focus -> mouseup -> click)", () => {
+    const onChange = vi.fn();
+    render(<DateInput onChange={onChange} />);
+    
+    const input = screen.getByPlaceholderText("mm/dd/yyyy");
+    const popover = screen.getByTestId("popover");
+    
+    expect(popover.getAttribute("data-open")).toBe("false");
+    
+    // Simulate full sequence
+    fireEvent.pointerDown(input);
+    fireEvent.mouseDown(input);
+    fireEvent.focus(input);
+    fireEvent.mouseUp(input);
+    fireEvent.click(input);
+    
+    // Popover should be open
+    expect(popover.getAttribute("data-open")).toBe("true");
+    
+    // Verify onChange still works while open
+    fireEvent.change(input, { target: { value: "12/25/2023" } });
+    expect(onChange).toHaveBeenCalledWith("2023-12-25");
+    
+    // Popover should STILL be open after typing
+    expect(popover.getAttribute("data-open")).toBe("true");
+  });
+
+  it("keeps focus on the input field when the popover opens", () => {
+    const TestWrapper = () => {
+      const [value, setValue] = React.useState<string | undefined>(undefined);
+      return <DateInput value={value} onChange={setValue} />;
+    };
+    render(<TestWrapper />);
+    
+    const input = screen.getByPlaceholderText("mm/dd/yyyy");
+    
+    // Set focus
+    console.log("Before focus, activeElement:", document.activeElement?.tagName);
+    input.focus();
+    console.log("After focus, activeElement:", document.activeElement?.tagName);
+    expect(document.activeElement).toBe(input);
+    
+    // Popover should be open
+    const popover = screen.getByTestId("popover");
+    console.log("Popover data-open:", popover.getAttribute("data-open"));
+    expect(popover.getAttribute("data-open")).toBe("true");
+    
+    // Focus should STILL be on the input (not moved to popover)
+    expect(document.activeElement).toBe(input);
   });
 
   it("syncs the calendar view and selection in real-time while typing a valid date", () => {
