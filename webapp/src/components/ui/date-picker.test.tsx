@@ -37,8 +37,12 @@ vi.mock("@/components/ui/select", () => ({
 
 // Mock DayPicker
 vi.mock("react-day-picker", () => ({
-  DayPicker: ({ month }: any) => (
-    <div data-testid="day-picker" data-month={month?.toISOString()} />
+  DayPicker: ({ month, selected }: any) => (
+    <div 
+      data-testid="day-picker" 
+      data-month={month?.toISOString()} 
+      data-selected={selected?.toISOString()}
+    />
   ),
 }));
 
@@ -68,21 +72,33 @@ describe("DateInput", () => {
     expect(popoverContent.getAttribute("data-has-on-open-auto-focus")).toBe("true");
   });
 
-  it("syncs the calendar view in real-time while typing a valid date", () => {
-    const onChange = vi.fn();
-    render(<DateInput onChange={onChange} />);
+  it("syncs the calendar view and selection in real-time while typing a valid date", () => {
+    const TestWrapper = () => {
+      const [value, setValue] = React.useState<string | undefined>(undefined);
+      return <DateInput value={value} onChange={setValue} />;
+    };
+    render(<TestWrapper />);
     
     const input = screen.getByPlaceholderText("mm/dd/yyyy");
-    const dayPicker = screen.getByTestId("day-picker");
-    
-    // Initial month should be current month (approximately)
-    const initialMonth = new Date(dayPicker.getAttribute("data-month")!);
     
     // Type a date in a different month/year
     fireEvent.change(input, { target: { value: "01/15/2020" } });
     
-    const updatedMonth = new Date(dayPicker.getAttribute("data-month")!);
+    const dayPicker = screen.getByTestId("day-picker");
+
+    // Verify month view updated
+    const updatedMonthValue = dayPicker.getAttribute("data-month");
+    expect(updatedMonthValue).not.toBeNull();
+    const updatedMonth = new Date(updatedMonthValue!);
     expect(updatedMonth.getFullYear()).toBe(2020);
     expect(updatedMonth.getMonth()).toBe(0); // January
+
+    // Verify selection updated
+    const selectedDateValue = dayPicker.getAttribute("data-selected");
+    expect(selectedDateValue).not.toBeNull();
+    const parsedSelected = new Date(selectedDateValue!);
+    expect(parsedSelected.getFullYear()).toBe(2020);
+    expect(parsedSelected.getMonth()).toBe(0);
+    expect(parsedSelected.getDate()).toBe(15);
   });
 });

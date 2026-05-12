@@ -255,8 +255,13 @@ export function DateInput({
       const d = parse(val, fmt, new Date());
       if (!isNaN(d.getTime())) {
         setMonth(d);
-        // We don't call onChange here to avoid premature validation/updates
-        // but we update the calendar view
+        
+        // If it looks like a complete date, sync the selection too
+        // We use a regex to ensure we have a full date (year is 4 digits)
+        const isComplete = /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(val) || /^\d{4}-\d{2}-\d{2}$/.test(val);
+        if (isComplete) {
+          onChange(formatToYmd(d));
+        }
         break;
       }
     }
