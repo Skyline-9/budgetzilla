@@ -225,6 +225,7 @@ export function DateInput({
   const [month, setMonth] = React.useState<Date>(parseDate(value) ?? new Date());
   const [isFocused, setIsFocused] = React.useState(false);
   const selected = parseDate(value);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Sync from parent value when it changes externally
   React.useEffect(() => {
@@ -324,7 +325,7 @@ export function DateInput({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverAnchor asChild>
-        <div className="relative">
+        <div className="relative" ref={containerRef}>
           <input
             id={id}
             type="text"
@@ -364,6 +365,11 @@ export function DateInput({
         className="w-auto p-3" 
         align="start" 
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => {
+          if (containerRef.current?.contains(e.target as Node)) {
+            e.preventDefault();
+          }
+        }}
       >
         <MonthYearNav
           displayMonth={month}
