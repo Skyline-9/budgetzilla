@@ -6,13 +6,13 @@ import { exportDatabase, importDatabase, persistDatabase } from "@/db/sqlite";
 import { runMigrations } from "@/db/schema";
 import {
   ensureAuthenticated,
-  getGapiClient,
   isAuthenticated,
   revokeToken,
   requestAccessTokenWithConsent,
   getStoredToken,
   setClientId,
   initGoogleAuth,
+  clearStoredToken,
 } from "./googleAuth";
 import type { DriveStatus, DriveSyncResponse, DriveSyncResult } from "@/types";
 
@@ -74,17 +74,30 @@ async function hashDatabase(): Promise<string> {
  * Find the database file in Drive's appDataFolder.
  */
 async function findDriveFile(): Promise<{ id: string; md5Checksum?: string; modifiedTime?: string } | null> {
-  const client = getGapiClient();
-  if (!client) throw new Error("Google API client not loaded");
+  const token = getStoredToken();
+  if (!token) throw new Error("Not authenticated");
 
-  const response = await client.drive.files.list({
-    spaces: "appDataFolder",
-    q: `name='${DB_FILENAME}' and trashed=false`,
-    fields: "files(id,name,md5Checksum,modifiedTime)",
-    pageSize: 1,
+  // We use fetch instead of gapi client for more reliable auth header handling across all environments
+  const q = encodeURIComponent(`name='${DB_FILENAME}' and trashed=false`);
+  const url = `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id,name,md5Checksum,modifiedTime)&pageSize=1`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
-  const files = response.result.files;
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearStoredToken();
+      throw new Error("Google session expired or invalid. Please connect again.");
+    }
+    const errorBody = await response.text();
+    throw new Error(`Drive list failed: ${response.status} ${response.statusText}${errorBody ? ` - ${errorBody}` : ""}`);
+  }
+
+  const result = await response.json();
+  const files = result.files;
   if (files && files.length > 0) {
     return {
       id: files[0].id!,
@@ -122,6 +135,10 @@ async function uploadDatabase(existingFileId?: string): Promise<{ id: string; md
     );
 
     if (!response.ok) {
+      if (response.status === 401) {
+        clearStoredToken();
+        throw new Error("Google session expired or invalid. Please connect again.");
+      }
       throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
     }
 
@@ -149,6 +166,10 @@ async function uploadDatabase(existingFileId?: string): Promise<{ id: string; md
     );
 
     if (!response.ok) {
+      if (response.status === 401) {
+        clearStoredToken();
+        throw new Error("Google session expired or invalid. Please connect again.");
+      }
       throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
     }
 
@@ -173,6 +194,10 @@ async function downloadDatabase(fileId: string): Promise<Uint8Array> {
   );
 
   if (!response.ok) {
+    if (response.status === 401) {
+      clearStoredToken();
+      throw new Error("Google session expired or invalid. Please connect again.");
+    }
     throw new Error(`Download failed: ${response.status} ${response.statusText}`);
   }
 

@@ -256,7 +256,7 @@ function saveToken(token: string, expiresIn: number): void {
 /**
  * Clear the stored token.
  */
-function clearStoredToken(): void {
+export function clearStoredToken(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(TOKEN_EXPIRY_KEY);
   window.dispatchEvent(new CustomEvent("google-auth-changed"));
@@ -267,7 +267,11 @@ function clearStoredToken(): void {
  */
 function setGapiToken(token: string): void {
   if (window.gapi?.client) {
-    window.gapi.client.setToken({ access_token: token });
+    try {
+      window.gapi.client.setToken({ access_token: token });
+    } catch (err) {
+      console.warn("Failed to set gapi token:", err);
+    }
   }
 }
 
