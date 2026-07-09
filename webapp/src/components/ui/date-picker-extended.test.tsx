@@ -16,6 +16,7 @@ vi.mock("@/components/ui/popover", () => ({
     </div>
   ),
   PopoverTrigger: ({ children }: any) => <div>{children}</div>,
+  PopoverAnchor: ({ children }: any) => <>{children}</>,
   PopoverContent: ({ children, onOpenAutoFocus }: any) => (
     <div data-testid="popover-content" data-has-on-open-auto-focus={String(!!onOpenAutoFocus)}>
       {children}

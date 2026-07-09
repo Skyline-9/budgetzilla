@@ -1,9 +1,8 @@
 /**
  * Database Provider - Initializes SQLite WASM on app startup.
- * Only active when API_MODE is "local".
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { API_MODE, GOOGLE_CLIENT_ID } from "@/api/config";
+import { GOOGLE_CLIENT_ID } from "@/api/config";
 import { initDatabase, isDatabaseReady } from "@/db/sqlite";
 import { runMigrations } from "@/db/schema";
 import { setDriveService } from "@/api/local/client";
@@ -32,12 +31,6 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Only initialize database in local mode
-    if (API_MODE !== "local") {
-      setIsReady(true);
-      return;
-    }
-
     async function init() {
       try {
         // Initialize SQLite database
@@ -71,8 +64,8 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     init();
   }, []);
 
-  // Show loading state while initializing in local mode
-  if (API_MODE === "local" && !isReady && !error) {
+  // Show loading state while initializing
+  if (!isReady && !error) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="text-center">

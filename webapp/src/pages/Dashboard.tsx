@@ -26,7 +26,10 @@ import { BudgetCard } from "@/components/dashboard/BudgetCard";
 import { CashFlowSummary } from "@/components/dashboard/CashFlowCard";
 import { QuickInsights } from "@/components/dashboard/QuickInsights";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { AnimatedMoneyCents } from "@/components/motion/AnimatedNumber";
+import { RecapHero } from "@/components/recap/RecapHero";
+import { buildRecapStats } from "@/components/recap/useRecapStats";
 import { cn } from "@/lib/cn";
 import { formatCents, formatPercent01 } from "@/lib/format";
 import {
@@ -136,6 +139,7 @@ export function DashboardPage() {
   const [sp, setSp] = useSearchParams();
   const from = readString(sp, "from");
   const to = readString(sp, "to");
+  const [recapOpen, setRecapOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (from || to) return;
@@ -260,6 +264,17 @@ export function DashboardPage() {
     return { income, net };
   }, [chartsQuery.data?.monthlyTrend]);
 
+  const recapStats = React.useMemo(() => {
+    const top = chartsQuery.data?.categoryShare?.[0];
+    return buildRecapStats({
+      incomeCents: summaryQuery.data?.incomeCents ?? 0,
+      expenseCents: summaryQuery.data?.expenseCents ?? 0,
+      netCents: summaryQuery.data?.netCents ?? 0,
+      topCategoryName: top?.categoryName ?? null,
+      topCategoryCents: top?.totalCents ?? 0,
+    });
+  }, [summaryQuery.data, chartsQuery.data]);
+
   const monthsInRange = React.useMemo(() => monthKeysForRange(from, to), [from, to]);
   const budgetQueries = useOverallBudgetsQuery(monthsInRange);
   const budgetsLoading = monthsInRange.length ? budgetQueries.some((q) => q.isLoading) : false;
@@ -318,11 +333,16 @@ export function DashboardPage() {
       {/* Header */}
       <motion.div variants={itemVariants}>
       <section className="space-y-3">
-        <div>
-          <div className="text-2xl font-semibold tracking-tight">Dashboard</div>
-          <div className="mt-1 text-sm text-muted-foreground text-balance">
-            {rangeLabel}. Click a category in charts to filter Transactions.
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-2xl font-semibold tracking-tight">Dashboard</div>
+            <div className="mt-1 text-sm text-muted-foreground text-balance">
+              {rangeLabel}. Click a category in charts to filter Transactions.
+            </div>
           </div>
+          <Button variant="secondary" size="sm" onClick={() => setRecapOpen(true)}>
+            View recap
+          </Button>
         </div>
 
         <ActiveFilterChips filters={filters} categoriesById={categoriesById} onChange={setFilters} />
@@ -400,6 +420,8 @@ export function DashboardPage() {
       </motion.div>
 
       <AiChatWidget />
+
+      {recapOpen && <RecapHero stats={recapStats} onClose={() => setRecapOpen(false)} />}
     </motion.div>
   );
 }

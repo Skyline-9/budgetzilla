@@ -7,11 +7,7 @@ import { useCategoriesQuery, useCreateTransactionMutation } from "@/api/queries"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileImage, FileText, Loader2, Trash2, CheckCircle2, Calendar, Store, DollarSign, Tag, CornerDownRight, X } from "lucide-react";
-import { SparklesIcon } from "@/components/ui/sparkles";
-import { DownloadIcon } from "@/components/ui/download";
-import { TrendingUpIcon } from "@/components/ui/trending-up";
-import { TrendingDownIcon } from "@/components/ui/trending-down";
+import { FileImage, FileText, Loader2, Trash2, CheckCircle2, Calendar, Store, DollarSign, Tag, CornerDownRight, X, Sparkles, Download, TrendingUp, TrendingDown } from "lucide-react";
 import type { TransactionCreate } from "@/types";
 import { DateInput } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -285,7 +281,7 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
           >
             {modelStatus === "downloading" ? (
               <>
-                <DownloadIcon size={16} className="mr-2 animate-pulse" />
+                <Download size={16} className="mr-2 animate-pulse" />
                 Downloading AI model... {downloadProgress}%
               </>
             ) : isScanning ? (
@@ -295,7 +291,7 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
               </>
             ) : (
               <>
-                <SparklesIcon size={16} className="mr-2" />
+                <Sparkles size={16} className="mr-2" />
                 Scan {files.length > 0 ? `${files.length} Document${files.length > 1 ? "s" : ""}` : "Documents"}
               </>
             )}
@@ -382,9 +378,9 @@ export function AiScanner({ onComplete }: { onComplete?: () => void }) {
                             <div className="flex min-w-0 items-center gap-2">
                               <span className="shrink-0 text-muted-foreground">
                                 {c.kind === "income" ? (
-                                  <TrendingUpIcon size={14} className="text-income" />
+                                  <TrendingUp size={14} className="text-income" />
                                 ) : (
-                                  <TrendingDownIcon size={14} className="text-expense" />
+                                  <TrendingDown size={14} className="text-expense" />
                                 )}
                               </span>
                               {isChild ? (

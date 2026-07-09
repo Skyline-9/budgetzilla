@@ -93,7 +93,7 @@ export function AppShell() {
 
   return (
     <MobileSidebarProvider>
-      <div className="min-h-screen bg-background surface-gradient">
+      <div className="min-h-screen bg-background">
         <div className="flex min-h-screen">
           <Sidebar />
           <div className="flex min-w-0 flex-1 flex-col">

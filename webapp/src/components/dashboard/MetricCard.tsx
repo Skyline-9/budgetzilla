@@ -1,10 +1,7 @@
 import React from "react";
-import { Minus } from "lucide-react";
-import { TrendingUpIcon } from "@/components/ui/trending-up";
-import { TrendingDownIcon } from "@/components/ui/trending-down";
+import { Minus, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
-import dotsOverlayUrl from "@/assets/dashboard/dots-overlay.svg";
 
 export type MetricDelta = {
   label: string; // e.g. "vs prior month"
@@ -183,14 +180,8 @@ export function MetricCard({
       role="region"
       aria-label={`${title} metric card`}
       className={cn(
-        "group relative overflow-hidden rounded-xl sm:rounded-squircle bg-card/85",
-        variant === "hero" ? "corner-glow-hero shadow-surface-elevated" : "corner-glow shadow-surface",
-        tone === "income" && "tint-income",
-        tone === "expense" && "tint-expense",
-        tone === "accent" && "tint-accent",
-        tone === "neutral" && "tint-neutral",
-        tone === "hero" && "tint-hero",
-        tone === "warm" && "tint-warm",
+        "group relative overflow-hidden rounded-xl sm:rounded-squircle border border-border/60 bg-card/85",
+        variant === "hero" ? "shadow-surface-elevated" : "shadow-surface",
         variant === "hero" ? "p-6 md:p-7 hover:-translate-y-1" : "p-5 hover:-translate-y-0.5",
         "transition-all duration-200 ease-out",
         "hover:bg-card/90 hover:shadow-lg",
@@ -198,18 +189,13 @@ export function MetricCard({
         className,
       )}
     >
-      {showDots && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.04]">
-          <img src={dotsOverlayUrl} alt="" className="h-full w-full object-cover" />
-        </div>
-      )}
       <div className="relative z-10 flex items-start justify-between gap-6">
         <div className="min-w-0">
           <div
             className={cn(
               "flex items-center gap-2",
-              "text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/80",
-              variant === "hero" && "text-xs text-foreground/70",
+              "text-xs font-semibold text-muted-foreground/80",
+              variant === "hero" && "text-foreground/70",
             )}
           >
             {icon ? (
@@ -217,11 +203,6 @@ export function MetricCard({
                 className={cn(
                   "inline-flex h-6 w-6 items-center justify-center rounded-xl",
                   "bg-background/40 text-muted-foreground",
-                  tone === "income" && "bg-income/10 text-income",
-                  tone === "expense" && "bg-expense/10 text-expense",
-                  tone === "accent" && "bg-primary/10 text-primary",
-                  tone === "hero" && "bg-hero/10 text-hero",
-                  tone === "warm" && "bg-warm/10 text-warm",
                 )}
               >
                 {icon}
@@ -236,7 +217,7 @@ export function MetricCard({
           </div>
           <div
             className={cn(
-              "mt-2 font-semibold tracking-tight tabular-nums",
+              "mt-2 font-display font-semibold tracking-tight tabular-nums",
               variant === "hero" ? "text-4xl sm:text-5xl" : "text-3xl",
             )}
           >
@@ -255,22 +236,14 @@ export function MetricCard({
               </div>
             ) : null}
             {savingsRate !== undefined && (
-              <div className="rounded-lg bg-warm/10 px-1.5 py-0.5 text-[10px] font-bold text-warm uppercase tracking-wider">
+              <div className="rounded-lg bg-income/10 px-1.5 py-0.5 text-[10px] font-bold text-income">
                 {Math.round(savingsRate * 100)}% Saved
               </div>
             )}
           </div>
         </div>
 
-        <div
-          className={cn(
-            "-mr-3 flex shrink-0 self-center flex-col items-end gap-2",
-            tone === "income" && "text-income",
-            tone === "expense" && "text-expense",
-            tone === "accent" && "text-primary",
-            tone === "hero" && "text-hero",
-          )}
-        >
+        <div className="-mr-3 flex shrink-0 self-center flex-col items-end gap-2 text-primary">
           {sparkline?.length ? <Sparkline values={sparkline} className="opacity-60" /> : null}
         </div>
       </div>
@@ -286,8 +259,8 @@ export function MetricCard({
               delta.intent === "neutral" && "text-muted-foreground",
             )}
           >
-            {delta.intent === "positive" && <TrendingUpIcon size={12} aria-hidden />}
-            {delta.intent === "negative" && <TrendingDownIcon size={12} aria-hidden />}
+            {delta.intent === "positive" && <TrendingUp size={12} aria-hidden />}
+            {delta.intent === "negative" && <TrendingDown size={12} aria-hidden />}
             {delta.intent === "neutral" && <Minus className="h-3 w-3" aria-hidden />}
             {delta.valueText}
           </span>

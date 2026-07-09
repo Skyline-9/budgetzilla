@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Stars } from "lucide-react"; // Changed Sparkles to Stars
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/cn";
 
 const THINKING_WORDS = [

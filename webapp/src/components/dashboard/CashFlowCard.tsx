@@ -22,15 +22,15 @@ function CashFlowStat({ label, cents, delta, tone, showSavingsRate }: CashFlowSt
   return (
     <div className="group/stat flex items-center justify-between gap-8 py-2">
       <div className="min-w-0">
-        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
+        <div className="text-xs font-semibold text-muted-foreground/60">
           {label}
         </div>
         <div className="mt-1 flex items-center gap-3">
-          <div className={cn("text-3xl font-bold tracking-tighter tabular-nums", valueColor)}>
+          <div className={cn("font-display text-3xl font-bold tracking-tight tabular-nums", valueColor)}>
             <AnimatedMoneyCents cents={cents} />
           </div>
           {showSavingsRate !== undefined && (
-            <div className="rounded-full bg-warm/10 px-2 py-0.5 text-[10px] font-bold text-warm uppercase tracking-wider">
+            <div className="rounded-full bg-income/10 px-2 py-0.5 text-[10px] font-bold text-income">
               {Math.round(showSavingsRate * 100)}% Saved
             </div>
           )}
@@ -56,7 +56,7 @@ function CashFlowStat({ label, cents, delta, tone, showSavingsRate }: CashFlowSt
             )}
             {delta.valueText}
           </div>
-          <div className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-widest">
+          <div className="text-[11px] font-medium text-muted-foreground/50">
             {delta.label}
           </div>
         </div>

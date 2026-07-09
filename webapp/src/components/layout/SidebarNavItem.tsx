@@ -66,6 +66,7 @@ export function SidebarNavItem({
         className={cn(
           "opacity-70 group-hover:opacity-100 [&>svg]:h-5 [&>svg]:w-5 transition-opacity",
           iconClassName,
+          isCurrentlyActive && "text-primary opacity-100",
           collapsed ? "grid h-full w-full place-items-center" : "inline-flex items-center justify-center",
           "[&>svg]:block",
         )}

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { MessageSquare, X, Loader2, Bot, User } from "lucide-react";
-import { SparklesIcon } from "@/components/ui/sparkles";
-import { SendIcon } from "@/components/ui/send";
+import { MessageSquare, X, Loader2, Bot, User, Sparkles, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,7 +99,7 @@ export function AiChatWidget() {
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-glow-accent hover:-translate-y-1 transition-all bg-card/80 backdrop-blur-lg border border-border/60 text-accent-foreground animate-pulse-slow"
           onClick={() => setIsOpen(true)}
         >
-          <SparklesIcon size={28} className="text-violet-400" />
+          <Sparkles size={28} className="text-violet-400" />
         </Button>
       </div>
 
@@ -119,7 +117,7 @@ export function AiChatWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-background/40 rounded-t-2xl">
           <div className="flex items-center gap-2 font-semibold">
-            <SparklesIcon size={20} className="text-violet-400" />
+            <Sparkles size={20} className="text-violet-400" />
             Financial Assistant
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
@@ -176,7 +174,7 @@ export function AiChatWidget() {
               disabled={!input.trim() || isLoading}
               className="absolute right-1 h-8 w-8 text-accent hover:text-accent/80 hover:bg-accent/10"
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendIcon size={16} />}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send size={16} />}
             </Button>
           </div>
         </form>

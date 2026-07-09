@@ -7,8 +7,6 @@ import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { cn } from "@/lib/cn";
 import { formatCents } from "@/lib/format";
 import { BudgetDialog } from "@/components/dashboard/BudgetDialog";
-import dividerWaveUrl from "@/assets/dashboard/divider-wave.svg";
-import dotsOverlayUrl from "@/assets/dashboard/dots-overlay.svg";
 
 function pctText(v01: number) {
   const nf = new Intl.NumberFormat(undefined, { style: "percent", maximumFractionDigits: 0 });
@@ -56,29 +54,20 @@ export function BudgetCard(props: {
     <motion.div
       role="region"
       aria-label="Budget tracking card"
-      animate={overspent ? { scale: [1, 1.01, 1] } : {}}
-      transition={overspent ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
       className={cn(
-        "group relative overflow-hidden rounded-xl sm:rounded-squircle bg-card/85",
-        "p-6 md:p-7 corner-glow-hero tint-hero shadow-surface-elevated",
+        "group relative overflow-hidden rounded-xl sm:rounded-squircle border border-border/60 bg-card/85",
+        "p-6 md:p-7 shadow-surface-elevated",
         "transition-all duration-300 ease-out hover:-translate-y-1",
         "hover:bg-card/90 hover:shadow-surface-elevated",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        overspent && "ring-2 ring-danger/20",
+        overspent && "ring-2 ring-danger/40",
         className,
       )}
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.12] dark:opacity-[0.08]">
-        <img src={dotsOverlayUrl} alt="" className="h-full w-full object-cover" />
-      </div>
-      <div aria-hidden className="pointer-events-none absolute bottom-10 left-0 right-0 opacity-60 dark:opacity-50">
-        <img src={dividerWaveUrl} alt="" className="w-full" />
-      </div>
-
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-hero/10 text-hero">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Target className="h-4 w-4" />
             </span>
             <span>Budget (Adjusted)</span>
@@ -129,8 +118,8 @@ export function BudgetCard(props: {
               </div>
               <div
                 className={cn(
-                  "mt-1 text-4xl font-semibold tracking-tight tabular-nums",
-                  overspent ? "text-warning" : "text-hero",
+                  "mt-1 font-display text-4xl font-semibold tracking-tight tabular-nums",
+                  overspent ? "text-danger" : "text-primary",
                 )}
               >
                 {formatCents(remainingCents ?? 0)}
@@ -149,7 +138,7 @@ export function BudgetCard(props: {
           <div className="space-y-2">
             <div className="h-2 overflow-hidden rounded-full border border-border/60 bg-background/40">
               <div
-                className={cn("h-full rounded-full", overspent ? "bg-danger" : ratio >= 0.75 ? "bg-warning" : "bg-hero")}
+                className={cn("h-full rounded-full", overspent ? "bg-danger" : ratio >= 0.75 ? "bg-warning" : "bg-primary")}
                 style={{ width: `${Math.round(fill01 * 100)}%` }}
               />
             </div>

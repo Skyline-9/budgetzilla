@@ -17,6 +17,10 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
         squircle: "var(--radius-squircle)"
       },
+      fontFamily: {
+        sans: ["var(--font-sans)"],
+        display: ["var(--font-display)"]
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

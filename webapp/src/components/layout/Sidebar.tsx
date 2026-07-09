@@ -186,7 +186,6 @@ function SidebarContent({
           to="/dashboard"
           label="Dashboard"
           icon={<BarChart3 className="h-4 w-4" />}
-          iconClassName="text-blue-500"
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
@@ -196,7 +195,6 @@ function SidebarContent({
           to="/transactions"
           label="Transactions"
           icon={<Receipt className="h-4 w-4" />}
-          iconClassName="text-emerald-500"
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
@@ -206,7 +204,6 @@ function SidebarContent({
           to="/categories"
           label="Categories"
           icon={<Tags className="h-4 w-4" />}
-          iconClassName="text-orange-500"
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}
@@ -216,7 +213,6 @@ function SidebarContent({
           to="/settings"
           label="Settings"
           icon={<Settings className="h-4 w-4" />}
-          iconClassName="text-slate-500"
           collapsed={collapsed}
           search={search}
           onClick={onNavClick}

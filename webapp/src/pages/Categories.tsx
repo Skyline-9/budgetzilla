@@ -3,7 +3,7 @@ import { ChevronRight, GripVertical, MoreHorizontal, Pencil, Plus, FolderOpen } 
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { api } from "@/api";
 import { qk, useCategoriesQuery, useDeleteCategoryMutation } from "@/api/queries";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";

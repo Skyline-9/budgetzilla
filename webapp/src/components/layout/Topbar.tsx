@@ -1,7 +1,6 @@
 import React from "react";
 import { endOfMonth, format, startOfMonth, subMonths } from "date-fns";
-import { CalendarRange, Menu, Search } from "lucide-react";
-import { PlusIcon, type PlusIconHandle } from "@/components/ui/plus";
+import { CalendarRange, Menu, Search, Plus } from "lucide-react";
 import { MobileSidebarTrigger } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { DateInput } from "@/components/ui/date-picker";
@@ -69,7 +68,6 @@ export function Topbar({
   showAddButton = true,
   liveFilter = false,
 }: TopbarProps) {
-  const plusRef = React.useRef<PlusIconHandle>(null);
   const [q, setQ] = React.useState(query);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
@@ -246,10 +244,8 @@ export function Topbar({
             title="Shortcut: N"
             size="icon"
             className="md:w-auto md:px-4 group/add"
-            onMouseEnter={() => plusRef.current?.startAnimation()}
-            onMouseLeave={() => plusRef.current?.stopAnimation()}
           >
-            <PlusIcon ref={plusRef} size={16} />
+            <Plus size={16} />
             <span className="hidden md:inline">Add Transaction</span>
             <kbd className="hidden md:inline-flex items-center rounded-lg border border-primary-foreground/25 bg-primary-foreground/10 px-2 py-0.5 text-[11px] font-semibold text-primary-foreground/90">
               N

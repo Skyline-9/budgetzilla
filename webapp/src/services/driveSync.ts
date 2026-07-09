@@ -2,7 +2,7 @@
  * Google Drive sync service.
  * Syncs the SQLite database to Google Drive as a single file.
  */
-import { exportDatabase, importDatabase, persistDatabase } from "@/db/sqlite";
+import { exportDatabase, mergeRemoteDatabase } from "@/db/sqlite";
 import { runMigrations } from "@/db/schema";
 import {
   ensureAuthenticated,
@@ -267,13 +267,19 @@ export async function push(): Promise<DriveSyncResponse> {
   const state = getSyncState();
 
   try {
-    const localHash = await hashDatabase();
-    
     // Find existing file
     const driveFile = await findDriveFile();
     const fileId = driveFile?.id ?? state.fileId;
 
-    // Upload
+    // If a remote copy exists, merge it into local first so we never overwrite
+    // rows that only exist on Drive (e.g. added from another device).
+    if (driveFile) {
+      const remoteData = await downloadDatabase(driveFile.id);
+      await mergeRemoteDatabase(remoteData);
+      await runMigrations();
+    }
+
+    // Upload the (merged) local database
     const uploaded = await uploadDatabase(fileId);
 
     // Update state
@@ -281,7 +287,7 @@ export async function push(): Promise<DriveSyncResponse> {
       fileId: uploaded.id,
       lastSyncAt: new Date().toISOString(),
       driveMd5: uploaded.md5Checksum,
-      localHash,
+      localHash: await hashDatabase(),
     };
     saveSyncState(newState);
 
@@ -338,8 +344,8 @@ export async function pull(): Promise<DriveSyncResponse> {
     // Download
     const data = await downloadDatabase(fileId);
 
-    // Import into SQLite
-    await importDatabase(data);
+    // Merge into SQLite at the row level (never drops local-only rows)
+    const merged = await mergeRemoteDatabase(data);
     await runMigrations();
 
     // Update state
@@ -356,7 +362,7 @@ export async function pull(): Promise<DriveSyncResponse> {
       filename: DB_FILENAME,
       action: "pull",
       status: "ok",
-      message: "Downloaded from Drive",
+      message: merged > 0 ? `Merged ${merged} change(s) from Drive` : "Up to date with Drive",
     });
   } catch (err) {
     results.push({
@@ -374,10 +380,27 @@ export async function pull(): Promise<DriveSyncResponse> {
   };
 }
 
+// Serializes concurrent syncs. Auto-sync fires after every mutation, so rapid
+// edits could otherwise run overlapping syncs that race on the localStorage
+// state (read-modify-write) and clobber each other's baselines.
+let syncChain: Promise<unknown> = Promise.resolve();
+
 /**
- * Smart sync - detect changes and sync accordingly.
+ * Smart sync - detect changes and reconcile local and Drive via a row-level
+ * merge. Runs are serialized so concurrent triggers never race.
  */
-export async function smartSync(): Promise<DriveSyncResponse> {
+export function smartSync(): Promise<DriveSyncResponse> {
+  const run = syncChain.then(doSmartSync, doSmartSync);
+  syncChain = run.catch(() => {});
+  return run;
+}
+
+/**
+ * Reconcile local and Drive. Unlike a whole-file overwrite, every path that
+ * brings in remote data uses a row-level merge, so transactions that only exist
+ * on one device are never deleted.
+ */
+async function doSmartSync(): Promise<DriveSyncResponse> {
   await ensureAuthenticated();
 
   const results: DriveSyncResult[] = [];
@@ -389,21 +412,16 @@ export async function smartSync(): Promise<DriveSyncResponse> {
 
     // Check Drive
     const driveFile = await findDriveFile();
-    const driveChanged = driveFile !== null && 
-      state.driveMd5 !== undefined && 
-      driveFile.md5Checksum !== state.driveMd5;
 
-    // First sync or no Drive file
+    // No file on Drive yet - create it from local.
     if (!driveFile) {
-      // No file on Drive - push
       const uploaded = await uploadDatabase();
-      const newState: SyncState = {
+      saveSyncState({
         fileId: uploaded.id,
         lastSyncAt: new Date().toISOString(),
         driveMd5: uploaded.md5Checksum,
         localHash,
-      };
-      saveSyncState(newState);
+      });
 
       results.push({
         filename: DB_FILENAME,
@@ -411,43 +429,37 @@ export async function smartSync(): Promise<DriveSyncResponse> {
         status: "ok",
         message: "Created on Drive",
       });
-      return {
-        mode: "appdata",
-        results,
-        last_sync_at: newState.lastSyncAt,
-      };
+      return { mode: "appdata", results, last_sync_at: getSyncState().lastSyncAt };
     }
 
-    // No previous state - first sync with existing Drive file
+    // First sync against an existing Drive file - merge both ways, then push the
+    // union so Drive also gets any local-only rows.
     if (!state.fileId && !state.localHash) {
-      // Pull from Drive for first sync
       const data = await downloadDatabase(driveFile.id);
-      await importDatabase(data);
+      const merged = await mergeRemoteDatabase(data);
       await runMigrations();
 
-      const newLocalHash = await hashDatabase();
-      const newState: SyncState = {
-        fileId: driveFile.id,
+      const uploaded = await uploadDatabase(driveFile.id);
+      saveSyncState({
+        fileId: uploaded.id,
         lastSyncAt: new Date().toISOString(),
-        driveMd5: driveFile.md5Checksum,
-        localHash: newLocalHash,
-      };
-      saveSyncState(newState);
+        driveMd5: uploaded.md5Checksum,
+        localHash: await hashDatabase(),
+      });
 
       results.push({
         filename: DB_FILENAME,
-        action: "pull",
+        action: "sync",
         status: "ok",
-        message: "Initial sync from Drive",
+        message: merged > 0 ? `Merged ${merged} change(s) with Drive` : "Merged with Drive",
       });
-      return {
-        mode: "appdata",
-        results,
-        last_sync_at: newState.lastSyncAt,
-      };
+      return { mode: "appdata", results, last_sync_at: getSyncState().lastSyncAt };
     }
 
-    // Neither changed
+    // Treat an unknown baseline as "changed" so we err toward a safe merge.
+    const driveChanged = state.driveMd5 === undefined || driveFile.md5Checksum !== state.driveMd5;
+
+    // Nothing changed on either side.
     if (!localChanged && !driveChanged) {
       results.push({
         filename: DB_FILENAME,
@@ -455,23 +467,18 @@ export async function smartSync(): Promise<DriveSyncResponse> {
         status: "skipped",
         message: "No changes detected",
       });
-      return {
-        mode: "appdata",
-        results,
-        last_sync_at: state.lastSyncAt ?? null,
-      };
+      return { mode: "appdata", results, last_sync_at: state.lastSyncAt ?? null };
     }
 
-    // Only local changed - push
+    // Only local changed - safe to push directly.
     if (localChanged && !driveChanged) {
       const uploaded = await uploadDatabase(driveFile.id);
-      const newState: SyncState = {
+      saveSyncState({
         fileId: uploaded.id,
         lastSyncAt: new Date().toISOString(),
         driveMd5: uploaded.md5Checksum,
         localHash,
-      };
-      saveSyncState(newState);
+      });
 
       results.push({
         filename: DB_FILENAME,
@@ -479,66 +486,48 @@ export async function smartSync(): Promise<DriveSyncResponse> {
         status: "ok",
         message: "Updated on Drive",
       });
-      return {
-        mode: "appdata",
-        results,
-        last_sync_at: newState.lastSyncAt,
-      };
+      return { mode: "appdata", results, last_sync_at: getSyncState().lastSyncAt };
     }
 
-    // Only Drive changed - pull
-    if (driveChanged && !localChanged) {
-      const data = await downloadDatabase(driveFile.id);
-      await importDatabase(data);
-      await runMigrations();
+    // Drive changed (possibly alongside local) - merge remote into local.
+    const data = await downloadDatabase(driveFile.id);
+    const merged = await mergeRemoteDatabase(data);
+    await runMigrations();
 
-      const newLocalHash = await hashDatabase();
-      const newState: SyncState = {
-        fileId: driveFile.id,
+    if (localChanged) {
+      // We also have local edits: push the merged union so Drive gets them too.
+      const uploaded = await uploadDatabase(driveFile.id);
+      saveSyncState({
+        fileId: uploaded.id,
         lastSyncAt: new Date().toISOString(),
-        driveMd5: driveFile.md5Checksum,
-        localHash: newLocalHash,
-      };
-      saveSyncState(newState);
+        driveMd5: uploaded.md5Checksum,
+        localHash: await hashDatabase(),
+      });
 
       results.push({
         filename: DB_FILENAME,
-        action: "pull",
+        action: "sync",
         status: "ok",
-        message: "Updated from Drive",
+        message: `Merged local and Drive changes (${merged} row(s) from Drive)`,
       });
-      return {
-        mode: "appdata",
-        results,
-        last_sync_at: newState.lastSyncAt,
-      };
+      return { mode: "appdata", results, last_sync_at: getSyncState().lastSyncAt };
     }
 
-    // Both changed - conflict
-    // Strategy: Keep local (more recent edits), save Drive version as backup
-    results.push({
-      filename: DB_FILENAME,
-      action: "conflict",
-      status: "conflict",
-      message: "Both local and Drive changed. Local version kept, pushing to Drive.",
-      conflict_local_copy: null, // In browser, we don't create conflict files
+    // Only Drive changed: we absorbed remote changes; no push needed.
+    saveSyncState({
+      fileId: driveFile.id,
+      lastSyncAt: new Date().toISOString(),
+      driveMd5: driveFile.md5Checksum,
+      localHash: await hashDatabase(),
     });
 
-    // Push local to overwrite Drive
-    const uploaded = await uploadDatabase(driveFile.id);
-    const newState: SyncState = {
-      fileId: uploaded.id,
-      lastSyncAt: new Date().toISOString(),
-      driveMd5: uploaded.md5Checksum,
-      localHash,
-    };
-    saveSyncState(newState);
-
-    return {
-      mode: "appdata",
-      results,
-      last_sync_at: newState.lastSyncAt,
-    };
+    results.push({
+      filename: DB_FILENAME,
+      action: "pull",
+      status: "ok",
+      message: merged > 0 ? `Merged ${merged} change(s) from Drive` : "Updated from Drive",
+    });
+    return { mode: "appdata", results, last_sync_at: getSyncState().lastSyncAt };
   } catch (err) {
     results.push({
       filename: DB_FILENAME,

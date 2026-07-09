@@ -1,8 +1,6 @@
 import React from "react";
 import { endOfMonth, format, getDaysInMonth, startOfMonth } from "date-fns";
-import { Lightbulb } from "lucide-react";
-import { TrendingUpIcon } from "@/components/ui/trending-up";
-import { TrendingDownIcon } from "@/components/ui/trending-down";
+import { Lightbulb, TrendingUp, TrendingDown } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { DashboardCharts, DashboardSummary } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -65,11 +63,11 @@ export function QuickInsights({
   const trendTone = insights.trend.direction === "up" ? "negative" : insights.trend.direction === "down" ? "positive" : "neutral";
   const trendIcon =
     insights.trend.direction === "up" ? (
-      <TrendingUpIcon size={16} />
+      <TrendingUp size={16} />
     ) : insights.trend.direction === "down" ? (
-      <TrendingDownIcon size={16} />
+      <TrendingDown size={16} />
     ) : (
-      <TrendingUpIcon size={16} />
+      <TrendingUp size={16} />
     );
 
   const trendLabel = insights.interval === "day" ? `vs prior ${insights.window} days` : `vs prior ${insights.window} months`;
@@ -80,13 +78,12 @@ export function QuickInsights({
       aria-label="Quick financial insights"
       className={cn(
         "group relative overflow-hidden rounded-xl sm:rounded-2xl border border-border/60 bg-card/85 p-5",
-        "corner-glow tint-neutral",
         "transition-all duration-150 ease-out hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-lift",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
     >
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-background/40 ring-1 ring-border/60 text-muted-foreground">
           <Lightbulb className="h-4 w-4" />
         </span>

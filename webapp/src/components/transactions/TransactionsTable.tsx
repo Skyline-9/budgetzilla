@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   ArrowDown,
   ArrowUp,
@@ -471,7 +471,7 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
   }, [rows]);
 
   return (
-    <div className="relative overflow-hidden rounded-squircle bg-card/85 shadow-surface corner-glow tint-neutral">
+    <div className="relative overflow-hidden rounded-squircle bg-card/85 shadow-surface">
       <div className="p-6 space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>

@@ -1,6 +1,6 @@
 import React from "react";
 import { X } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";

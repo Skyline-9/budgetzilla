@@ -30,7 +30,7 @@ import { isWebGpuAvailable, ensureModelLoaded, isModelLoaded, type ModelStatus }
 import type { InferenceBackend } from "@/services/localAiParser";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { API_MODE, GOOGLE_CLIENT_ID } from "@/api/config";
+import { GOOGLE_CLIENT_ID } from "@/api/config";
 import { useDriveStatusQuery, useSmartSyncMutation, driveQk } from "@/api/queries";
 import { connect as connectDrive } from "@/services/driveSync";
 import { api } from "@/api";
@@ -66,26 +66,17 @@ function Card({
   className?: string;
   tint?: CardTint;
 }) {
-  const tintClass = {
-    neutral: "tint-neutral",
-    income: "tint-income",
-    expense: "tint-expense",
-    accent: "tint-accent",
-    hero: "tint-hero",
-    warm: "tint-warm",
-  }[tint];
+  void tint;
 
   return (
     <div
       className={cn(
         "group relative overflow-hidden rounded-squircle bg-card/85 p-6 shadow-surface",
-        "corner-glow",
-        tintClass,
         "transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-card/90 hover:shadow-surface-elevated",
         className,
       )}
     >
-      <div className="flex items-center gap-2 text-sm font-semibold tracking-tight uppercase tracking-[0.12em] text-muted-foreground/80">
+      <div className="flex items-center gap-2 text-sm font-semibold tracking-tight text-muted-foreground/80">
         {icon ? (
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-background/40 text-muted-foreground">
             {icon}

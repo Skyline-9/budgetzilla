@@ -1,7 +1,7 @@
 import React from "react";
 import ReactECharts from "echarts-for-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "motion/react";
 import { TrendingUp, BarChart3, Calendar } from "lucide-react";
 import type { DashboardCharts, Category } from "@/types";
 import { formatCents, formatDateDisplay, formatMonthKey, formatYmdToShort } from "@/lib/format";
@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 import { useTheme } from "@/providers/ThemeProvider";
 import { ChartLegendList, type LegendItem } from "@/components/dashboard/ChartLegendList";
 import cornerShineSvg from "@/assets/dashboard/corner-shine.svg";
-import { getChartCategoricalPalette, getChartTableauPalette, getGlowRgbTriplet } from "@/theme/palette";
+import { categoricalHighlightColors, blueRamp, chartSeriesColors, CHART_HIGHLIGHT } from "@/theme/chartPalette";
 
 function ChartSection({
   title,
@@ -48,15 +48,12 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
   const navigate = useNavigate();
   const [sp] = useSearchParams();
 
-  const chartCategoricalPalette = React.useMemo(() => getChartCategoricalPalette(), [theme]);
-  const chartTableauPalette = React.useMemo(() => getChartTableauPalette(), [theme]);
-
-  const incomeRgb = React.useMemo(() => getGlowRgbTriplet("income"), [theme]);
-  const expenseRgb = React.useMemo(() => getGlowRgbTriplet("expense"), [theme]);
-  const incomeColor = `rgb(${incomeRgb})`;
-  const expenseColor = `rgb(${expenseRgb})`;
-  const incomeArea = `rgba(${incomeRgb},0.10)`;
-  const expenseArea = `rgba(${expenseRgb},0.10)`;
+  const chartTheme = theme === "dark" ? "dark" : "light";
+  const series = React.useMemo(() => chartSeriesColors(chartTheme), [chartTheme]);
+  const incomeColor = series.income.line;
+  const expenseColor = series.expense.line;
+  const incomeArea = series.income.area;
+  const expenseArea = series.expense.area;
 
   const hasAnimatedOnceRef = React.useRef(false);
   const allowAnimation = !hasAnimatedOnceRef.current && !reduceMotion;
@@ -133,7 +130,7 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
             </div>
             <div style="height:1px; background:rgba(148,163,184,0.22); margin:8px 0"></div>
             <div style="display:flex; justify-content:space-between; gap:24px">
-              <span>Net</span><span style="font-weight:700; font-variant-numeric: tabular-nums; color: ${netCents >= 0 ? "rgb(52, 211, 153)" : "rgb(244, 114, 182)"}">${formatCents(
+              <span>Net</span><span style="font-weight:700; font-variant-numeric: tabular-nums; color: ${netCents >= 0 ? incomeColor : expenseColor}">${formatCents(
             netCents,
           )}</span>
             </div>
@@ -215,6 +212,7 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
         categoryId: c.categoryId,
       }))
       .reverse();
+    const breakdownColors = categoricalHighlightColors(seriesData.length, seriesData.length - 1, chartTheme);
     return {
       textStyle: baseText,
       animation: allowAnimation,
@@ -256,14 +254,12 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
           barWidth: 16,
           itemStyle: {
             borderRadius: [10, 10, 10, 10],
-            color: (params: any) => {
-              return chartCategoricalPalette[params.dataIndex % chartCategoricalPalette.length];
-            },
+            color: (params: any) => breakdownColors[params.dataIndex] ?? CHART_HIGHLIGHT,
           },
         },
       ],
     };
-  }, [allowAnimation, baseText, chartCategoricalPalette, charts.categoryBreakdown, theme]);
+  }, [allowAnimation, baseText, chartTheme, charts.categoryBreakdown, theme]);
 
   const categoryMonthlyOption = React.useMemo(() => {
     const months = charts.categoryMonthly.months;
@@ -300,7 +296,7 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
     const finalSeries = Array.from(rolledMap.values());
 
     const isDark = theme === "dark";
-    const palette = chartTableauPalette;
+    const palette = blueRamp(finalSeries.length);
 
     const startValue = months.length > 6 ? months[Math.max(0, months.length - 6)] : months[0];
     const endValue = months[months.length - 1];
@@ -446,7 +442,7 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
       },
       series: seriesOptions,
     };
-  }, [allowAnimation, baseText, chartTableauPalette, charts.categoryMonthly, theme]);
+  }, [allowAnimation, baseText, chartTheme, charts.categoryMonthly, theme]);
 
   const categoryRankItems = React.useMemo(() => {
     // 1. Build lookup map for categories
@@ -500,7 +496,7 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
     // 4. Transform to LegendItem array and sort
     const result = Array.from(rootGroups.values()).sort((a, b) => b.totalCents - a.totalCents);
     const globalTotal = result.reduce((acc, g) => acc + g.totalCents, 0) || 1;
-    const palette = chartCategoricalPalette.slice(0, 6);
+    const palette = categoricalHighlightColors(result.length, 0, chartTheme);
 
     return result.map((g, idx) => {
       const subItems: LegendItem[] = Array.from(g.children.values())
@@ -521,7 +517,7 @@ export function DashboardChartsView({ charts, categories }: { charts: DashboardC
         subItems,
       };
     });
-  }, [categories, chartCategoricalPalette, charts.categoryShare]);
+  }, [categories, chartTheme, charts.categoryShare]);
 
   const onCategoryClick = React.useCallback(
     (categoryId: string) => {

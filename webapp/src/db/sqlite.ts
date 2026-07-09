@@ -220,6 +220,148 @@ export async function importDatabase(data: Uint8Array): Promise<void> {
 }
 
 /**
+ * Read all rows for a query, tolerating a missing table (returns []) so that an
+ * older remote database without a given table doesn't abort the merge.
+ */
+function readAllRows(db: SqlJsDatabase, query: string): unknown[][] {
+  try {
+    const res = db.exec(query);
+    if (res.length === 0) return [];
+    return res[0].values as unknown[][];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Reconcile a table keyed by `id` using the ISO `updated_at` column. ISO 8601
+ * UTC timestamps compare lexicographically in chronological order, so the row
+ * with the newer updated_at wins and carries its column values, including any
+ * `deleted` tombstone. This propagates edits, deletes, and undeletes correctly.
+ * Returns the number of local rows inserted or replaced.
+ */
+function mergeByUpdatedAt(
+  local: SqlJsDatabase,
+  remote: SqlJsDatabase,
+  table: string,
+  columns: string[],
+): number {
+  const idIdx = columns.indexOf("id");
+  const tsIdx = columns.indexOf("updated_at");
+
+  const localTimestamps = new Map<string, string>();
+  for (const row of readAllRows(local, `SELECT id, updated_at FROM ${table}`)) {
+    localTimestamps.set(String(row[0]), String(row[1]));
+  }
+
+  const remoteRows = readAllRows(remote, `SELECT ${columns.join(", ")} FROM ${table}`);
+  if (remoteRows.length === 0) return 0;
+
+  const placeholders = columns.map(() => "?").join(", ");
+  const insertSql = `INSERT OR REPLACE INTO ${table} (${columns.join(", ")}) VALUES (${placeholders})`;
+
+  let modified = 0;
+  for (const row of remoteRows) {
+    const id = String(row[idIdx]);
+    const remoteTs = String(row[tsIdx]);
+    const localTs = localTimestamps.get(id);
+    if (localTs === undefined || remoteTs > localTs) {
+      local.run(insertSql, row as (string | number | null)[]);
+      modified++;
+    }
+  }
+  return modified;
+}
+
+/**
+ * Union a table by its primary key, keeping the local row on conflict. Used for
+ * tables without a timestamp (budgets, config) so that rows unique to either
+ * side are preserved. Returns the number of remote-only rows added locally.
+ */
+function mergeUnion(
+  local: SqlJsDatabase,
+  remote: SqlJsDatabase,
+  table: string,
+  columns: string[],
+  keyColumns: string[],
+): number {
+  const keyIdx = keyColumns.map((k) => columns.indexOf(k));
+
+  const localKeys = new Set<string>();
+  for (const row of readAllRows(local, `SELECT ${keyColumns.join(", ")} FROM ${table}`)) {
+    localKeys.add(row.map((v) => String(v)).join("\u0000"));
+  }
+
+  const remoteRows = readAllRows(remote, `SELECT ${columns.join(", ")} FROM ${table}`);
+  if (remoteRows.length === 0) return 0;
+
+  const placeholders = columns.map(() => "?").join(", ");
+  const insertSql = `INSERT OR IGNORE INTO ${table} (${columns.join(", ")}) VALUES (${placeholders})`;
+
+  let modified = 0;
+  for (const row of remoteRows) {
+    const key = keyIdx.map((i) => String(row[i])).join("\u0000");
+    if (!localKeys.has(key)) {
+      local.run(insertSql, row as (string | number | null)[]);
+      modified++;
+    }
+  }
+  return modified;
+}
+
+/**
+ * Merge a remote database (raw bytes) into the local database at the row level,
+ * instead of replacing the whole file. This prevents cross-device sync from
+ * deleting rows that only exist on one device. Browser-only.
+ * Returns the number of local rows inserted or updated by the merge.
+ */
+export async function mergeRemoteDatabase(data: Uint8Array): Promise<number> {
+  if (isTauriEnv()) {
+    throw new Error("mergeRemoteDatabase not supported in Tauri - use file system APIs");
+  }
+
+  const sql = await initSqlJs_();
+
+  // No local database yet - adopt the remote one wholesale.
+  if (!sqlJsDb) {
+    sqlJsDb = new sql.Database(data);
+    await persistDatabase();
+    return 0;
+  }
+
+  const local = sqlJsDb;
+  const remote = new sql.Database(data);
+  let modified = 0;
+
+  try {
+    local.run("BEGIN TRANSACTION");
+
+    modified += mergeByUpdatedAt(local, remote, "transactions", [
+      "id", "date", "amount_cents", "category_id", "merchant", "notes", "created_at", "updated_at", "deleted",
+    ]);
+    modified += mergeByUpdatedAt(local, remote, "categories", [
+      "id", "name", "kind", "parent_id", "active", "created_at", "updated_at",
+    ]);
+    modified += mergeUnion(local, remote, "budgets", ["month", "category_id", "budget_cents"], ["month", "category_id"]);
+    modified += mergeUnion(local, remote, "config", ["key", "value"], ["key"]);
+
+    local.run("COMMIT");
+  } catch (err) {
+    try {
+      local.run("ROLLBACK");
+    } catch {
+      // ignore rollback failure
+    }
+    remote.close();
+    throw err;
+  }
+
+  remote.close();
+  await persistDatabase();
+  return modified;
+}
+
+/**
  * Close the database connection.
  */
 export async function closeDatabase(): Promise<void> {

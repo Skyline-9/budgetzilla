@@ -1,5 +1,5 @@
 import * as React from "react";
-import { animate, useMotionValue, useMotionValueEvent, useReducedMotion } from "framer-motion";
+import { animate, useMotionValue, useMotionValueEvent, useReducedMotion } from "motion/react";
 import { formatCents, getCurrency } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
