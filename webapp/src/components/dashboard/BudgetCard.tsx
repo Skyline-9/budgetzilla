@@ -67,7 +67,7 @@ export function BudgetCard(props: {
         className,
       )}
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.22] dark:opacity-[0.18]">
+      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.10] dark:opacity-[0.06]">
         <img src={dotsOverlayUrl} alt="" className="h-full w-full object-cover" />
       </div>
       <div aria-hidden className="pointer-events-none absolute bottom-10 left-0 right-0 opacity-80 dark:opacity-70">
