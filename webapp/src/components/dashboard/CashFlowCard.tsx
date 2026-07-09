@@ -1,6 +1,7 @@
 import React from "react";
-import { Minus, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Minus, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { Card } from "@/components/ui/card";
 import { AnimatedMoneyCents } from "@/components/motion/AnimatedNumber";
 import type { MetricDelta } from "./MetricCard";
 
@@ -20,7 +21,7 @@ function CashFlowStat({ label, cents, delta, tone, showSavingsRate }: CashFlowSt
   }[tone];
 
   return (
-    <div className="group/stat flex items-center justify-between gap-8 py-2">
+    <div className="group/stat flex items-center justify-between gap-8">
       <div className="min-w-0">
         <div className="text-xs font-semibold text-muted-foreground/60">
           {label}
@@ -85,16 +86,40 @@ export function CashFlowSummary({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col justify-center px-2 divide-y divide-border/10", className)}>
-      <CashFlowStat label="Income" cents={incomeCents} delta={incomeDelta} tone="income" />
-      <CashFlowStat label="Expenses" cents={expenseCents} delta={expenseDelta} tone="expense" />
-      <CashFlowStat
-        label="Net"
-        cents={netCents}
-        delta={netDelta}
-        tone="neutral"
-        showSavingsRate={savingsRate}
-      />
-    </div>
+    <Card
+      hoverEffect="all"
+      className={cn(
+        "group relative overflow-hidden p-6 md:p-7",
+        className,
+      )}
+    >
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/80 mb-3">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Wallet className="h-4 w-4" />
+          </span>
+          <span>Cash Flow Summary</span>
+        </div>
+        
+        <div className="divide-y divide-border/20">
+          <div className="py-3">
+            <CashFlowStat label="Income" cents={incomeCents} delta={incomeDelta} tone="income" />
+          </div>
+          <div className="py-3">
+            <CashFlowStat label="Expenses" cents={expenseCents} delta={expenseDelta} tone="expense" />
+          </div>
+          <div className="py-3 pb-0">
+            <CashFlowStat
+              label="Net"
+              cents={netCents}
+              delta={netDelta}
+              tone="neutral"
+              showSavingsRate={savingsRate}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
+

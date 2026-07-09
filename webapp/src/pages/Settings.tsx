@@ -50,6 +50,7 @@ import { importSpreadsheetCSV } from "@/services/importSpreadsheet";
 import { clearAllData } from "@/db/schema";
 import { cn } from "@/lib/cn";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card as GlobalCard } from "@/components/ui/card";
 
 type CardTint = "neutral" | "income" | "expense" | "accent" | "hero" | "warm";
 
@@ -69,10 +70,10 @@ function Card({
   void tint;
 
   return (
-    <div
+    <GlobalCard
+      hoverEffect="all"
       className={cn(
-        "group relative overflow-hidden rounded-squircle bg-card/85 p-6 shadow-surface",
-        "transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-card/90 hover:shadow-surface-elevated",
+        "group relative overflow-hidden p-6",
         className,
       )}
     >
@@ -85,7 +86,7 @@ function Card({
         <span>{title}</span>
       </div>
       <div className="mt-4">{children}</div>
-    </div>
+    </GlobalCard>
   );
 }
 
@@ -637,7 +638,10 @@ export function SettingsPage() {
 
 function HelpTopicCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
   return (
-    <div className="group relative overflow-hidden rounded-squircle bg-card/85 p-6 shadow-surface transition-all duration-300 hover:shadow-surface-elevated hover:-translate-y-1">
+    <GlobalCard
+      hoverEffect="all"
+      className="group relative overflow-hidden p-6"
+    >
       <div className="flex items-center gap-4">
         <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:scale-110">
           {icon}
@@ -650,6 +654,6 @@ function HelpTopicCard({ title, description, icon }: { title: string; descriptio
       <Button variant="ghost" size="sm" className="mt-4 w-full justify-between rounded-xl">
         Learn more <ArrowRight className="h-3 w-3 opacity-50" />
       </Button>
-    </div>
+    </GlobalCard>
   );
 }

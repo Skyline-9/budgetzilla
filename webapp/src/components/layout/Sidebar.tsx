@@ -138,7 +138,7 @@ function SidebarContent({
     <div className="flex h-full min-h-0 flex-col">
       <div
         className={cn(
-          "flex h-[60px] items-center gap-2 border-b border-border/70",
+          "flex h-[60px] items-center gap-2",
           collapsed ? "justify-center px-3" : "justify-between px-6",
         )}
       >
@@ -190,6 +190,8 @@ function SidebarContent({
           search={search}
           onClick={onNavClick}
           mdUp={mdUp}
+          activeColorClassName="text-blue-500 dark:text-blue-400"
+          activeIndicatorClassName="bg-blue-500/10 border-blue-500/15 shadow-blue-500/5"
         />
         <SidebarNavItem
           to="/transactions"
@@ -199,6 +201,8 @@ function SidebarContent({
           search={search}
           onClick={onNavClick}
           mdUp={mdUp}
+          activeColorClassName="text-emerald-500 dark:text-emerald-400"
+          activeIndicatorClassName="bg-emerald-500/10 border-emerald-500/15 shadow-emerald-500/5"
         />
         <SidebarNavItem
           to="/categories"
@@ -208,6 +212,8 @@ function SidebarContent({
           search={search}
           onClick={onNavClick}
           mdUp={mdUp}
+          activeColorClassName="text-violet-500 dark:text-violet-400"
+          activeIndicatorClassName="bg-violet-500/10 border-violet-500/15 shadow-violet-500/5"
         />
         <SidebarNavItem
           to="/settings"
@@ -217,12 +223,14 @@ function SidebarContent({
           search={search}
           onClick={onNavClick}
           mdUp={mdUp}
+          activeColorClassName="text-amber-500 dark:text-amber-400"
+          activeIndicatorClassName="bg-amber-500/10 border-amber-500/15 shadow-amber-500/5"
         />
       </nav>
 
       <div
         className={cn(
-          "shrink-0 border-t border-border/70 py-3",
+          "shrink-0 border-t border-border/15 py-3",
           collapsed ? "px-2" : "px-3",
         )}
       >
@@ -296,7 +304,7 @@ export function Sidebar() {
       <aside
         className={cn(
           "sticky top-0 z-20 h-[100dvh] shrink-0",
-          "border-r border-border/70 bg-background/80 backdrop-blur-xl dark:bg-background/40",
+          "border-r border-border/15 bg-background/30 backdrop-blur-xl dark:bg-background/15",
           "transition-[width] duration-200",
           "hidden md:block",
           collapsed ? "w-[60px]" : "w-[280px]",
@@ -315,7 +323,7 @@ export function Sidebar() {
       {/* Mobile hamburger button - rendered in Topbar via context */}
       {/* Mobile drawer */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-[280px] p-0 bg-background/95 backdrop-blur-xl">
+        <SheetContent side="left" className="w-[280px] p-0 bg-background/50 border-r border-border/15 backdrop-blur-xl">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation Menu</SheetTitle>
           </SheetHeader>

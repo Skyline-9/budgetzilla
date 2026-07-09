@@ -1,6 +1,11 @@
 import React from "react";
 import { motion } from "motion/react";
+import { Card } from "@/components/ui/card";
 import { Target } from "lucide-react";
+import dividerWaveUrl from "@/assets/dashboard/divider-wave.svg";
+import dotsOverlayUrl from "@/assets/dashboard/dots-overlay.svg";
+
+const MotionCard = motion(Card);
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
@@ -51,19 +56,23 @@ export function BudgetCard(props: {
   const overspent = budgetCents != null && expenseCents > budgetCents;
 
   return (
-    <motion.div
+    <MotionCard
       role="region"
       aria-label="Budget tracking card"
+      hoverEffect="all"
       className={cn(
-        "group relative overflow-hidden rounded-xl sm:rounded-squircle border border-border/60 bg-card/85",
-        "p-6 md:p-7 shadow-surface-elevated",
-        "transition-all duration-300 ease-out hover:-translate-y-1",
-        "hover:bg-card/90 hover:shadow-surface-elevated",
+        "group relative overflow-hidden p-6 md:p-7",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         overspent && "ring-2 ring-danger/40",
         className,
       )}
     >
+      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.22] dark:opacity-[0.18]">
+        <img src={dotsOverlayUrl} alt="" className="h-full w-full object-cover" />
+      </div>
+      <div aria-hidden className="pointer-events-none absolute bottom-10 left-0 right-0 opacity-80 dark:opacity-70">
+        <img src={dividerWaveUrl} alt="" className="w-full" />
+      </div>
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
@@ -161,6 +170,6 @@ export function BudgetCard(props: {
         month={editMonth}
         initialBudgetCents={editMonthBudgetCents ?? null}
       />
-    </motion.div>
+    </MotionCard>
   );
 }

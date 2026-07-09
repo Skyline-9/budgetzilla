@@ -13,6 +13,8 @@ export function SidebarNavItem({
   search,
   onClick,
   mdUp = true,
+  activeColorClassName,
+  activeIndicatorClassName,
 }: {
   to: string;
   label: string;
@@ -22,6 +24,8 @@ export function SidebarNavItem({
   search: string;
   onClick?: () => void;
   mdUp?: boolean;
+  activeColorClassName?: string;
+  activeIndicatorClassName?: string;
 }) {
   const location = useLocation();
   const isCurrentlyActive = location.pathname === to;
@@ -57,7 +61,7 @@ export function SidebarNavItem({
       {isCurrentlyActive && mdUp && !collapsed && (
         <motion.div
           layoutId="sidebar-active-indicator"
-          className="absolute inset-0 rounded-squircle bg-muted shadow-sm"
+          className={cn("absolute inset-0 rounded-squircle border shadow-sm", activeIndicatorClassName || "bg-primary/10 border-primary/15 shadow-primary/5")}
           style={{ zIndex: -1 }}
           transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
         />
@@ -66,7 +70,7 @@ export function SidebarNavItem({
         className={cn(
           "opacity-70 group-hover:opacity-100 [&>svg]:h-5 [&>svg]:w-5 transition-opacity",
           iconClassName,
-          isCurrentlyActive && "text-primary opacity-100",
+          isCurrentlyActive && (activeColorClassName || "text-primary") + " opacity-100",
           collapsed ? "grid h-full w-full place-items-center" : "inline-flex items-center justify-center",
           "[&>svg]:block",
         )}

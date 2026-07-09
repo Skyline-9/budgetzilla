@@ -41,6 +41,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { buildCategoryTreeRows } from "@/lib/categoryHierarchy";
 import { formatDateDisplay } from "@/lib/format";
@@ -471,7 +472,7 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
   }, [rows]);
 
   return (
-    <div className="relative overflow-hidden rounded-squircle bg-card/85 shadow-surface">
+    <Card className="relative overflow-hidden">
       <div className="p-6 space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -905,7 +906,7 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 

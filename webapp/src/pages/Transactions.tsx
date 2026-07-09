@@ -6,6 +6,7 @@ import type { Transaction } from "@/types";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 import { readString, readStringList, parseMoneyToCents } from "@/lib/urlState";
 import { getDescendantIds } from "@/lib/categoryHierarchy";
 
@@ -63,19 +64,19 @@ export function TransactionsPage() {
       </div>
 
       {categoriesQuery.isLoading || txnsQuery.isLoading ? (
-        <div className="rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg">
+        <Card className="p-4">
           <div className="space-y-3">
             <Skeleton className="h-6 w-40" />
             <Skeleton className="h-[560px] w-full" />
           </div>
-        </div>
+        </Card>
       ) : categoriesQuery.isError || txnsQuery.isError ? (
-        <div className="rounded-3xl border border-border/60 bg-card/90 p-6 shadow-soft-lg">
+        <Card className="p-6">
           <div className="text-sm font-semibold">Couldn’t load transactions</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Try again, or switch API mode back to mock.
           </div>
-        </div>
+        </Card>
       ) : (
         <TransactionsTable
           transactions={txnsQuery.data ?? []}

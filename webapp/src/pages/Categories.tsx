@@ -12,6 +12,7 @@ import { CategoryDialog } from "@/components/categories/CategoryDialog";
 import { CategoryInspectorPanel, CategoryInspectorSheet } from "@/components/categories/CategoryInspector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -377,7 +378,7 @@ function CategoryGroup(props: {
   );
 
   return (
-    <div className="rounded-squircle bg-card/85 p-5 shadow-surface flex min-h-0 flex-col transition-all duration-300 hover:shadow-surface-elevated">
+    <Card className="p-5 flex min-h-0 flex-col" hoverEffect="brightness">
       <div className="flex items-center justify-between gap-3 px-1">
         <div>
           <div className="text-sm font-semibold tracking-tight uppercase tracking-[0.12em] text-muted-foreground/80">{title}</div>
@@ -434,7 +435,7 @@ function CategoryGroup(props: {
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -482,7 +483,7 @@ function CategoriesSidePanel(props: {
   const kindPill = selectedKind ? (selectedKind === "expense" ? "Expense" : "Income") : "Mixed types";
 
   return (
-    <div className="h-[calc(100dvh-7.25rem)] rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg flex min-h-0 flex-col">
+    <Card className="h-[calc(100dvh-7.25rem)] p-4 flex min-h-0 flex-col">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -612,7 +613,7 @@ function CategoriesSidePanel(props: {
           </>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -1032,12 +1033,12 @@ export function CategoriesPage() {
           <Skeleton className="hidden h-[420px] xl:block rounded-squircle" />
         </div>
       ) : categoriesQuery.isError ? (
-        <div className="rounded-squircle bg-card/85 p-6 shadow-surface">
+        <Card className="p-6">
           <div className="text-sm font-semibold">Couldn't load categories</div>
           <div className="mt-1 text-sm text-muted-foreground">
             Try again, or switch API mode back to mock.
           </div>
-        </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_440px]">
           <CategoryGroup

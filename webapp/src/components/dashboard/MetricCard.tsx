@@ -1,6 +1,7 @@
 import React from "react";
 import { Minus, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { Card } from "@/components/ui/card";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
 
 export type MetricDelta = {
@@ -176,15 +177,14 @@ export function MetricCard({
   const valueText = useAutoScaleText({ deps: [value] });
 
   return (
-    <div
+    <Card
       role="region"
       aria-label={`${title} metric card`}
+      hoverEffect="brightness"
       className={cn(
-        "group relative overflow-hidden rounded-xl sm:rounded-squircle border border-border/60 bg-card/85",
-        variant === "hero" ? "shadow-surface-elevated" : "shadow-surface",
+        "group relative overflow-hidden",
         variant === "hero" ? "p-6 md:p-7 hover:-translate-y-1" : "p-5 hover:-translate-y-0.5",
         "transition-all duration-200 ease-out",
-        "hover:bg-card/90 hover:shadow-lg",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
@@ -271,7 +271,7 @@ export function MetricCard({
       ) : (
         <div className="mt-4 text-xs text-muted-foreground/40">—</div>
       )}
-    </div>
+    </Card>
   );
 }
 

@@ -11,6 +11,7 @@
     /* Softer light theme: off-white background to reduce glare */
     --background: 210 35% 98%;
     --foreground: 222.2 84% 4.9%;
+    --bg-gradient: radial-gradient(circle at 10% 10%, hsl(210 40% 99%) 0%, hsl(210 35% 98%) 100%);
 
     --card: 210 25% 99%;
     --card-foreground: 222.2 84% 4.9%;
@@ -66,8 +67,9 @@
     --input: 214.3 31.8% 91.4%;
     --ring: var(--primary);
 
-    --radius: 1rem;
-    --radius-squircle: 1.5rem;
+    --radius: 0.5rem;
+    --radius-squircle: 0.5rem;
+    --bg-grid-color: rgba(0, 0, 0, 0.03);
 
     /* Semantic aliases (requested) */
     --bg: var(--background);
@@ -95,6 +97,8 @@
     /* Dark-first theme: deep charcoal + subtle contrast (premium) */
     --background: 240 7% 7%;
     --foreground: 210 40% 98%;
+    --bg-gradient: radial-gradient(circle at 0% 0%, hsl(217 32% 13%) 0%, hsl(240 7% 3%) 70%, hsl(0 0% 0%) 100%);
+    --bg-grid-color: rgba(255, 255, 255, 0.015);
 
     --card: 240 7% 10%;
     --card-foreground: 210 40% 98%;
@@ -203,9 +207,30 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    background: 
+      linear-gradient(to right, var(--bg-grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--bg-grid-color) 1px, transparent 1px),
+      var(--bg-gradient);
+    background-size: 24px 24px, 24px 24px, auto;
+    background-attachment: scroll, scroll, fixed;
+    @apply text-foreground;
     font-family: var(--font-sans);
     text-rendering: geometricPrecision;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    body {
+      animation: grid-drift 80s linear infinite;
+    }
+  }
+
+  @keyframes grid-drift {
+    0% {
+      background-position: 0px 0px, 0px 0px, 0 0;
+    }
+    100% {
+      background-position: 24px 24px, 24px 24px, 0 0;
+    }
   }
 
   h1, h2, h3 {
@@ -278,4 +303,25 @@ body.tauri-ios {
   body.tauri-ios {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+}
+
+/* Premium Glassmorphic Surfaces */
+.premium-glass {
+  background: linear-gradient(135deg, hsl(var(--card) / 0.5) 0%, hsl(var(--card) / 0.3) 100%);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.dark .premium-glass {
+  background: linear-gradient(135deg, hsl(var(--card) / 0.45) 0%, hsl(var(--card) / 0.15) 100%);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 }

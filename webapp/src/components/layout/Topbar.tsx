@@ -82,7 +82,7 @@ export function Topbar({
   }, []);
 
   return (
-    <header className={cn("sticky top-0 z-20 border-b border-border/70 bg-background/40 backdrop-blur-md md:backdrop-blur-xl", scrolled && "shadow-md")}>
+    <header className={cn("sticky top-0 z-20 border-b border-border/15 bg-background/25 backdrop-blur-md md:backdrop-blur-xl", scrolled && "shadow-md")}>
       {/* Titlebar drag region for macOS */}
       <div
         data-tauri-drag-region
