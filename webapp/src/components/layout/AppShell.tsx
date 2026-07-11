@@ -115,7 +115,9 @@ export function AppShell() {
               />
             )}
             <main className="min-w-0 flex-1 px-3 pb-8 pt-4 md:px-5">
-              <Outlet context={{ openAddTransaction }} />
+              <React.Suspense fallback={<div className="h-96 w-full flex items-center justify-center text-muted-foreground animate-pulse text-sm">Loading...</div>}>
+                <Outlet context={{ openAddTransaction }} />
+              </React.Suspense>
             </main>
           </div>
         </div>

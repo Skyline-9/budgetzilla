@@ -8,6 +8,7 @@ import { ConfirmDialogProvider } from "@/hooks/useConfirmDialog";
 import { ScreenReaderAnnouncerProvider } from "@/components/ui/screen-reader-announcer";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 const DashboardPage = React.lazy(() => import("@/pages/Dashboard").then(m => ({ default: m.DashboardPage })));
 const TransactionsPage = React.lazy(() => import("@/pages/Transactions").then(m => ({ default: m.TransactionsPage })));
@@ -24,7 +25,7 @@ function AppInner() {
         <ScreenReaderAnnouncerProvider>
           <TooltipProvider delayDuration={120}>
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <React.Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background text-muted-foreground animate-pulse text-sm">Loading Budgetzilla...</div>}>
+              <ErrorBoundary>
                 <Routes>
                   <Route element={<AppShell />}>
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -34,7 +35,7 @@ function AppInner() {
                     <Route path="/settings" element={<SettingsPage />} />
                   </Route>
                 </Routes>
-              </React.Suspense>
+              </ErrorBoundary>
               <WelcomeModal />
             </BrowserRouter>
 
