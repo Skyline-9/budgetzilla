@@ -80,6 +80,8 @@
     --text: var(--foreground);
 
     /* Shadows (light) — subtle, Premium Studio Light */
+    --shadow-soft-sm: 0 2px 8px -4px rgba(2, 6, 23, 0.08);
+    --shadow-soft-md: 0 6px 18px -10px rgba(2, 6, 23, 0.12);
     --shadow-soft: 0 10px 26px -22px rgba(2, 6, 23, 0.16);
     --shadow-lift: 0 16px 40px -28px rgba(2, 6, 23, 0.22);
     --shadow-soft-lg: 0 12px 30px -24px rgba(2, 6, 23, 0.18);
@@ -161,6 +163,8 @@
     --text: var(--foreground);
 
     /* Shadows (dark) — cinematic depth */
+    --shadow-soft-sm: 0 2px 8px -4px rgba(0, 0, 0, 0.4);
+    --shadow-soft-md: 0 6px 18px -10px rgba(0, 0, 0, 0.5);
     --shadow-soft: 0 10px 24px -18px rgba(0, 0, 0, 0.65),
       0 0 0 1px rgba(255, 255, 255, 0.06) inset;
     --shadow-lift: 0 18px 44px -24px rgba(0, 0, 0, 0.78),

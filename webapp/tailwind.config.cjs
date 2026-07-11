@@ -15,7 +15,9 @@ module.exports = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        squircle: "var(--radius-squircle)"
+        squircle: "var(--radius-squircle)",
+        button: "var(--radius-button, var(--radius))",
+        input: "var(--radius-input, 11px)"
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
@@ -85,6 +87,8 @@ module.exports = {
         }
       },
       boxShadow: {
+        "soft-sm": "var(--shadow-soft-sm)",
+        "soft-md": "var(--shadow-soft-md)",
         soft: "var(--shadow-soft)",
         lift: "var(--shadow-lift)",
         "soft-lg": "var(--shadow-soft-lg)",
