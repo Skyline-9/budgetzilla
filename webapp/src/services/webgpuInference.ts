@@ -1,25 +1,13 @@
-import {
-  AutoProcessor,
-  Gemma4ForConditionalGeneration,
-  TextStreamer,
-  RawImage,
-  env,
+import type {
+  AutoProcessor as AutoProcessorType,
+  Gemma4ForConditionalGeneration as Gemma4ForConditionalGenerationType,
 } from "@huggingface/transformers";
 import { idbModelCache } from "./idbModelCache";
 
-env.useCustomCache = true;
-env.customCache = idbModelCache as any;
-env.useBrowserCache = false;
-
-if (import.meta.env.DEV && localStorage.getItem("hfProxyPort")) {
-  env.remoteHost = `http://localhost:${localStorage.getItem("hfProxyPort")}`;
-  env.remotePathTemplate = "{model}/resolve/{revision}/";
-}
-
 const MODEL_ID = "onnx-community/gemma-4-E2B-it-ONNX";
 
-let processor: InstanceType<typeof AutoProcessor> | null = null;
-let model: InstanceType<typeof Gemma4ForConditionalGeneration> | null = null;
+let processor: InstanceType<typeof AutoProcessorType> | null = null;
+let model: InstanceType<typeof Gemma4ForConditionalGenerationType> | null = null;
 let loadingPromise: Promise<void> | null = null;
 
 export function isWebGpuAvailable(): boolean {
@@ -36,6 +24,17 @@ export async function ensureModelLoaded(
 
   loadingPromise = (async () => {
     try {
+      const { AutoProcessor, Gemma4ForConditionalGeneration, env } = await import("@huggingface/transformers");
+
+      env.useCustomCache = true;
+      env.customCache = idbModelCache as any;
+      env.useBrowserCache = false;
+
+      if (import.meta.env.DEV && localStorage.getItem("hfProxyPort")) {
+        env.remoteHost = `http://localhost:${localStorage.getItem("hfProxyPort")}`;
+        env.remotePathTemplate = "{model}/resolve/{revision}/";
+      }
+
       processor = await AutoProcessor.from_pretrained(MODEL_ID);
       model = (await Gemma4ForConditionalGeneration.from_pretrained(MODEL_ID, {
         dtype: "q4f16",
@@ -77,6 +76,8 @@ export async function generateFromImage(
 ): Promise<string> {
   await ensureModelLoaded();
   if (!model || !processor) throw new Error("Model not loaded");
+
+  const { RawImage, TextStreamer } = await import("@huggingface/transformers");
 
   const imageBitmap = await createImageBitmap(imageBlob);
   const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
@@ -135,6 +136,8 @@ export async function generateFromText(
 ): Promise<string> {
   await ensureModelLoaded();
   if (!model || !processor) throw new Error("Model not loaded");
+
+  const { TextStreamer } = await import("@huggingface/transformers");
 
   const messages = [
     {
