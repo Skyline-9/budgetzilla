@@ -43,8 +43,6 @@ import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useTheme } from "@/providers/ThemeProvider";
 import { getCurrency, setCurrency } from "@/lib/format";
-import { importCashewCSV } from "@/services/importCashew";
-import { importSpreadsheetCSV } from "@/services/importSpreadsheet";
 import { clearAllData } from "@/db/schema";
 import { cn } from "@/lib/cn";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -295,6 +293,7 @@ export function SettingsPage() {
 
     setIsImporting(true);
     try {
+      const { importCashewCSV } = await import("@/services/importCashew");
       const result = await importCashewCSV(file, {
         commit: true,
         skipDuplicates: true,
@@ -350,6 +349,7 @@ export function SettingsPage() {
 
     setIsImportingSpreadsheet(true);
     try {
+      const { importSpreadsheetCSV } = await import("@/services/importSpreadsheet");
       const result = await importSpreadsheetCSV(file, {
         commit: true,
         skipDuplicates: true,

@@ -5,8 +5,10 @@ export function initPerformanceMonitoring() {
     // 1. Monitor Largest Contentful Paint (LCP)
     const lcpObserver = new PerformanceObserver((entryList) => {
       const entries = entryList.getEntries();
-      const lastEntry = entries[entries.length - 1] as any;
-      console.log(`[Performance] LCP: ${lastEntry.startTime.toFixed(2)}ms`, lastEntry.element);
+      if (entries.length > 0) {
+        const lastEntry = entries[entries.length - 1] as any;
+        console.log(`[Performance] LCP: ${lastEntry.startTime.toFixed(2)}ms`, lastEntry.element);
+      }
     });
     lcpObserver.observe({ type: "largest-contentful-paint", buffered: true });
 
@@ -22,7 +24,7 @@ export function initPerformanceMonitoring() {
       });
     });
     inpObserver.observe({ type: "first-input", buffered: true });
-    inpObserver.observe({ type: "event", buffered: true, durationThreshold: 16 } as any);
+    inpObserver.observe({ type: "event", buffered: true, durationThreshold: 50 } as any);
   } catch (e) {
     console.warn("[Performance] PerformanceObserver not supported", e);
   }
