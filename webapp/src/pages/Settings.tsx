@@ -43,9 +43,7 @@ import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useTheme } from "@/providers/ThemeProvider";
 import { getCurrency, setCurrency } from "@/lib/format";
-import { downloadXLSX, downloadTransactionsCSV } from "@/services/export";
 import { importCashewCSV } from "@/services/importCashew";
-import { importXLSX } from "@/services/importXLSX";
 import { importSpreadsheetCSV } from "@/services/importSpreadsheet";
 import { clearAllData } from "@/db/schema";
 import { cn } from "@/lib/cn";
@@ -254,7 +252,8 @@ export function SettingsPage() {
   const handleExportXLSX = async () => {
     setIsExporting(true);
     try {
-      downloadXLSX();
+      const { downloadXLSX } = await import("@/services/export");
+      await downloadXLSX();
       toast.success("Export complete");
     } catch (e) {
       toast.error("Export failed");
@@ -267,7 +266,8 @@ export function SettingsPage() {
   const handleExportCSV = async () => {
     setIsExporting(true);
     try {
-      downloadTransactionsCSV();
+      const { downloadTransactionsCSV } = await import("@/services/export");
+      await downloadTransactionsCSV();
       toast.success("Export complete");
     } catch (e) {
       toast.error("Export failed");
@@ -324,6 +324,7 @@ export function SettingsPage() {
 
     setIsImportingXLSX(true);
     try {
+      const { importXLSX } = await import("@/services/importXLSX");
       const result = await importXLSX(file);
 
       if (result.errors.length > 0) {
