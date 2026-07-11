@@ -17,7 +17,9 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
         squircle: "var(--radius-squircle)",
         button: "var(--radius-button, var(--radius))",
-        input: "var(--radius-input, 11px)"
+        input: "var(--radius-input, 11px)",
+        card: "var(--radius-card, 0.75rem)",
+        "card-desktop": "var(--radius-card-desktop, var(--radius-squircle))"
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

@@ -11,7 +11,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-xl sm:rounded-squircle premium-glass transition-all duration-300 ease-out",
+          "rounded-card sm:rounded-card-desktop premium-glass transition-all duration-300 ease-out",
           hoverEffect === "translate" && "hover:-translate-y-1",
           hoverEffect === "brightness" && "hover:brightness-[1.03]",
           hoverEffect === "all" && "hover:-translate-y-1 hover:brightness-[1.03]",

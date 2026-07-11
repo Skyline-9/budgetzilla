@@ -71,6 +71,8 @@
     --radius-squircle: 0.5rem;
     --radius-button: 0.5rem;
     --radius-input: 11px;
+    --radius-card: 0.75rem; /* 12px mobile */
+    --radius-card-desktop: var(--radius-squircle); /* 8px squircle desktop */
     --bg-grid-color: rgba(0, 0, 0, 0.03);
 
     /* Semantic aliases (requested) */
