@@ -311,7 +311,7 @@ export function CategoryInspectorPanel(props: InspectorProps & { containerRef?: 
   return (
     <div
       ref={containerRef as any}
-      className="h-[calc(100dvh-7.25rem)] rounded-3xl border border-border/60 bg-card/90 p-4 shadow-soft-lg"
+      className="h-[calc(100dvh-7.25rem)] panel-glass p-4"
     >
       <CategoryInspectorContent {...rest} />
     </div>

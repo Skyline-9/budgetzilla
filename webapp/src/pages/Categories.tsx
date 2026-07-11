@@ -1148,7 +1148,7 @@ export function CategoriesPage() {
 
       {selectedCount ? (
         <div className="sticky bottom-4 z-10 xl:hidden">
-          <div className="rounded-3xl border border-border/60 bg-background/60 p-3 shadow-soft-lg backdrop-blur-xl">
+          <div className="panel-glass p-3 bg-background/60">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="text-xs font-semibold text-muted-foreground">
                 {selectedCount} selected
