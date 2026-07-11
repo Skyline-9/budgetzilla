@@ -342,7 +342,7 @@ export function DateInput({
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              "flex h-9 w-full rounded-2xl border border-input bg-card/85 px-3 py-1 pr-10 text-sm",
+              "flex h-9 w-full rounded-input border border-input bg-card/85 px-3 py-1 pr-10 text-sm",
               "placeholder:text-muted-foreground/90",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-ring/40 transition",
               "disabled:cursor-not-allowed disabled:opacity-50",

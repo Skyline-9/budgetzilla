@@ -95,12 +95,15 @@ export function Topbar({
         
         <div className="flex min-w-0 flex-1 items-center gap-2">
           {/* Mobile search icon */}
-          <button
-            className="md:hidden p-2 rounded-md hover:bg-muted"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
             onClick={() => setSearchOpen(!searchOpen)}
+            aria-label="Search"
           >
             <Search className="h-5 w-5" />
-          </button>
+          </Button>
 
           {/* Desktop search input */}
           <div className="relative hidden w-full max-w-[560px] md:block">
