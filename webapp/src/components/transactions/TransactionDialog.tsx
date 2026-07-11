@@ -17,7 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cn";
 import { buildCategoryTreeRows } from "@/lib/categoryHierarchy";
-import { AiScanner } from "./AiScanner";
+
+const AiScanner = React.lazy(() => import("./AiScanner").then(m => ({ default: m.AiScanner })));
 
 const transactionSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use MM/DD/YYYY"),
@@ -307,7 +308,9 @@ export function TransactionDialog(props: {
             </TabsContent>
 
             <TabsContent value="ai">
-              <AiScanner onComplete={() => onOpenChange(false)} />
+              <React.Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground animate-pulse">Loading AI scanner components...</div>}>
+                <AiScanner onComplete={() => onOpenChange(false)} />
+              </React.Suspense>
             </TabsContent>
           </Tabs>
         ) : (

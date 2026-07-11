@@ -39,9 +39,9 @@ import {
   writeListOrDelete,
   writeOrDelete,
 } from "@/lib/urlState";
-import { AiChatWidget } from "@/components/dashboard/AiChatWidget";
 
 const DashboardChartsLazy = React.lazy(() => import("@/components/dashboard/DashboardCharts"));
+const AiChatWidgetLazy = React.lazy(() => import("@/components/dashboard/AiChatWidget").then(m => ({ default: m.AiChatWidget })));
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -419,7 +419,9 @@ export function DashboardPage() {
       </section>
       </motion.div>
 
-      <AiChatWidget />
+      <React.Suspense fallback={null}>
+        <AiChatWidgetLazy />
+      </React.Suspense>
 
       {recapOpen && <RecapHero stats={recapStats} onClose={() => setRecapOpen(false)} />}
     </motion.div>
