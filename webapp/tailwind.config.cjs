@@ -105,6 +105,10 @@ module.exports = {
           "0%, 100%": { opacity: 1, transform: "scale(1)" },
           "50%": { opacity: 0.9, transform: "scale(1.05)" }
         }
+      },
+      scale: {
+        "interactive-hover": "1.02",
+        "interactive-active": "0.98",
       }
     }
   },
