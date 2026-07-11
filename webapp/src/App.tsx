@@ -1,3 +1,4 @@
+import React from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
@@ -7,10 +8,11 @@ import { ConfirmDialogProvider } from "@/hooks/useConfirmDialog";
 import { ScreenReaderAnnouncerProvider } from "@/components/ui/screen-reader-announcer";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
-import { CategoriesPage } from "@/pages/Categories";
-import { DashboardPage } from "@/pages/Dashboard";
-import { SettingsPage } from "@/pages/Settings";
-import { TransactionsPage } from "@/pages/Transactions";
+
+const DashboardPage = React.lazy(() => import("@/pages/Dashboard").then(m => ({ default: m.DashboardPage })));
+const TransactionsPage = React.lazy(() => import("@/pages/Transactions").then(m => ({ default: m.TransactionsPage })));
+const CategoriesPage = React.lazy(() => import("@/pages/Categories").then(m => ({ default: m.CategoriesPage })));
+const SettingsPage = React.lazy(() => import("@/pages/Settings").then(m => ({ default: m.SettingsPage })));
 
 
 function AppInner() {
@@ -22,15 +24,17 @@ function AppInner() {
         <ScreenReaderAnnouncerProvider>
           <TooltipProvider delayDuration={120}>
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <Routes>
-              <Route element={<AppShell />}>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/transactions" element={<TransactionsPage />} />
-                <Route path="/categories" element={<CategoriesPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Route>
-            </Routes>
+              <React.Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background text-muted-foreground animate-pulse text-sm">Loading Budgetzilla...</div>}>
+                <Routes>
+                  <Route element={<AppShell />}>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/transactions" element={<TransactionsPage />} />
+                    <Route path="/categories" element={<CategoriesPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                  </Route>
+                </Routes>
+              </React.Suspense>
               <WelcomeModal />
             </BrowserRouter>
 
