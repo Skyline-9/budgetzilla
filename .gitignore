@@ -79,4 +79,7 @@ webapp/src-tauri/gen/apple/*.xcodeproj/project.xcworkspace/xcuserdata/
 
 # Swift Package Manager build artifacts
 /macos-app/.build/
+# Superpowers tooling
+docs/superpowers/
+
 
