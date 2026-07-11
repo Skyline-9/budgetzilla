@@ -69,6 +69,8 @@
 
     --radius: 0.5rem;
     --radius-squircle: 0.5rem;
+    --radius-button: 0.5rem;
+    --radius-input: 11px;
     --bg-grid-color: rgba(0, 0, 0, 0.03);
 
     /* Semantic aliases (requested) */
@@ -235,6 +237,26 @@
 
   h1, h2, h3 {
     font-family: var(--font-display);
+  }
+
+  /* Centralized Custom Scrollbar Styles */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--border) / 0.5);
+    border-radius: var(--radius-button);
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border));
+  }
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border) / 0.5) transparent;
   }
 }
 
