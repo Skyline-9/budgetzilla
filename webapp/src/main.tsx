@@ -5,6 +5,7 @@ import { DatabaseProvider } from "./providers/DatabaseProvider";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk";
 import "./index.css";
+import { initPerformanceMonitoring } from "./lib/performanceMonitor";
 
 // Detect Tauri platform for safe area handling
 if ("__TAURI_INTERNALS__" in window) {
@@ -24,6 +25,8 @@ if ("__TAURI_INTERNALS__" in window) {
     }
   });
 }
+
+initPerformanceMonitoring();
 
 const rootElement = document.getElementById("root");
 
