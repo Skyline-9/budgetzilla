@@ -11,7 +11,7 @@ Transactions are the core of Budgetzilla. Every purchase, payment, or income you
 
 Press `N` anywhere in the app to open the quick add dialog. Fill in:
 
-- **Amount** — The transaction amount (positive for income, negative for expenses)
+- **Amount** — The transaction amount. You can enter this as a positive number; Budgetzilla will automatically sign it as negative for expense categories, or positive for income categories.
 - **Description** — What was this transaction for?
 - **Category** — Select or create a category
 - **Date** — Defaults to today
@@ -24,7 +24,7 @@ Navigate to the Transactions page and click the **+ Add Transaction** button for
 
 | Field | Description |
 |-------|-------------|
-| Amount | The monetary value (positive = income, negative = expense) |
+| Amount | The monetary value (automatically signed based on the category type: negative for expenses, positive for income) |
 | Description | A brief note about the transaction |
 | Category | The spending/income category |
 | Date | When the transaction occurred |
