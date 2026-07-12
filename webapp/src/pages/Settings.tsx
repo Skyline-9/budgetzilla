@@ -13,18 +13,12 @@ import {
   Trash2, 
   Upload,
   HelpCircle,
-  BookOpen,
   ChevronRight,
   ArrowRight,
   Receipt,
   Tags,
   Target,
-  Activity,
-  Lightbulb,
-  Keyboard,
-  ShieldCheck,
-  Smartphone,
-  Info
+  Lightbulb
 } from "lucide-react";
 import { isWebGpuAvailable, ensureModelLoaded, isModelLoaded, type ModelStatus } from "@/services/webgpuInference";
 import type { InferenceBackend } from "@/services/localAiParser";
@@ -39,54 +33,77 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useTheme } from "@/providers/ThemeProvider";
 import { getCurrency, setCurrency } from "@/lib/format";
 import { clearAllData } from "@/db/schema";
 import { cn } from "@/lib/cn";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card as GlobalCard } from "@/components/ui/card";
 
-type CardTint = "neutral" | "income" | "expense" | "accent" | "hero" | "warm";
-
-function Card({
-  title,
-  icon,
-  children,
-  className,
-  tint = "neutral",
-}: {
+interface SettingsCardProps {
   title: string;
-  icon?: React.ReactNode;
+  description?: string;
   children: React.ReactNode;
   className?: string;
-  tint?: CardTint;
-}) {
-  void tint;
+}
 
+function SettingsCard({
+  title,
+  description,
+  children,
+  className,
+}: SettingsCardProps) {
   return (
-    <GlobalCard
-      hoverEffect="all"
-      className={cn(
-        "group relative overflow-hidden p-6",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-2 text-sm font-semibold tracking-tight text-muted-foreground/80">
-        {icon ? (
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-background/40 text-muted-foreground">
-            {icon}
-          </span>
-        ) : null}
-        <span>{title}</span>
+    <div className={cn("space-y-3.5", className)}>
+      <div className="px-1">
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">{title}</h3>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
-      <div className="mt-4">{children}</div>
-    </GlobalCard>
+      <div className="overflow-hidden rounded-2xl border border-border/40 bg-card/25 backdrop-blur-md shadow-soft divide-y divide-border/20">
+        {children}
+      </div>
+    </div>
   );
 }
 
-// ... GoogleDriveSyncCard remains mostly same but uses refactored Card ...
+interface SettingsRowProps {
+  icon?: React.ReactNode;
+  iconBgColor?: string;
+  iconTextColor?: string;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+function SettingsRow({
+  icon,
+  iconBgColor = "bg-primary/10",
+  iconTextColor = "text-primary",
+  title,
+  description,
+  children,
+  className,
+}: SettingsRowProps) {
+  return (
+    <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/5", className)}>
+      <div className="flex items-start gap-4">
+        {icon && (
+          <div className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl", iconBgColor, iconTextColor)}>
+            {icon}
+          </div>
+        )}
+        <div className="space-y-0.5">
+          <div className="text-sm font-medium tracking-tight">{title}</div>
+          {description && <div className="text-xs text-muted-foreground max-w-md">{description}</div>}
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function GoogleDriveSyncCard() {
   const queryClient = useQueryClient();
   const { data: status, isLoading } = useDriveStatusQuery();
@@ -139,36 +156,26 @@ function GoogleDriveSyncCard() {
   const lastSyncAt = status?.last_sync_at;
 
   return (
-    <Card
-      title="Google Drive"
-      icon={isConnected ? <Cloud className="h-4 w-4" /> : <CloudOff className="h-4 w-4" />}
-      tint={isConnected ? "income" : "neutral"}
-    >
-      <div className="space-y-4">
-        <div className="flex items-center gap-3 text-sm">
-          <div
-            className={cn(
-              "h-2 w-2 rounded-full",
-              isConnected ? "bg-income animate-pulse" : "bg-muted-foreground/40"
-            )}
-          />
-          <span className={isConnected ? "text-income font-semibold" : "text-muted-foreground"}>
-            {isLoading ? "Checking..." : isConnected ? "Connected" : "Not connected"}
-          </span>
-        </div>
-
-        {isConnected && lastSyncAt && (
-          <div className="text-xs text-muted-foreground">
-            Last synced: {new Date(lastSyncAt).toLocaleString()}
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-2">
+    <SettingsCard title="Cloud Sync" description="Keep your data backed up securely and synced across devices.">
+      <SettingsRow
+        icon={isConnected ? <Cloud className="h-4 w-4" /> : <CloudOff className="h-4 w-4" />}
+        iconBgColor={isConnected ? "bg-emerald-500/10" : "bg-muted/30"}
+        iconTextColor={isConnected ? "text-emerald-500" : "text-muted-foreground"}
+        title="Google Drive Sync"
+        description={
+          isLoading
+            ? "Checking connection status..."
+            : isConnected
+              ? `Connected. Last synced: ${lastSyncAt ? new Date(lastSyncAt).toLocaleString() : "Never"}`
+              : "Not connected. Connect to back up your local database securely."
+        }
+      >
+        <div className="flex items-center gap-2">
           {!isConnected ? (
             <Button
               variant="secondary"
               size="sm"
-              className="px-4"
+              className="h-9 px-4"
               onClick={handleConnect}
               disabled={isConnecting || isLoading}
             >
@@ -180,7 +187,7 @@ function GoogleDriveSyncCard() {
               <Button
                 variant="secondary"
                 size="sm"
-                className="px-4"
+                className="h-9 px-4"
                 onClick={handleSync}
                 disabled={isSyncing}
               >
@@ -190,7 +197,7 @@ function GoogleDriveSyncCard() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="px-4"
+                className="h-9 px-3 text-muted-foreground hover:text-foreground"
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
               >
@@ -199,8 +206,8 @@ function GoogleDriveSyncCard() {
             </>
           )}
         </div>
-      </div>
-    </Card>
+      </SettingsRow>
+    </SettingsCard>
   );
 }
 
@@ -393,135 +400,231 @@ export function SettingsPage() {
     }
   };
 
+  // Local navigation and Intersection Observer
+  const [activeSection, setActiveSection] = React.useState("preferences");
+
+  React.useEffect(() => {
+    const sections = ["preferences", "sync", "ai", "data", "help"];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -60% 0px" }
+    );
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveSection(id);
+    }
+  };
+
+  const navItems = [
+    { id: "preferences", label: "Preferences", icon: <Palette className="h-4 w-4" /> },
+    { id: "sync", label: "Cloud Sync", icon: <Cloud className="h-4 w-4" /> },
+    { id: "ai", label: "AI Engine", icon: <Cpu className="h-4 w-4" /> },
+    { id: "data", label: "Data & Backup", icon: <Database className="h-4 w-4" /> },
+    { id: "help", label: "Help & Support", icon: <HelpCircle className="h-4 w-4" /> },
+  ];
+
   return (
-    <div className="space-y-10 pb-20">
-      <header className="space-y-1">
+    <div className="space-y-8 pb-20">
+      <header className="space-y-1.5">
         <div className="text-2xl font-semibold tracking-tight">Settings</div>
         <div className="text-sm text-muted-foreground text-balance">
-          Manage your preferences, data, and find help.
+          Manage your preferences, local database, and cloud synchronization.
         </div>
       </header>
 
-      <Tabs defaultValue="data" className="space-y-10">
-        <TabsList className="bg-background/40 p-1 border border-border/40 h-11 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-nowrap w-full">
-          <TabsTrigger value="data" className="px-4 sm:px-8 h-full text-sm font-semibold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Data & Sync</TabsTrigger>
-          <TabsTrigger value="preferences" className="px-4 sm:px-8 h-full text-sm font-semibold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Preferences</TabsTrigger>
-          <TabsTrigger value="help" className="px-4 sm:px-8 h-full text-sm font-semibold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Help & Support</TabsTrigger>
-        </TabsList>
+      {/* Mobile Sticky Pills Navigation */}
+      <nav className="md:hidden flex overflow-x-auto gap-2 pb-4 scrollbar-none sticky top-0 bg-background/80 backdrop-blur-md z-10 py-3 border-b border-border/20 -mx-3 px-3">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => scrollToSection(item.id)}
+            className={cn(
+              "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200",
+              activeSection === item.id
+                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-[1.02]"
+                : "bg-card/40 border border-border/40 text-muted-foreground hover:bg-card/60 hover:text-foreground"
+            )}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
 
-        <TabsContent value="preferences" className="space-y-10 outline-none">
-          <section className="space-y-6">
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Appearance</h2>
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <Card title="Theme" icon={<Palette className="h-4 w-4" />} tint="hero">
-                <div className="flex items-center justify-between rounded-input border border-border/40 bg-background/20 px-4 py-4 transition-all hover:bg-background/30">
-                  <div className="flex items-center gap-3">
-                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-background/40">
-                      {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold">{theme === "dark" ? "Dark mode" : "Light mode"}</div>
-                      <div className="text-xs text-muted-foreground">{theme === "dark" ? "OLED-ready deep blacks" : "Clean, bright interface"}</div>
-                    </div>
-                  </div>
+      {/* Desktop Split Layout */}
+      <div className="flex flex-col md:flex-row md:items-start gap-8 lg:gap-12">
+        {/* Sticky Local Nav Sidebar (desktop only) */}
+        <aside className="hidden md:block sticky top-24 shrink-0 w-48 lg:w-56 space-y-1.5">
+          <div className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest px-3 mb-2">Sections</div>
+          <nav className="space-y-1">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => scrollToSection(item.id)}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 text-left",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                  activeSection === item.id
+                    ? "bg-primary/10 text-primary border-l-2 border-primary pl-2 shadow-sm shadow-primary/5 font-bold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/10 pl-3"
+                )}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Settings Sections Container */}
+        <div className="flex-1 max-w-3xl space-y-12">
+          {/* Section: Preferences */}
+          <section id="preferences" className="scroll-mt-28">
+            <SettingsCard title="Preferences" description="Customize how Budgetzilla looks and formats information.">
+              {/* Theme Row */}
+              <SettingsRow
+                icon={theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                iconBgColor="bg-amber-500/10"
+                iconTextColor="text-amber-500"
+                title="Appearance"
+                description={theme === "dark" ? "Dark mode (OLED-ready deep blacks)" : "Light mode (Clean, bright interface)"}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{theme === "dark" ? "Dark" : "Light"}</span>
                   <Switch checked={theme === "dark"} onCheckedChange={() => toggleTheme()} />
                 </div>
-              </Card>
-
-              <Card title="Currency" icon={<span className="text-sm font-bold">$</span>} tint="warm">
-                <div className="space-y-4">
-                  <div className="text-xs text-muted-foreground">
-                    Display currency for all amounts across the app.
-                  </div>
-                  <div className="space-y-2">
-                    <Select
-                      value={currency}
-                      onValueChange={(v) => {
-                        setCurrencyState(v);
-                        setCurrency(v);
-                        toast.success("Currency saved");
-                      }}
-                    >
-                      <SelectTrigger className="max-w-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD ($)</SelectItem>
-                        <SelectItem value="EUR">EUR (€)</SelectItem>
-                        <SelectItem value="GBP">GBP (£)</SelectItem>
-                        <SelectItem value="JPY">JPY (¥)</SelectItem>
-                        <SelectItem value="CAD">CAD ($)</SelectItem>
-                        <SelectItem value="AUD">AUD ($)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </Card>
-            </div>
+              </SettingsRow>
+              
+              {/* Currency Row */}
+              <SettingsRow
+                icon={<span className="text-sm font-bold">$</span>}
+                iconBgColor="bg-emerald-500/10"
+                iconTextColor="text-emerald-500"
+                title="Currency"
+                description="Display currency for all amounts across the app."
+              >
+                <Select
+                  value={currency}
+                  onValueChange={(v) => {
+                    setCurrencyState(v);
+                    setCurrency(v);
+                    toast.success("Currency saved");
+                  }}
+                >
+                  <SelectTrigger className="w-36 h-9 bg-background/40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="GBP">GBP (£)</SelectItem>
+                    <SelectItem value="JPY">JPY (¥)</SelectItem>
+                    <SelectItem value="CAD">CAD ($)</SelectItem>
+                    <SelectItem value="AUD">AUD ($)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </SettingsRow>
+            </SettingsCard>
           </section>
 
-          <section className="space-y-6">
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">AI Engine</h2>
-            <Card title="Inference Backend" icon={<Cpu className="h-4 w-4" />} tint="accent">
-              <div className="space-y-6">
-                <div className="text-xs text-muted-foreground">
-                  Choose how AI features like receipt scanning are powered.
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold">Backend</Label>
-                  <Select value={inferenceBackend} onValueChange={handleBackendChange}>
-                    <SelectTrigger className="max-w-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="webgpu" disabled={!webGpuSupported}>
-                        In-Browser (WebGPU) {!webGpuSupported && "— not supported"}
-                      </SelectItem>
-                      <SelectItem value="ollama">Ollama (External)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* Section: Cloud Sync */}
+          <section id="sync" className="scroll-mt-28">
+            <GoogleDriveSyncCard />
+          </section>
 
-                {inferenceBackend === "webgpu" && (
-                  <div className="space-y-4 rounded-input border border-border/40 bg-background/20 p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-semibold">Gemma 4 E2B</div>
-                        <div className="text-xs text-muted-foreground">~1.2 GB, cached after first download</div>
+          {/* Section: AI Engine */}
+          <section id="ai" className="scroll-mt-28">
+            <SettingsCard title="AI Engine" description="Configure how receipt scanning and other intelligence features are processed.">
+              <SettingsRow
+                icon={<Cpu className="h-4 w-4" />}
+                iconBgColor="bg-violet-500/10"
+                iconTextColor="text-violet-500"
+                title="Inference Backend"
+                description="Choose how AI features like receipt scanning are powered."
+              >
+                <Select value={inferenceBackend} onValueChange={handleBackendChange}>
+                  <SelectTrigger className="w-56 h-9 bg-background/40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="webgpu" disabled={!webGpuSupported}>
+                      In-Browser (WebGPU) {!webGpuSupported && "— not supported"}
+                    </SelectItem>
+                    <SelectItem value="ollama">Ollama (External Local)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </SettingsRow>
+
+              {/* WebGPU Status and download progress row */}
+              {inferenceBackend === "webgpu" && (
+                <div className="px-5 py-4 bg-muted/5 border-t border-border/10 space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-medium tracking-tight">Gemma 4 E2B Model</div>
+                      <div className="text-xs text-muted-foreground">
+                        ~1.2 GB file. Runs entirely in your browser using your GPU. Cached after downloading.
                       </div>
+                    </div>
+                    <div>
                       {modelStatus === "ready" ? (
-                        <div className="text-xs font-semibold text-income">Ready</div>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Ready
+                        </span>
                       ) : modelStatus === "downloading" ? (
-                        <div className="text-xs font-semibold text-accent">{downloadProgress}%</div>
+                        <span className="text-xs font-semibold text-primary">{downloadProgress}%</span>
                       ) : (
                         <Button
                           variant="secondary"
                           size="sm"
-                          className="px-4"
+                          className="h-8 px-3"
                           onClick={handlePreDownload}
                         >
-                          <Download className="mr-1.5 h-4 w-4" />
-                          Pre-download
+                          <Download className="mr-1.5 h-3.5 w-3.5" />
+                          Download Model
                         </Button>
                       )}
                     </div>
-                    {modelStatus === "downloading" && (
-                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-border" role="progressbar" aria-valuenow={downloadProgress} aria-valuemin={0} aria-valuemax={100} aria-label={`Model download ${downloadProgress}%`}>
-                        <div
-                          className="h-full rounded-full bg-primary transition-all duration-300"
-                          style={{ width: `${downloadProgress}%` }}
-                        />
-                      </div>
-                    )}
                   </div>
-                )}
+                  
+                  {modelStatus === "downloading" && (
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-border/40" role="progressbar" aria-valuenow={downloadProgress} aria-valuemin={0} aria-valuemax={100}>
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-300"
+                        style={{ width: `${downloadProgress}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {inferenceBackend === "ollama" && (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Ollama URL</Label>
+              {/* Ollama Configuration fields row */}
+              {inferenceBackend === "ollama" && (
+                <div className="px-5 py-5 bg-muted/5 border-t border-border/10">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-muted-foreground">Ollama Server URL</Label>
                       <Input
-                        className="bg-background/20 border-border/40"
+                        className="h-9 bg-background/20 border-border/40"
                         defaultValue={localStorage.getItem("ollamaUrl") || "http://localhost:11434"}
                         onBlur={(e) => {
                           localStorage.setItem("ollamaUrl", e.target.value);
@@ -529,10 +632,10 @@ export function SettingsPage() {
                         }}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Model Name</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-muted-foreground">Model Name</Label>
                       <Input
-                        className="bg-background/20 border-border/40"
+                        className="h-9 bg-background/20 border-border/40"
                         defaultValue={localStorage.getItem("ollamaModel") || "gemma4"}
                         onBlur={(e) => {
                           localStorage.setItem("ollamaModel", e.target.value);
@@ -541,120 +644,148 @@ export function SettingsPage() {
                       />
                     </div>
                   </div>
-                )}
-              </div>
-            </Card>
-          </section>
-        </TabsContent>
-
-        <TabsContent value="data" className="space-y-10 outline-none">
-          <section className="space-y-6">
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Cloud Sync</h2>
-            <GoogleDriveSyncCard />
+                </div>
+              )}
+            </SettingsCard>
           </section>
 
-          <section className="space-y-6">
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Import & Export</h2>
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <Card title="Export" icon={<Download className="h-4 w-4" />} tint="income">
-                <div className="space-y-4">
-                  <div className="text-xs text-muted-foreground">Download your transaction history.</div>
-                  <div className="flex flex-wrap gap-3">
-                    <Button variant="secondary" size="sm" className="px-5" onClick={handleExportXLSX} disabled={isExporting}>
-                      <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel
-                    </Button>
-                    <Button variant="secondary" size="sm" className="px-5" onClick={handleExportCSV} disabled={isExporting}>
-                      <Download className="mr-2 h-4 w-4" /> CSV
-                    </Button>
+          {/* Section: Data & Backup */}
+          <section id="data" className="scroll-mt-28">
+            <SettingsCard title="Data & Backup" description="Import data from other apps, export your transactions, or reset the app.">
+              {/* Export Row */}
+              <SettingsRow
+                icon={<Download className="h-4 w-4" />}
+                iconBgColor="bg-blue-500/10"
+                iconTextColor="text-blue-500"
+                title="Export Data"
+                description="Download your full transaction history to your device."
+              >
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="secondary" size="sm" className="h-8 px-3" onClick={handleExportXLSX} disabled={isExporting}>
+                    <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /> Excel
+                  </Button>
+                  <Button variant="secondary" size="sm" className="h-8 px-3" onClick={handleExportCSV} disabled={isExporting}>
+                    <Download className="mr-1.5 h-3.5 w-3.5" /> CSV
+                  </Button>
+                </div>
+              </SettingsRow>
+
+              {/* Import Row */}
+              <SettingsRow
+                icon={<Upload className="h-4 w-4" />}
+                iconBgColor="bg-indigo-500/10"
+                iconTextColor="text-indigo-500"
+                title="Import Data"
+                description="Import historical transactions from Excel or Cashew format."
+              >
+                <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+                <input ref={xlsxInputRef} type="file" accept=".xlsx" onChange={handleXLSXFileChange} className="hidden" />
+                <input ref={spreadsheetInputRef} type="file" accept=".csv" onChange={handleSpreadsheetFileChange} className="hidden" />
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="secondary" size="sm" className="h-8 px-3" onClick={handleImportXLSXClick} disabled={isImportingXLSX}>
+                    Excel
+                  </Button>
+                  <Button variant="secondary" size="sm" className="h-8 px-3" onClick={handleImportClick} disabled={isImporting}>
+                    Cashew
+                  </Button>
+                </div>
+              </SettingsRow>
+
+              {/* Danger Zone Row */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-destructive/5 bg-destructive/[0.01]">
+                <div className="flex items-start gap-4">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium tracking-tight text-destructive">Danger Zone: Reset App</div>
+                    <div className="text-xs text-muted-foreground max-w-md">
+                      Permanently delete all transactions, budgets, and categories. This cannot be undone.
+                    </div>
                   </div>
                 </div>
-              </Card>
+                <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
+                  <Button variant="destructive" size="sm" className="h-8 px-4" onClick={handleClearData}>
+                    Clear All Data
+                  </Button>
+                </div>
+              </div>
+            </SettingsCard>
+          </section>
 
-              <Card title="Import" icon={<Upload className="h-4 w-4" />} tint="accent">
-                <div className="space-y-4">
-                  <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
-                  <input ref={xlsxInputRef} type="file" accept=".xlsx" onChange={handleXLSXFileChange} className="hidden" />
-                  <input ref={spreadsheetInputRef} type="file" accept=".csv" onChange={handleSpreadsheetFileChange} className="hidden" />
-                  <div className="text-xs text-muted-foreground">Restore from backup or external sources.</div>
-                  <div className="flex flex-wrap gap-3">
-                    <Button variant="secondary" size="sm" className="px-5" onClick={handleImportXLSXClick} disabled={isImportingXLSX}>
-                      Excel
-                    </Button>
-                    <Button variant="secondary" size="sm" className="px-5" onClick={handleImportClick} disabled={isImporting}>
-                      Cashew
-                    </Button>
+          {/* Section: Help & Support */}
+          <section id="help" className="space-y-6 scroll-mt-28">
+            <SettingsCard title="Help & Support" description="Learn how to use Budgetzilla or read our best tips.">
+              <div className="p-5 space-y-6">
+                {/* Learning topics */}
+                <div className="space-y-3">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Guides</div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <HelpTopicCard title="Transactions" description="Log & manage spending." icon={<Receipt className="h-4 w-4" />} />
+                    <HelpTopicCard title="Categories" description="Organize your money." icon={<Tags className="h-4 w-4" />} />
+                    <HelpTopicCard title="Budgets" description="Stay on track easily." icon={<Target className="h-4 w-4" />} />
                   </div>
                 </div>
-              </Card>
-            </div>
-          </section>
 
-          <section className="space-y-6">
-            <h2 className="text-xs font-bold text-destructive uppercase tracking-widest">Danger Zone</h2>
-            <Card title="Reset App" icon={<Trash2 className="h-4 w-4" />} tint="expense">
-              <div className="space-y-4">
-                <div className="text-xs text-muted-foreground">Permanently wipe all local data. This action is irreversible.</div>
-                <Button variant="destructive" size="sm" className="px-6" onClick={handleClearData}>
-                  <Trash2 className="mr-2 h-4 w-4" /> Clear All Data
-                </Button>
+                <hr className="border-border/30" />
+
+                {/* Tips */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <Lightbulb className="h-4 w-4 text-amber-500" />
+                    <span>Quick Tips</span>
+                  </div>
+                  
+                  <div className="space-y-3.5 pl-1">
+                    <div className="flex gap-3 text-xs">
+                      <div className="h-5 w-5 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-semibold text-[10px]">1</div>
+                      <div className="text-muted-foreground mt-0.5 leading-snug">
+                        <strong className="text-foreground">Hierarchical Categories:</strong> Drag and drop categories in the categories manager to organize them hierarchically.
+                      </div>
+                    </div>
+                    <div className="flex gap-3 text-xs">
+                      <div className="h-5 w-5 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-semibold text-[10px]">2</div>
+                      <div className="text-muted-foreground mt-0.5 leading-snug">
+                        <strong className="text-foreground">AI Intelligence:</strong> Ask questions about your financial history in natural language via the AI Chat sidebar.
+                      </div>
+                    </div>
+                    <div className="flex gap-3 text-xs">
+                      <div className="h-5 w-5 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-semibold text-[10px]">3</div>
+                      <div className="text-muted-foreground mt-0.5 leading-snug">
+                        <strong className="text-foreground">Automatic Sync:</strong> Enable Google Drive Sync to automatically sync data across all your client devices.
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </Card>
+            </SettingsCard>
           </section>
-        </TabsContent>
-
-        <TabsContent value="help" className="space-y-10 outline-none">
-          <section className="space-y-6">
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Learning Budgetzilla</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <HelpTopicCard title="Transactions" description="How to log and manage spending." icon={<Receipt className="h-5 w-5" />} />
-              <HelpTopicCard title="Categories" description="Organizing your money effectively." icon={<Tags className="h-5 w-5" />} />
-              <HelpTopicCard title="Budgets" description="Setting targets and staying on track." icon={<Target className="h-5 w-5" />} />
-            </div>
-          </section>
-
-          <section className="space-y-6">
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Quick Tips</h2>
-            <Card title="Pro Features" icon={<Lightbulb className="h-4 w-4" />} tint="warm">
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex gap-3">
-                  <div className="h-5 w-5 rounded-full bg-warm/10 text-warm flex items-center justify-center shrink-0">1</div>
-                  <span>Drag-and-drop categories to nest them for better organization.</span>
-                </li>
-                <li className="flex gap-3">
-                  <div className="h-5 w-5 rounded-full bg-warm/10 text-warm flex items-center justify-center shrink-0">2</div>
-                  <span>Use the AI Chat widget to ask questions about your spending in natural language.</span>
-                </li>
-                <li className="flex gap-3">
-                  <div className="h-5 w-5 rounded-full bg-warm/10 text-warm flex items-center justify-center shrink-0">3</div>
-                  <span>Sync with Google Drive to keep your data safe and accessible across devices.</span>
-                </li>
-              </ul>
-            </Card>
-          </section>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
 
 function HelpTopicCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
   return (
-    <GlobalCard
-      hoverEffect="all"
-      className="group relative overflow-hidden p-6"
+    <button
+      type="button"
+      className={cn(
+        "group relative flex items-center justify-between p-4 rounded-xl text-left transition-all duration-200",
+        "border border-border/40 bg-card/25 hover:bg-card/45 hover:border-border/60 hover:-translate-y-0.5 shadow-sm",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 w-full"
+      )}
     >
-      <div className="flex items-center gap-4">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:scale-110">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:scale-105 shrink-0">
           {icon}
         </div>
-        <div>
-          <h3 className="text-sm font-bold tracking-tight">{title}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+        <div className="min-w-0">
+          <h4 className="text-xs font-semibold tracking-tight truncate">{title}</h4>
+          <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight truncate">{description}</p>
         </div>
       </div>
-      <Button variant="ghost" size="sm" className="mt-4 w-full justify-between">
-        Learn more <ArrowRight className="h-3 w-3 opacity-50" />
-      </Button>
-    </GlobalCard>
+      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 shrink-0" />
+    </button>
   );
 }

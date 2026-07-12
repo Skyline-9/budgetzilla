@@ -1,8 +1,39 @@
 import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, createLogger } from "vite";
+
+// Suppress Node.js v22+ module.register() deprecation warning from dependencies
+process.on("warning", (warning) => {
+  if (
+    warning.name === "DeprecationWarning" &&
+    warning.message.includes("module.register")
+  ) {
+    return;
+  }
+  console.warn(warning.stack || `${warning.name}: ${warning.message}`);
+});
+
+// Suppress PostCSS "did not pass the from option" warnings
+const customLogger = createLogger();
+const originalWarn = customLogger.warn;
+const originalWarnOnce = customLogger.warnOnce;
+
+customLogger.warn = (msg, options) => {
+  if (msg.includes("postcss.parse") || (msg.includes("from option") && msg.includes("PostCSS"))) {
+    return;
+  }
+  originalWarn(msg, options);
+};
+
+customLogger.warnOnce = (msg, options) => {
+  if (msg.includes("postcss.parse") || (msg.includes("from option") && msg.includes("PostCSS"))) {
+    return;
+  }
+  originalWarnOnce(msg, options);
+};
 
 export default defineConfig({
+  customLogger,
   plugins: [
     react({
       babel: {
