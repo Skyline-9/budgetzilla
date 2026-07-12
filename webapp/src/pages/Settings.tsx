@@ -168,7 +168,7 @@ function GoogleDriveSyncCard() {
             <Button
               variant="secondary"
               size="sm"
-              className="rounded-full px-4"
+              className="px-4"
               onClick={handleConnect}
               disabled={isConnecting || isLoading}
             >
@@ -180,7 +180,7 @@ function GoogleDriveSyncCard() {
               <Button
                 variant="secondary"
                 size="sm"
-                className="rounded-full px-4"
+                className="px-4"
                 onClick={handleSync}
                 disabled={isSyncing}
               >
@@ -190,7 +190,7 @@ function GoogleDriveSyncCard() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="rounded-full px-4"
+                className="px-4"
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
               >
@@ -414,7 +414,7 @@ export function SettingsPage() {
             <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Appearance</h2>
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
               <Card title="Theme" icon={<Palette className="h-4 w-4" />} tint="hero">
-                <div className="flex items-center justify-between rounded-2xl border border-border/40 bg-background/20 px-4 py-4 transition-all hover:bg-background/30">
+                <div className="flex items-center justify-between rounded-input border border-border/40 bg-background/20 px-4 py-4 transition-all hover:bg-background/30">
                   <div className="flex items-center gap-3">
                     <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-background/40">
                       {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
@@ -442,7 +442,7 @@ export function SettingsPage() {
                         toast.success("Currency saved");
                       }}
                     >
-                      <SelectTrigger className="max-w-xs rounded-xl bg-background/20 border-border/40">
+                      <SelectTrigger className="max-w-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -470,7 +470,7 @@ export function SettingsPage() {
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold">Backend</Label>
                   <Select value={inferenceBackend} onValueChange={handleBackendChange}>
-                    <SelectTrigger className="max-w-xs rounded-xl bg-background/20 border-border/40">
+                    <SelectTrigger className="max-w-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -483,7 +483,7 @@ export function SettingsPage() {
                 </div>
 
                 {inferenceBackend === "webgpu" && (
-                  <div className="space-y-4 rounded-2xl border border-border/40 bg-background/20 p-4">
+                  <div className="space-y-4 rounded-input border border-border/40 bg-background/20 p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-semibold">Gemma 4 E2B</div>
@@ -497,7 +497,7 @@ export function SettingsPage() {
                         <Button
                           variant="secondary"
                           size="sm"
-                          className="rounded-full px-4"
+                          className="px-4"
                           onClick={handlePreDownload}
                         >
                           <Download className="mr-1.5 h-4 w-4" />
@@ -521,7 +521,7 @@ export function SettingsPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold">Ollama URL</Label>
                       <Input
-                        className="rounded-xl bg-background/20 border-border/40"
+                        className="bg-background/20 border-border/40"
                         defaultValue={localStorage.getItem("ollamaUrl") || "http://localhost:11434"}
                         onBlur={(e) => {
                           localStorage.setItem("ollamaUrl", e.target.value);
@@ -532,7 +532,7 @@ export function SettingsPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold">Model Name</Label>
                       <Input
-                        className="rounded-xl bg-background/20 border-border/40"
+                        className="bg-background/20 border-border/40"
                         defaultValue={localStorage.getItem("ollamaModel") || "gemma4"}
                         onBlur={(e) => {
                           localStorage.setItem("ollamaModel", e.target.value);
@@ -560,10 +560,10 @@ export function SettingsPage() {
                 <div className="space-y-4">
                   <div className="text-xs text-muted-foreground">Download your transaction history.</div>
                   <div className="flex flex-wrap gap-3">
-                    <Button variant="secondary" size="sm" className="rounded-full px-5" onClick={handleExportXLSX} disabled={isExporting}>
+                    <Button variant="secondary" size="sm" className="px-5" onClick={handleExportXLSX} disabled={isExporting}>
                       <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel
                     </Button>
-                    <Button variant="secondary" size="sm" className="rounded-full px-5" onClick={handleExportCSV} disabled={isExporting}>
+                    <Button variant="secondary" size="sm" className="px-5" onClick={handleExportCSV} disabled={isExporting}>
                       <Download className="mr-2 h-4 w-4" /> CSV
                     </Button>
                   </div>
@@ -577,10 +577,10 @@ export function SettingsPage() {
                   <input ref={spreadsheetInputRef} type="file" accept=".csv" onChange={handleSpreadsheetFileChange} className="hidden" />
                   <div className="text-xs text-muted-foreground">Restore from backup or external sources.</div>
                   <div className="flex flex-wrap gap-3">
-                    <Button variant="secondary" size="sm" className="rounded-full px-5" onClick={handleImportXLSXClick} disabled={isImportingXLSX}>
+                    <Button variant="secondary" size="sm" className="px-5" onClick={handleImportXLSXClick} disabled={isImportingXLSX}>
                       Excel
                     </Button>
-                    <Button variant="secondary" size="sm" className="rounded-full px-5" onClick={handleImportClick} disabled={isImporting}>
+                    <Button variant="secondary" size="sm" className="px-5" onClick={handleImportClick} disabled={isImporting}>
                       Cashew
                     </Button>
                   </div>
@@ -594,7 +594,7 @@ export function SettingsPage() {
             <Card title="Reset App" icon={<Trash2 className="h-4 w-4" />} tint="expense">
               <div className="space-y-4">
                 <div className="text-xs text-muted-foreground">Permanently wipe all local data. This action is irreversible.</div>
-                <Button variant="destructive" size="sm" className="rounded-full px-6" onClick={handleClearData}>
+                <Button variant="destructive" size="sm" className="px-6" onClick={handleClearData}>
                   <Trash2 className="mr-2 h-4 w-4" /> Clear All Data
                 </Button>
               </div>
@@ -652,7 +652,7 @@ function HelpTopicCard({ title, description, icon }: { title: string; descriptio
           <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         </div>
       </div>
-      <Button variant="ghost" size="sm" className="mt-4 w-full justify-between rounded-xl">
+      <Button variant="ghost" size="sm" className="mt-4 w-full justify-between">
         Learn more <ArrowRight className="h-3 w-3 opacity-50" />
       </Button>
     </GlobalCard>
