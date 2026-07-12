@@ -403,10 +403,10 @@ export function SettingsPage() {
       </header>
 
       <Tabs defaultValue="data" className="space-y-10">
-        <TabsList className="bg-background/40 p-1.5 rounded-full border border-border/40 h-14 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-nowrap w-full">
-          <TabsTrigger value="data" className="rounded-full px-4 sm:px-8 h-full text-sm font-bold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Data & Sync</TabsTrigger>
-          <TabsTrigger value="preferences" className="rounded-full px-4 sm:px-8 h-full text-sm font-bold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Preferences</TabsTrigger>
-          <TabsTrigger value="help" className="rounded-full px-4 sm:px-8 h-full text-sm font-bold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Help & Support</TabsTrigger>
+        <TabsList className="bg-background/40 p-1 border border-border/40 h-11 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-nowrap w-full">
+          <TabsTrigger value="data" className="px-4 sm:px-8 h-full text-sm font-semibold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Data & Sync</TabsTrigger>
+          <TabsTrigger value="preferences" className="px-4 sm:px-8 h-full text-sm font-semibold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Preferences</TabsTrigger>
+          <TabsTrigger value="help" className="px-4 sm:px-8 h-full text-sm font-semibold tracking-tight whitespace-nowrap shrink-0 flex-1 sm:flex-initial">Help & Support</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preferences" className="space-y-10 outline-none">
