@@ -135,7 +135,7 @@ export function BudgetDialog(props: {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="text-danger hover:text-danger hover:bg-danger/5 rounded-full px-6"
+                  className="text-danger hover:text-danger hover:bg-danger/5 px-6"
                   disabled={submitting}
                   onClick={onDelete}
                 >
@@ -148,13 +148,13 @@ export function BudgetDialog(props: {
               <Button
                 type="button"
                 variant="secondary"
-                className="rounded-full px-8"
+                className="px-8"
                 disabled={submitting}
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="rounded-full px-8 shadow-lg shadow-primary/20" disabled={submitting}>
+              <Button type="submit" className="px-8 shadow-lg shadow-primary/20" disabled={submitting}>
                 Save Limit
               </Button>
             </div>

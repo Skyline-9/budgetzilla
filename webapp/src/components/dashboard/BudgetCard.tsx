@@ -95,7 +95,7 @@ export function BudgetCard(props: {
           <div className="mt-1 text-xs text-muted-foreground/60">{subtitle}</div>
         </div>
 
-        <Button variant="secondary" size="sm" onClick={() => setOpen(true)} className="rounded-full px-4">
+        <Button variant="secondary" size="sm" onClick={() => setOpen(true)} className="px-4">
           {budgetCents != null ? "Edit" : "Set"}
         </Button>
       </div>

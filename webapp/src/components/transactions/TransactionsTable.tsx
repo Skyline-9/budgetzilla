@@ -490,7 +490,7 @@ export function TransactionsTable({ transactions, categories, onRowClick, isFilt
         <div className="flex flex-wrap items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="sm" className="rounded-full px-4">
+              <Button variant="secondary" size="sm" className="px-4">
                 <Filter className="h-4 w-4" />
                 Category
                 {categoryId.length ? (
