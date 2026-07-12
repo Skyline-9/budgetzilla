@@ -14,7 +14,7 @@ Budgetzilla can optionally sync your data to Google Drive for backup and cross-d
 
 ## Setting Up Sync
 
-1. Go to **Settings > Cloud Sync**
+1. Go to the **Data & Sync** tab in **Settings**
 2. Click **Connect Google Drive**
 3. Sign in with your Google account
 4. Grant permission to the Budgetzilla app folder only
@@ -61,7 +61,7 @@ Budgetzilla is designed as a single-user app. Simultaneous edits from multiple d
 
 To stop syncing:
 
-1. Go to **Settings > Cloud Sync**
+1. Go to the **Data & Sync** tab in **Settings**
 2. Click **Disconnect**
 3. Your local data remains intact
 4. The Drive folder and data are not deleted
