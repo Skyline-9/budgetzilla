@@ -13,23 +13,23 @@ Budgetzilla supports keyboard shortcuts for common actions.
 | `N` | Add new transaction |
 | `Esc` | Close dialog/modal |
 
-## Navigation
+## Transactions
 
 | Shortcut | Action |
 |----------|--------|
-| `G` then `D` | Go to Dashboard |
-| `G` then `T` | Go to Transactions |
-| `G` then `C` | Go to Categories |
-| `G` then `S` | Go to Settings |
+| `Enter` | Submit Quick Add (in quick add form) |
+| `Esc` | Clear Quick Add |
+| `Enter` / `Space` | Open selected transaction from table |
 
-## Transaction List
+## Categories
 
 | Shortcut | Action |
 |----------|--------|
-| `J` | Move to next transaction |
-| `K` | Move to previous transaction |
-| `Enter` | Open selected transaction |
-| `Delete` | Delete selected transaction |
+| `↑` / `↓` | Move focus between rows |
+| `Enter` | Select focused row |
+| `Space` | Toggle selection of focused row |
+| `Shift + Click` | Range select rows |
+| `Cmd/Ctrl + Click` | Toggle selection (mouse) |
 
 ## Dialogs
 
