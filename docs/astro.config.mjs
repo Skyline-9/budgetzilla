@@ -10,7 +10,7 @@ export default defineConfig({
 			title: 'Budgetzilla',
 			description: 'Local-first budgeting that just works.',
 			logo: {
-				src: './src/assets/logo.png',
+				src: './src/assets/logo.svg',
 				replacesTitle: false,
 			},
 			social: [
