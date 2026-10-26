@@ -4,6 +4,7 @@
  * falls back to sql.js with OPFS persistence for browser.
  */
 import type { Database as SqlJsDatabase, SqlJsStatic } from "sql.js";
+import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import type TauriDatabaseType from "@tauri-apps/plugin-sql";
 
 // Dynamic check for Tauri - checked at runtime, not module load
@@ -40,7 +41,7 @@ async function initSqlJs_(): Promise<SqlJsStatic> {
 
   const initSqlJs = (await import("sql.js")).default;
   SQL = await initSqlJs({
-    locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
+    locateFile: (file: string) => file.endsWith(".wasm") ? sqlWasmUrl : file,
   });
 
   return SQL;
