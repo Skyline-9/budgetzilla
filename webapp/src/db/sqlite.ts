@@ -40,8 +40,15 @@ async function initSqlJs_(): Promise<SqlJsStatic> {
   if (SQL) return SQL;
 
   const initSqlJs = (await import("sql.js")).default;
+  const isTestRuntime = import.meta.env.MODE === "test" || import.meta.env.VITEST === true ||
+    (typeof process !== "undefined" && process.env.NODE_ENV === "test");
   SQL = await initSqlJs({
-    locateFile: (file: string) => file.endsWith(".wasm") ? sqlWasmUrl : file,
+    locateFile: (file: string) => {
+      const located = file.endsWith(".wasm")
+        ? (isTestRuntime ? `${process.cwd()}/node_modules/sql.js/dist/sql-wasm.wasm` : sqlWasmUrl)
+        : file;
+      return located;
+    },
   });
 
   return SQL;

@@ -35,6 +35,8 @@ export function setDriveService(service: typeof driveService): void {
  * Local API client - all operations are performed locally using SQLite.
  */
 export const localApiClient: ApiClient = {
+  async getPlaidAccounts() { return db.getPlaidAccounts(); },
+  async upsertPlaidAccounts(accounts) { return db.upsertPlaidAccounts(accounts); },
   // ==================== Transactions ====================
 
   async getTransactions(params: GetTransactionsParams) {

@@ -16,6 +16,7 @@ function normalizeParams<T extends { categoryId?: string[] }>(params: T): T {
 }
 
 export const qk = {
+  plaidAccounts: () => ["plaidAccounts"] as const,
   categories: () => ["categories"] as const,
   transactions: (params: GetTransactionsParams) => ["transactions", normalizeParams(params)] as const,
   dashboardSummary: (params: GetDashboardParams) =>
@@ -23,6 +24,10 @@ export const qk = {
   dashboardCharts: (params: GetDashboardParams) => ["dashboardCharts", normalizeParams(params)] as const,
   overallBudget: (month: string) => ["overallBudget", month] as const,
 };
+
+export function usePlaidAccountsQuery() {
+  return useQuery({ queryKey: qk.plaidAccounts(), queryFn: () => api.getPlaidAccounts() });
+}
 
 export function useCategoriesQuery() {
   return useQuery({

@@ -34,6 +34,7 @@ export default defineConfig({
 						{ label: 'Dashboard', slug: 'features/dashboard' },
 						{ label: 'Local AI Scanner', slug: 'features/local-ai' },
 						{ label: 'Import & Export', slug: 'features/import-export' },
+						{ label: 'Plaid Bank Sync', slug: 'features/plaid-sync' },
 						{ label: 'Google Drive Sync', slug: 'features/google-drive-sync' },
 					],
 				},

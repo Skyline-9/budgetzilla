@@ -9,8 +9,10 @@
     "typecheck": "tsc --build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:dev": "npm run build:plaid-companion && tauri dev",
+    "tauri:build": "npm run build:plaid-companion && tauri build",
+    "build:plaid-companion": "node scripts/build-plaid-companion.mjs",
+    "package:plaid-companion": "node scripts/package-plaid-companion.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
@@ -54,7 +56,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
-    "@tauri-apps/api": "^2.9.1",
+    "@tauri-apps/api": "~2.9.1",
     "@tauri-apps/cli": "^2.9.6",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.1",
