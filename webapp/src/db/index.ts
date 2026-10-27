@@ -24,6 +24,7 @@ export * from "./transactions";
 export * from "./categories";
 export * from "./budgets";
 export * from "./dashboard";
+export * from "./plaid";
 
 // Re-export types
 export type { GetTransactionsParams } from "./transactions";

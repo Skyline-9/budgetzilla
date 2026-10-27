@@ -1,0 +1,88 @@
+name: Plaid companion and desktop release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+          - runner: macos-latest
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+          - runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            args: ''
+          - runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            args: ''
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux Tauri dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Build companion executable
+        run: cargo build --manifest-path plaid-companion/Cargo.toml --release --target ${{ matrix.target }} --bin plaid-companion
+
+      - name: Stage standalone download and Tauri sidecar
+        working-directory: webapp
+        shell: bash
+        run: |
+          BIN="../plaid-companion/target/${{ matrix.target }}/release/plaid-companion"
+          if [[ "${{ matrix.target }}" == *windows* ]]; then BIN="${BIN}.exe"; fi
+          node scripts/package-plaid-companion.mjs --target "${{ matrix.target }}" --binary "$BIN" --output-dir ../release-assets
+
+      - name: Install frontend dependencies
+        working-directory: webapp
+        run: npm ci
+
+      - name: Build Tauri installers with the companion sidecar
+        working-directory: webapp
+        run: npx tauri build ${{ matrix.args }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plaid-companion-${{ matrix.target }}
+          path: |
+            release-assets/plaid-companion-${{ matrix.target }}*
+            webapp/src-tauri/target/release/bundle/**
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: plaid-companion-*
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/**
+          generate_release_notes: true
+          draft: true

@@ -38,6 +38,7 @@ import { useTheme } from "@/providers/ThemeProvider";
 import { getCurrency, setCurrency } from "@/lib/format";
 import { clearAllData } from "@/db/schema";
 import { cn } from "@/lib/cn";
+import { PlaidSyncCard } from "@/components/settings/PlaidSyncCard";
 
 interface SettingsCardProps {
   title: string;
@@ -548,7 +549,10 @@ export function SettingsPage() {
 
           {/* Section: Cloud Sync */}
           <section id="sync" className="scroll-mt-28">
-            <GoogleDriveSyncCard />
+            <div className="space-y-8">
+              <GoogleDriveSyncCard />
+              <PlaidSyncCard />
+            </div>
           </section>
 
           {/* Section: AI Engine */}

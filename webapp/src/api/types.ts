@@ -30,6 +30,8 @@ export type GetDashboardParams = DateRangeParams & {
 };
 
 export type ApiClient = {
+  getPlaidAccounts: () => Promise<import("@/types/plaid").PlaidAccount[]>;
+  upsertPlaidAccounts: (accounts: import("@/types/plaid").PlaidAccount[]) => Promise<void>;
   getTransactions: (params: GetTransactionsParams) => Promise<Transaction[]>;
   createTransaction: (payload: TransactionCreate) => Promise<Transaction>;
   updateTransaction: (id: string, payload: TransactionUpdate) => Promise<Transaction>;

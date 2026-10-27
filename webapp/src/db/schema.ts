@@ -3,7 +3,7 @@
  */
 import { execSQL, runSQL, persistDatabase, isTauri } from "./sqlite";
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 3;
 
 /**
  * Schema definitions for all tables.
@@ -110,8 +110,29 @@ export async function runMigrations(): Promise<void> {
       console.log("Applied migration v1: Initial schema");
     }
 
-    // Future migrations would go here:
-    // if (currentVersion < 2) { ... }
+    if (currentVersion < 2) {
+      await runSQL(`ALTER TABLE transactions ADD COLUMN source TEXT`);
+      await runSQL(`ALTER TABLE transactions ADD COLUMN source_account_id TEXT`);
+      await runSQL(`ALTER TABLE transactions ADD COLUMN source_transaction_id TEXT`);
+      await runSQL(`CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_source_identity
+        ON transactions(source, source_transaction_id)
+        WHERE source IS NOT NULL AND source_transaction_id IS NOT NULL`);
+      await runSQL(`CREATE TABLE IF NOT EXISTS plaid_accounts (
+        account_id TEXT PRIMARY KEY, item_id TEXT NOT NULL, institution_name TEXT NOT NULL,
+        name TEXT NOT NULL, mask TEXT, type TEXT NOT NULL, subtype TEXT,
+        enabled INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      )`);
+      console.log("Applied migration v2: Plaid provenance and accounts");
+    }
+
+    if (currentVersion < 3) {
+      await runSQL(`CREATE TABLE IF NOT EXISTS plaid_pending_changes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, account_id TEXT NOT NULL,
+        payload TEXT NOT NULL, created_at TEXT NOT NULL
+      )`);
+      await runSQL("CREATE INDEX IF NOT EXISTS idx_plaid_pending_account ON plaid_pending_changes(account_id,id)");
+      console.log("Applied migration v3: deferred changes for disabled Plaid accounts");
+    }
 
     await setVersion(SCHEMA_VERSION);
     await persistDatabase();
