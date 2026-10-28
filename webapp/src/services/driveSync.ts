@@ -461,13 +461,15 @@ async function doSmartSync(): Promise<DriveSyncResponse> {
 
     // Nothing changed on either side.
     if (!localChanged && !driveChanged) {
+      const lastSyncAt = new Date().toISOString();
+      saveSyncState({ ...state, lastSyncAt });
       results.push({
         filename: DB_FILENAME,
         action: "sync",
         status: "skipped",
         message: "No changes detected",
       });
-      return { mode: "appdata", results, last_sync_at: state.lastSyncAt ?? null };
+      return { mode: "appdata", results, last_sync_at: lastSyncAt };
     }
 
     // Only local changed - safe to push directly.
